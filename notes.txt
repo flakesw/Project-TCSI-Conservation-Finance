@@ -1,0 +1,57 @@
+---2021-07-30
+Model is running with NECN 6.7 and SCRPPLE 3.13
+
+To update to NECN 6.8/SCRPPLE 3.2 and use the updated climate library, we need to:
+
+-fix this error:
+
+	2021-07-30 12:33:00,309 -    Begin parsing FUNCTIONAL GROUP table.
+	2021-07-30 12:33:00,334 - Error at line 123 of file "NECN_Succession.txt":
+  	Found the name "Conifers" but expected "Functional_CSV_File"
+
+-TODO: to update to NECN 6.8, we need to transfer material from NECN.txt to external csv files
+
+Note: TCSI_IC6.csv is a version of the IC without small cohorts
+Note: 180m_IC5.csv contans all the small cohorts and is slow to run
+Note: the 90m version takes weeks to run and was abandoned by Charles
+
+Rasters are in a weird CRS, EPSG 2163 -- US National Atlas Equal Area
+
+---2021-08-11
+
+Updated lightning and accidental ignitions rasters (lightning_masked_tcsi.tif and acc_masked_tcsi.tif).
+Created masks to subset the study area. 
+
+---2021-08-15
+
+Started a run (Scenario 2) with altered SCRPPLE parameters which hopefully create more fire
+
+---2021-08-16
+
+Some problems with the stand and management area rasters -- data type isn't unsigned integer?
+
+stands180_yr20 and stands180_ssp5_yr20 seem like they're identical?
+
+stands1_ssp2_yr20_v4 is continuous surface -- no weird gaps and discontinuities like other rasters
+
+The simulation does work using the original rasters: ./tz1_20_ssp2_v3.tif and ./stands180_yr20.tif
+
+emailed Charles to ask for advice
+
+Weird problem with "Value was either too large or too small for a UInt32." NAvalue is -INF, INT4S data type for original raster
+Why does it create problems when we subset it?
+
+In the end, it was caused by R introducing NAs -- true NAs, not NAvalue (NoData values). So finicky. 
+
+Charles said: The SSP2 vs SSP5 are based on the EPA ICLUS data, and have different development footprints (though the difference is marginal at 2020).  The idea was that I would run both and swap out the management areas through time.  This prompted me to try and build a "universal" stand file that would be compatible with all the different management zone maps, which didn't work.  The only compatible stand map had a unique value per cell, which bumped into that number of stands limit issue messing up harvest.
+So the stand map should be the same throughout all the scenarios as the only set that actually works is this combo: ManagementAreas "./tz1_20_ssp2_v3.tif" Stands "./stands_ssp2_20_180_v5.tif".  The rapidly increasing version number is out of frustration--LANDIS only accepts rasters that are signed "INT4S" or "FLT4S" (but it depends on the input which is not documented) and have a NA value set to 0.  Any other NA value leads to errors.
+The other headache with updating the management areas maps through time is the encroachment of the WUI on restricted land uses.  One of the issues is that wilderness/roadless regulations trump WUI areas, so I had to do all sorts of masking to ensure treatments weren't going into areas where they couldn't.  The highest version of each management area should work?  I can't recall the extent of my testing though.  The yrXX ending equals 20XX, so yr80 corresponds to 2080 or _20_ is 2020.  The stands1 vs stands4 has to do with the underlying fishnet grid to create stands, with the stands1 grid being too small.  Anyway, things got too complicated and I ran out of time.  If you are going to have to deal with the management zones through time, I would recommend creating a separate stand map for each time, even though it probably will prevent easy restarting of the model?
+Let me know if you have any other questions.
+
+Summary: use "./tz1_20_ssp2_v3.tif" and "./stands_ssp2_20_180_v5.tif"
+
+---2021-08-18
+Fires are weird, but the problem is mostly because there aren't enough ignitions in the TCSI using MTBS or Short dataset. 
+Plan: calculate FWI for a bigger area and use a larger number of points from Short
+
+TODO update to NECN 6.8

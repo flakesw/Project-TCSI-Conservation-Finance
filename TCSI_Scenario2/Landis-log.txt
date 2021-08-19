@@ -1,0 +1,44 @@
+2021-07-27 16:37:39,791 - LANDIS-II 7.0 (7)
+2021-07-27 16:37:39,801 - 
+2021-07-27 16:37:39,902 - Loading scenario from file "Scenario1_TEST.txt" ...
+2021-07-27 16:37:40,000 - Initialized random number generator with seed = 3,151,481,016
+2021-07-27 16:37:40,001 - Loading species data from file "species.txt" ...
+2021-07-27 16:37:40,033 - Loading ecoregions from file "ecoregions.txt" ...
+2021-07-27 16:37:40,052 - Initializing landscape from ecoregions map "TCSI_ecoregions.tif" ...
+2021-07-27 16:37:40,071 - Cell length = 180 m, cell area = 3.24 ha
+2021-07-27 16:37:40,074 - Map dimensions: 800 rows by 650 columns = 520,000 cells
+2021-07-27 16:37:40,144 - Sites: 275,414 active (53.0%), 244,586 inactive (47.0%)
+2021-07-27 16:37:40,267 - Loading NECN Succession extension ...
+2021-07-27 16:37:40,319 -    Registering Data:  Succession.LeafBiomassCohorts.
+2021-07-27 16:37:40,320 -    Registering Data:  Succession.AgeCohorts.
+2021-07-27 16:37:40,320 -    Registering Data:  Succession.BiomassCohorts.
+2021-07-27 16:37:40,320 -    Registering Data:  Succession.FineFuels.
+2021-07-27 16:37:40,320 -    Registering Data:  Succession.SmolderConsumption.
+2021-07-27 16:37:40,320 -    Registering Data:  Succession.FlamingConsumption.
+2021-07-27 16:37:40,320 -    Registering Data:  Succession.CWD.
+2021-07-27 16:37:40,320 -    Registering Data:  Succession.PET.
+2021-07-27 16:37:42,009 -    Begin parsing NECN SPECIES table.
+2021-07-27 16:37:42,014 -    Begin parsing FUNCTIONAL GROUP table.
+2021-07-27 16:37:42,016 -    Begin reading FIRE REDUCTION parameters.
+2021-07-27 16:37:42,017 -    Begin reading HARVEST REDUCTION parameters.
+2021-07-27 16:37:42,025 - Initializing NECN Succession ...
+2021-07-27 16:37:42,080 -   Read in data from SoilDepth.tif
+2021-07-27 16:37:42,173 -   Read in data from SoilDrain.tif
+2021-07-27 16:37:42,286 -   Read in data from BaseFFrac.tif
+2021-07-27 16:37:42,386 -   Read in data from StormFFrac.tif
+2021-07-27 16:37:42,486 -   Read in data from FieldCap2.tif
+2021-07-27 16:37:42,585 -   Read in data from WiltPoint.tif
+2021-07-27 16:37:42,685 -   Read in data from PercSand.tif
+2021-07-27 16:37:42,777 -   Read in data from PercClay.tif
+2021-07-27 16:37:42,874 -   Read in data from SOM1Csurface.tif
+2021-07-27 16:37:42,999 -   Read in data from SOMNsurfacev2.tif
+2021-07-27 16:37:43,163 -   Read in data from SOM1Csoil.tif
+2021-07-27 16:37:43,500 -   Read in data from SOMNsoilv2.tif
+2021-07-27 16:37:43,842 -   Read in data from SOM2C.tif
+2021-07-27 16:37:44,097 -   Read in data from SOMN2.tif
+2021-07-27 16:37:44,293 -   Read in data from SOM3C.tif
+2021-07-27 16:37:44,461 -   Read in data from SOMN3.tif
+2021-07-27 16:37:44,612 -   Read in data from DeadWoodBiomass-10.img
+2021-07-27 16:37:44,864 -   Read in data from deadcoarseroots.tif
+2021-07-27 16:37:45,042 - Error at line 12 of file "climate-generator.txt":
+  Found the name "FineFuelMoistureCode" but expected "SpringStart"

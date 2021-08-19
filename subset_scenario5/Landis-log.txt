@@ -1,0 +1,62 @@
+2021-08-16 22:26:21,142 - LANDIS-II 7.0 (7)
+2021-08-16 22:26:21,222 - 
+2021-08-16 22:26:21,467 - Loading scenario from file "Scenario1.txt" ...
+2021-08-16 22:26:21,773 - Initialized random number generator with seed = 4,062,102,966
+2021-08-16 22:26:21,785 - Loading species data from file "species.txt" ...
+2021-08-16 22:26:21,861 - Loading ecoregions from file "ecoregions.txt" ...
+2021-08-16 22:26:21,917 - Initializing landscape from ecoregions map "TCSI_ecoregions_subset.tif" ...
+2021-08-16 22:26:22,029 - Cell length = 180 m, cell area = 3.24 ha
+2021-08-16 22:26:22,056 - Map dimensions: 111 rows by 650 columns = 72,150 cells
+2021-08-16 22:26:22,099 - Sites: 51,264 active (71.1%), 20,886 inactive (28.9%)
+2021-08-16 22:26:22,216 - Loading NECN Succession extension ...
+2021-08-16 22:26:22,307 -    Registering Data:  Succession.LeafBiomassCohorts.
+2021-08-16 22:26:22,322 -    Registering Data:  Succession.AgeCohorts.
+2021-08-16 22:26:22,355 -    Registering Data:  Succession.BiomassCohorts.
+2021-08-16 22:26:22,392 -    Registering Data:  Succession.FineFuels.
+2021-08-16 22:26:22,406 -    Registering Data:  Succession.SmolderConsumption.
+2021-08-16 22:26:22,439 -    Registering Data:  Succession.FlamingConsumption.
+2021-08-16 22:26:22,468 -    Registering Data:  Succession.CWD.
+2021-08-16 22:26:22,497 -    Registering Data:  Succession.PET.
+2021-08-16 22:26:23,742 -    Begin parsing NECN SPECIES table.
+2021-08-16 22:26:23,781 -    Begin parsing FUNCTIONAL GROUP table.
+2021-08-16 22:26:23,812 -    Begin reading FIRE REDUCTION parameters.
+2021-08-16 22:26:23,828 -    Begin reading HARVEST REDUCTION parameters.
+2021-08-16 22:26:23,862 - Initializing NECN Succession ...
+2021-08-16 22:26:24,072 -   Read in data from SoilDepth_subset.tif
+2021-08-16 22:26:24,171 -   Read in data from SoilDrain_subset.tif
+2021-08-16 22:26:24,278 -   Read in data from BaseFFrac_subset.tif
+2021-08-16 22:26:24,366 -   Read in data from StormFFrac_subset.tif
+2021-08-16 22:26:24,466 -   Read in data from FieldCap2_subset.tif
+2021-08-16 22:26:24,567 -   Read in data from WiltPoint_subset.tif
+2021-08-16 22:26:24,667 -   Read in data from PercSand_subset.tif
+2021-08-16 22:26:24,767 -   Read in data from PercClay_subset.tif
+2021-08-16 22:26:24,906 -   Read in data from SOM1Csurface_subset.tif
+2021-08-16 22:26:25,062 -   Read in data from SOMNsurfacev2_subset.tif
+2021-08-16 22:26:25,184 -   Read in data from SOM1Csoil_subset.tif
+2021-08-16 22:26:25,442 -   Read in data from SOMNsoilv2_subset.tif
+2021-08-16 22:26:25,528 -   Read in data from SOM2C_subset.tif
+2021-08-16 22:26:25,683 -   Read in data from SOMN2_subset.tif
+2021-08-16 22:26:25,781 -   Read in data from SOM3C_subset.tif
+2021-08-16 22:26:25,942 -   Read in data from SOMN3_subset.tif
+2021-08-16 22:26:26,046 -   Read in data from DeadWoodBiomass-10_subset.tif
+2021-08-16 22:26:26,189 -   Read in data from deadcoarseroots_subset.tif
+2021-08-16 22:26:26,353 -    Loading weather data ...
+2021-08-16 22:32:56,114 -    Registering Data:  TimeOfLastSuccession.
+2021-08-16 22:32:56,168 -    Registering Data:  Shade.
+2021-08-16 22:32:56,213 -    Creating Dispersal Neighborhood List.
+2021-08-16 22:32:56,263 -    Dispersal:  NeighborRadius=3090, CellLength=180, numCellRadius=17
+2021-08-16 22:32:56,382 -    Loading initial communities from file "IC_TM_CSV.txt" ...
+2021-08-16 22:51:43,304 -    Reading initial communities map "ic_mapcode5_subset.tif" ...
+2021-08-16 22:54:08,743 - Loading SCRAPPLE extension ...
+2021-08-16 22:54:08,865 -    Registering Data:  Fire.Severity.
+2021-08-16 22:54:08,868 -    Registering Data:  Fire.TimeOfLastEvent.
+2021-08-16 22:54:08,902 -    Begin parsing NECN SPECIES table.
+2021-08-16 22:54:08,923 -    Reading in Slope2_subset.tif
+2021-08-16 22:54:08,977 -    Reading in upslope_subset.tif
+2021-08-16 22:54:09,040 -    Reading in PercClay_subset.tif
+2021-08-16 22:54:09,140 -    Loading Dead Wood table...
+2021-08-16 22:54:09,152 - Loading Biomass Harvest Biomass Rank extension ...
+2021-08-16 22:54:09,229 -    Registering Data:  Harvest.PrescriptionName.
+2021-08-16 22:54:09,230 -    Registering Data:  Harvest.TimeOfLastEvent.
+2021-08-16 22:54:09,231 -    Registering Data:  Harvest.CohortsDamaged.
+2021-08-16 22:54:09,244 - Error: The file output-biom-harvest_s1_1.txt does not exist

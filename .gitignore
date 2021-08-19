@@ -34,3 +34,13 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+
+#Large input files
+*.tiff
+*.tif
+*.img
+*.zip
+/climate_IC/*
+TCSI_IC6.csv
+/calibration data/mtbs
+/calibration data/short
