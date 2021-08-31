@@ -16,11 +16,19 @@ GroundSlopeMap Slope2_subset.tif
 UphillSlopeAzimuthMap  upslope_subset.tif	
 ClayMap PercClay_subset.tif
 
->>Updated on 2/20 w new fits params
-LightningIgnitionsB0   -4.0
-LightningIgnitionsB1   0.035
-AccidentalIgnitionsB0  -4.0
-AccidentalIgnitionsB1  0.035
+>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+LightningIgnitionsB0 -2.729175 
+LightningIgnitionsB1  0.087775
+
+AccidentalIgnitionsB0   -0.63738
+AccidentalIgnitionsB1   0.01361
+IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+>>> Zero inflated model <<<<<<<
+LightningIgnitionsBinomialB0 3.144824
+LightningIgnitionsBinomialB1 -0.030999 
+AccidentalIgnitionsBinomialB0 3.309425
+AccidentalIgnitionsBinomialB1 -0.094066
 
 MaximumFineFuels 5400 <<Derived from Fuel Loadings with Jonathan Long
 

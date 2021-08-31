@@ -4,8 +4,8 @@ Timestep                            1
 
 Species_CSV_File	SCRPPLE_spp_sierra.csv
 
-AccidentalIgnitionsMap     	accidental_tcsi_subset.tif
-LightningIgnitionsMap  		lightning_tcsi_subset.tif 
+AccidentalIgnitionsMap     	accidental_tcsi_subset.tif <<NEED
+LightningIgnitionsMap  		lightning_tcsi_subset.tif <<NEED
 RxIgnitionsMap  		rx_equal1_subset.tif <<NEED
 
 AccidentalSuppressionMap	full_suppression_subset.tif <<NEED
@@ -16,11 +16,19 @@ GroundSlopeMap Slope2_subset.tif
 UphillSlopeAzimuthMap  upslope_subset.tif	
 ClayMap PercClay_subset.tif
 
->>Updated on 2/20 w new fits params
-LightningIgnitionsB0   -4.0
-LightningIgnitionsB1   0.035
-AccidentalIgnitionsB0  -4.0
-AccidentalIgnitionsB1  0.035
+>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+LightningIgnitionsB0 -6.770389 <<-2.729175 before scaling
+LightningIgnitionsB1  0.087775
+
+AccidentalIgnitionsB0   -4.678591 <<-0.63738 before scaling
+AccidentalIgnitionsB1   0.01361
+IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+>>> Zero inflated model <<<<<<<
+LightningIgnitionsBinomialB0 3.144824
+LightningIgnitionsBinomialB1 -0.030999 
+AccidentalIgnitionsBinomialB0 3.309425
+AccidentalIgnitionsBinomialB1 -0.094066
 
 MaximumFineFuels 5400 <<Derived from Fuel Loadings with Jonathan Long
 
@@ -38,10 +46,10 @@ LastDayRxFires 350
 TargetRxSize 40
 
 MaximumSpreadAreaB0	-71 
-MaximumSpreadAreaB1	30 <<-3 <<FWI << Note:set to 30
-MaximumSpreadAreaB2	20 <<-2.5  <<effective wind speed Note: set to 20
+MaximumSpreadAreaB1	17.5 <<-3 <<FWI
+MaximumSpreadAreaB2	10.6 <<-2.5  <<effective wind speed
 
-SpreadProbabilityB0 -10 <<more negative means lower spread <<Note: adjusted down 
+SpreadProbabilityB0 -35 <<more negative means lower spread
 SpreadProbabilityB1 0.62  <<FWI
 SpreadProbabilityB2  0.52 << relativized fine fuels. Was .915
 SpreadProbabilityB3 0.31 << effective wind speed. 

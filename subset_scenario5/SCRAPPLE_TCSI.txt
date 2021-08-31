@@ -16,13 +16,21 @@ GroundSlopeMap Slope2_subset.tif
 UphillSlopeAzimuthMap  upslope_subset.tif	
 ClayMap PercClay_subset.tif
 
->>Updated on 2/20 w new fits params <<note: made crazy ignition parameters
-LightningIgnitionsB0   -1.0
-LightningIgnitionsB1   0.1
-AccidentalIgnitionsB0  -1.0
-AccidentalIgnitionsB1  0.1
+>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+LightningIgnitionsB0 -13.075114
+LightningIgnitionsB1  0.27667
 
-MaximumFineFuels 15000 <<Derived from Fuel Loadings with Jonathan Long <<note: made crazy fine fuels
+AccidentalIgnitionsB0   -2.765654 
+AccidentalIgnitionsB1   -0.03846
+IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+>>> Zero inflated model <<<<<<<
+LightningIgnitionsBinomialB0 -1.13297 
+LightningIgnitionsBinomialB1 0.13809
+AccidentalIgnitionsBinomialB0 6.05490
+AccidentalIgnitionsBinomialB1 -0.13918
+
+MaximumFineFuels 5400 <<Derived from Fuel Loadings with Jonathan Long
 
 >> Prescribed Fire Parameters
 MaximumRxWindSpeed 11
@@ -37,14 +45,14 @@ FirstDayRxFires 10
 LastDayRxFires 350
 TargetRxSize 40
 
-MaximumSpreadAreaB0	-10 <<note: bumped these up a ton also
-MaximumSpreadAreaB1	30 <<-3 <<FWI
-MaximumSpreadAreaB2	30  <<-2.5  <<effective wind speed
+MaximumSpreadAreaB0	-71 
+MaximumSpreadAreaB1	17.5 <<-3 <<FWI
+MaximumSpreadAreaB2	10.6 <<-2.5  <<effective wind speed
 
-SpreadProbabilityB0 -5 <<more negative means lower spread <<note: made these crazy high also
-SpreadProbabilityB1 0.8  <<FWI
-SpreadProbabilityB2  0.915 << relativized fine fuels. Was .915
-SpreadProbabilityB3 0.6 << effective wind speed. 
+SpreadProbabilityB0 -35 <<more negative means lower spread
+SpreadProbabilityB1 0.62  <<FWI
+SpreadProbabilityB2  0.52 << relativized fine fuels. Was .915
+SpreadProbabilityB3 0.31 << effective wind speed. 
 
 SiteMortalityB0	-0.0004047	<< Intercept
 SiteMortalityB1	0.00026380	<< Clay

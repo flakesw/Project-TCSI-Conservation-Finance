@@ -55,3 +55,119 @@ Fires are weird, but the problem is mostly because there aren't enough ignitions
 Plan: calculate FWI for a bigger area and use a larger number of points from Short
 
 TODO update to NECN 6.8
+
+--2021-08-26
+Got fires from the whole Sierra Nevada. Experimented using FWI from NASA Global GWI dataset, but ended up
+using FWI from TCSI with fires from whole SN. Got okay model fit, but might not represent the really
+crazy fire years? 
+
+TODO: check that some parameters are appropriately downscaled:
+	Ignition model DONE -- after correction, number of ignitions is pretty good!
+	AGB and ANPP -- TODO check that cell size is corrected for
+	Pest
+	
+
+Changes to species table:
+	LeafLongevity needs to be an integer
+	N/Y need to be changed to TRUE/FALSE
+	Need to remove species not present -- not just comment them out
+
+Way too many fires when applying the uncorrected model, but way too few when subtracting the "scaling coefficient" to reduce the number of fires.
+
+--2021-08-27
+
+Fire model comparison:
+
+	Fit using all Sierra fires: (Scenario1)
+		>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+		LightningIgnitionsB0 -2.729175 
+		LightningIgnitionsB1  0.087775
+
+		AccidentalIgnitionsB0   -0.63738
+		AccidentalIgnitionsB1   0.01361
+		IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+		>>> Zero inflated model <<<<<<<
+		LightningIgnitionsBinomialB0 3.144824
+		LightningIgnitionsBinomialB1 -0.030999 
+		AccidentalIgnitionsBinomialB0 3.309425
+		AccidentalIgnitionsBinomialB1 -0.094066
+
+		Results: 46.22 lightning fires per year (should be 0.22 for TCSI / 0.41 for Sierra)
+		80.875 accidental fires per year (should be 0.11 / 1.5)
+		 
+
+	Fit using all Sierra fires, Poisson model corrected for area: (Scenario2)
+		
+		>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+		LightningIgnitionsB0 -6.770389 <<-2.729175 before scaling
+		LightningIgnitionsB1  0.087775
+
+		AccidentalIgnitionsB0   -4.678591 <<-0.63738 before scaling
+		AccidentalIgnitionsB1   0.01361
+		IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+		>>> Zero inflated model <<<<<<<
+		LightningIgnitionsBinomialB0 3.144824
+		LightningIgnitionsBinomialB1 -0.030999 
+		AccidentalIgnitionsBinomialB0 3.309425
+		AccidentalIgnitionsBinomialB1 -0.094066
+		
+		Results:
+			0.69 lightning fires per year (should be 0.22 for TCSI / 0.41 for Sierra)
+			1.34 accidental fires per year (should be 0.11 / 1.5 for Sierra)
+			34 lightning ha burned (should be 0.8 or 1.8)
+			16.6 accidental ha burned (should be 0.28 or 4.9)
+			
+	Fit using all Sierra fires with correction; binomial model from just TCSI (Scenario3)	
+	
+		>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+		LightningIgnitionsB0 -6.770389 <<-2.729175 before scaling
+		LightningIgnitionsB1  0.087775
+
+		AccidentalIgnitionsB0   -4.678591 <<-0.63738 before scaling
+		AccidentalIgnitionsB1   0.01361
+		IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+		>>> Zero inflated model <<<<<<<
+		LightningIgnitionsBinomialB0 -1.13297
+		LightningIgnitionsBinomialB1 0.13809
+		AccidentalIgnitionsBinomialB0 6.05490
+		AccidentalIgnitionsBinomialB1 -0.13918
+		
+	Fit using model from TCSI (Scenario4)
+	
+		>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+		LightningIgnitionsB0 -10.89757 <<-2.729175 before scaling
+		LightningIgnitionsB1  0.27667
+
+		AccidentalIgnitionsB0   -0.58811 <<-0.63738 before scaling
+		AccidentalIgnitionsB1   -0.03846
+		IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+		>>> Zero inflated model <<<<<<<
+		LightningIgnitionsBinomialB0 -1.13297 
+		LightningIgnitionsBinomialB1 0.13809
+		AccidentalIgnitionsBinomialB0 6.05490
+		AccidentalIgnitionsBinomialB1 -0.13918
+		
+	Fit using model form TCSI, scaled to subset (Scenario5)
+	
+		>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+		LightningIgnitionsB0 -13.075114
+		LightningIgnitionsB1  0.27667
+
+		AccidentalIgnitionsB0   -2.765654 
+		AccidentalIgnitionsB1   -0.03846
+		IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+		>>> Zero inflated model <<<<<<<
+		LightningIgnitionsBinomialB0 -1.13297 
+		LightningIgnitionsBinomialB1 0.13809
+		AccidentalIgnitionsBinomialB0 6.05490
+		AccidentalIgnitionsBinomialB1 -0.13918
+
+			
+			
+			
+	
