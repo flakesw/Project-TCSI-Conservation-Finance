@@ -1,11 +1,11 @@
 LandisData "Climate Config"				
 		
 ClimateTimeSeries			Daily_SequencedYears
-ClimateFile				tcsi_idaho_v5.csv
+ClimateFile				tcsi_12k_gridmet_short.csv
 ClimateFileFormat			Daily_Temp-K_Precip-mmDay
 
 SpinUpClimateTimeSeries			Daily_SequencedYears
-SpinUpClimateFile			tcsi_idaho_v5.csv
+SpinUpClimateFile			tcsi_12k_gridmet_short.csv
 SpinUpClimateFileFormat			Daily_Temp-K_Precip-mmDay
 
 UsingFireClimate			yes

@@ -4,8 +4,8 @@ Timestep                            1
 
 Species_CSV_File	SCRPPLE_spp_sierra.csv
 
-AccidentalIgnitionsMap     	accidental1.tif <<NEED
-LightningIgnitionsMap  		lightning1.tif <<NEED
+AccidentalIgnitionsMap     	"../input_rasters_reproject/accidental_tcsi.tif"
+LightningIgnitionsMap  		lightning_tcsi.tif
 RxIgnitionsMap  		rx_equal1.tif<<NEED
 
 AccidentalSuppressionMap	full_suppression.tif <<NEED
@@ -17,12 +17,12 @@ UphillSlopeAzimuthMap  upslope.tif
 ClayMap PercClay.tif
 
 >>Updated on 2/20 w new fits params
-LightningIgnitionsB0   -4.0
-LightningIgnitionsB1   0.035
-AccidentalIgnitionsB0  -4.0
-AccidentalIgnitionsB1  0.035
+LightningIgnitionsB0   -8.3
+LightningIgnitionsB1   0.11
+AccidentalIgnitionsB0  -5.03
+AccidentalIgnitionsB1  0.043
 
-MaximumFineFuels 5400 <<Derived from Fuel Loadings with Jonathan Long
+MaximumFineFuels 8000 <<Derived from Fuel Loadings with Jonathan Long
 
 >> Prescribed Fire Parameters
 MaximumRxWindSpeed 11
@@ -37,20 +37,21 @@ FirstDayRxFires 10
 LastDayRxFires 350
 TargetRxSize 40
 
-MaximumSpreadAreaB0	-71 
-MaximumSpreadAreaB1	17.5 <<-3 <<FWI
-MaximumSpreadAreaB2	10.6 <<-2.5  <<effective wind speed
+MaximumSpreadAreaB0	-32457 
+MaximumSpreadAreaB1	663 <<-3 <<FWI
+MaximumSpreadAreaB2	4430 <<-2.5  <<effective wind speed
+
 
 SpreadProbabilityB0 -35 <<more negative means lower spread
 SpreadProbabilityB1 0.62  <<FWI
 SpreadProbabilityB2  0.52 << relativized fine fuels. Was .915
-SpreadProbabilityB3 0.31 << effective wind speed. 
+SpreadProbabilityB3 0.41 << effective wind speed. 
 
 SiteMortalityB0	-0.0004047	<< Intercept
 SiteMortalityB1	0.00026380	<< Clay
 SiteMortalityB2	-0.00000483	<< Previous PET
 SiteMortalityB3	0.00003033	<<Wind
-SiteMortalityB4	0.00000857	<<CWD
+SiteMortalityB4	0.00000757	<<CWD
 SiteMortalityB5	0.00358100	<<Fine
 SiteMortalityB6	0.00000064	<<Ladder
 

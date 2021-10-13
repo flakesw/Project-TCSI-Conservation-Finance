@@ -1,3 +1,6 @@
 SimulationYear,TotalBurnedSitesAccidental,TotalBurnedSitesLightning,TotalBurnedSitesRx,NumberFiresAccidental,NumberFiresLightning,NumberFiresRx,TotalBiomassMortalityAccidental,TotalBiomassMortalityLightning,TotalBiomassMortalityRx,
-1, 11, 15, 0, 11, 15, 0, 221520, 285297, 0, 
-2, 17, 1244, 0, 17, 7, 0, 236520, 29702704, 0, 
+1, 21, 6, 0, 18, 6, 0, 185201, 46921, 0, 
+2, 14, 9, 0, 14, 9, 0, 121244, 89398, 0, 
+3, 7, 12, 0, 7, 12, 0, 45684, 153144, 0, 
+4, 14, 9, 0, 14, 9, 0, 128803, 137394, 0, 
+5, 347, 12, 0, 10, 12, 0, 2534866, 97921, 0, 

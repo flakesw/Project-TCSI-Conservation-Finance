@@ -1,48 +1,105 @@
-2021-08-17 16:46:13,243 - LANDIS-II 7.0 (7)
-2021-08-17 16:46:13,252 - 
-2021-08-17 16:46:13,543 - Loading scenario from file "Scenario1.txt" ...
-2021-08-17 16:46:13,618 - Initialized random number generator with seed = 1,934,003,159
-2021-08-17 16:46:13,619 - Loading species data from file "species.txt" ...
-2021-08-17 16:46:13,649 - Loading ecoregions from file "ecoregions.txt" ...
-2021-08-17 16:46:13,669 - Initializing landscape from ecoregions map "TCSI_ecoregions.tif" ...
-2021-08-17 16:46:13,735 - Cell length = 180 m, cell area = 3.24 ha
-2021-08-17 16:46:13,737 - Map dimensions: 800 rows by 650 columns = 520,000 cells
-2021-08-17 16:46:13,798 - Sites: 275,414 active (53.0%), 244,586 inactive (47.0%)
-2021-08-17 16:46:13,905 - Loading NECN Succession extension ...
-2021-08-17 16:46:14,291 -    Registering Data:  Succession.LeafBiomassCohorts.
-2021-08-17 16:46:14,291 -    Registering Data:  Succession.AgeCohorts.
-2021-08-17 16:46:14,291 -    Registering Data:  Succession.BiomassCohorts.
-2021-08-17 16:46:14,291 -    Registering Data:  Succession.FineFuels.
-2021-08-17 16:46:14,292 -    Registering Data:  Succession.SmolderConsumption.
-2021-08-17 16:46:14,292 -    Registering Data:  Succession.FlamingConsumption.
-2021-08-17 16:46:14,292 -    Registering Data:  Succession.CWD.
-2021-08-17 16:46:14,292 -    Registering Data:  Succession.PET.
-2021-08-17 16:46:16,335 -    Begin parsing NECN SPECIES table.
-2021-08-17 16:46:16,339 -    Begin parsing FUNCTIONAL GROUP table.
-2021-08-17 16:46:16,341 -    Begin reading FIRE REDUCTION parameters.
-2021-08-17 16:46:16,342 -    Begin reading HARVEST REDUCTION parameters.
-2021-08-17 16:46:16,436 - Initializing NECN Succession ...
-2021-08-17 16:46:16,556 -   Read in data from SoilDepth.tif
-2021-08-17 16:46:16,643 -   Read in data from SoilDrain.tif
-2021-08-17 16:46:16,741 -   Read in data from BaseFFrac.tif
-2021-08-17 16:46:16,823 -   Read in data from StormFFrac.tif
-2021-08-17 16:46:16,906 -   Read in data from FieldCap2.tif
-2021-08-17 16:46:17,011 -   Read in data from WiltPoint.tif
-2021-08-17 16:46:17,109 -   Read in data from PercSand.tif
-2021-08-17 16:46:17,203 -   Read in data from PercClay.tif
-2021-08-17 16:46:17,294 -   Read in data from SOM1Csurface.tif
-2021-08-17 16:46:17,419 -   Read in data from SOMNsurfacev2.tif
-2021-08-17 16:46:17,547 -   Read in data from SOM1Csoil.tif
-2021-08-17 16:46:17,709 -   Read in data from SOMNsoilv2.tif
-2021-08-17 16:46:17,827 -   Read in data from SOM2C.tif
-2021-08-17 16:46:17,950 -   Read in data from SOMN2.tif
-2021-08-17 16:46:18,080 -   Read in data from SOM3C.tif
-2021-08-17 16:46:18,205 -   Read in data from SOMN3.tif
-2021-08-17 16:46:18,328 -   Read in data from DeadWoodBiomass-10.img
-2021-08-17 16:46:18,582 -   Read in data from deadcoarseroots.tif
-2021-08-17 16:46:18,721 -    Loading weather data ...
-2021-08-17 16:51:19,250 -    Registering Data:  TimeOfLastSuccession.
-2021-08-17 16:51:19,252 -    Registering Data:  Shade.
-2021-08-17 16:51:19,254 -    Creating Dispersal Neighborhood List.
-2021-08-17 16:51:19,255 -    Dispersal:  NeighborRadius=3090, CellLength=180, numCellRadius=17
-2021-08-17 16:51:19,586 -    Loading initial communities from file "IC_TM_CSV.txt" ...
+2021-10-11 11:19:20,328 - LANDIS-II 7.0 (7)
+2021-10-11 11:19:20,346 - 
+2021-10-11 11:19:20,480 - Loading scenario from file "Scenario1.txt" ...
+2021-10-11 11:19:20,577 - Initialized random number generator with seed = 1,743,963,820
+2021-10-11 11:19:20,578 - Loading species data from file "species.txt" ...
+2021-10-11 11:19:20,609 - Loading ecoregions from file "ecoregions.txt" ...
+2021-10-11 11:19:20,630 - Initializing landscape from ecoregions map "TCSI_ecoregions.tif" ...
+2021-10-11 11:19:20,649 - Cell length = 180 m, cell area = 3.24 ha
+2021-10-11 11:19:20,651 - Map dimensions: 800 rows by 650 columns = 520,000 cells
+2021-10-11 11:19:20,729 - Sites: 275,414 active (53.0%), 244,586 inactive (47.0%)
+2021-10-11 11:19:20,870 - Loading NECN Succession extension ...
+2021-10-11 11:19:20,935 -    Registering Data:  Succession.LeafBiomassCohorts.
+2021-10-11 11:19:20,936 -    Registering Data:  Succession.AgeCohorts.
+2021-10-11 11:19:20,937 -    Registering Data:  Succession.BiomassCohorts.
+2021-10-11 11:19:20,937 -    Registering Data:  Succession.FineFuels.
+2021-10-11 11:19:20,937 -    Registering Data:  Succession.SmolderConsumption.
+2021-10-11 11:19:20,937 -    Registering Data:  Succession.FlamingConsumption.
+2021-10-11 11:19:20,937 -    Registering Data:  Succession.CWD.
+2021-10-11 11:19:20,937 -    Registering Data:  Succession.PET.
+2021-10-11 11:19:23,136 -    Begin parsing NECN SPECIES table.
+2021-10-11 11:19:23,161 -    Begin parsing FUNCTIONAL GROUP table.
+2021-10-11 11:19:23,167 -    Begin reading FIRE REDUCTION parameters.
+2021-10-11 11:19:23,167 -    Begin reading HARVEST REDUCTION parameters.
+2021-10-11 11:19:23,173 - Initializing NECN Succession ...
+2021-10-11 11:19:23,216 -   Read in data from ../input_rasters_reproject/SoilDepth.tif
+2021-10-11 11:19:23,310 -   Read in data from ../input_rasters_reproject/SoilDrain.tif
+2021-10-11 11:19:23,483 -   Read in data from ../input_rasters_reproject/BaseFFrac.tif
+2021-10-11 11:19:23,583 -   Read in data from ../input_rasters_reproject/StormFFrac.tif
+2021-10-11 11:19:23,695 -   Read in data from ../input_rasters_reproject/FieldCap2.tif
+2021-10-11 11:19:23,794 -   Read in data from ../input_rasters_reproject/WiltPoint.tif
+2021-10-11 11:19:23,898 -   Read in data from ../input_rasters_reproject/PercSand.tif
+2021-10-11 11:19:24,013 -   Read in data from ../input_rasters_reproject/PercClay.tif
+2021-10-11 11:19:24,108 -   Read in data from ../input_rasters_reproject/SOM1Csurface.tif
+2021-10-11 11:19:24,246 -   Read in data from ../input_rasters_reproject/SOMNsurfacev2.tif
+2021-10-11 11:19:24,377 -   Read in data from ../input_rasters_reproject/SOM1Csoil.tif
+2021-10-11 11:19:24,512 -   Read in data from ../input_rasters_reproject/SOMNsoilv2.tif
+2021-10-11 11:19:24,665 -   Read in data from ../input_rasters_reproject/SOM2C.tif
+2021-10-11 11:19:24,810 -   Read in data from ../input_rasters_reproject/SOMN2.tif
+2021-10-11 11:19:24,939 -   Read in data from ../input_rasters_reproject/SOM3C.tif
+2021-10-11 11:19:25,082 -   Read in data from ../input_rasters_reproject/SOMN3.tif
+2021-10-11 11:19:25,212 -   Read in data from ../input_rasters_reproject/DeadWoodBiomass-10.tif
+2021-10-11 11:19:25,469 -   Read in data from ../input_rasters_reproject/deadcoarseroots.tif
+2021-10-11 11:19:25,634 -    Loading weather data ...
+2021-10-11 11:23:47,003 -    Registering Data:  TimeOfLastSuccession.
+2021-10-11 11:23:47,005 -    Registering Data:  Shade.
+2021-10-11 11:23:47,008 -    Creating Dispersal Neighborhood List.
+2021-10-11 11:23:47,008 -    Dispersal:  NeighborRadius=3090, CellLength=180, numCellRadius=17
+2021-10-11 11:23:47,302 -    Loading initial communities from file "IC_TM_CSV.txt" ...
+2021-10-11 11:26:46,907 -    Reading initial communities map "ic_mapcode5.tif" ...
+2021-10-11 11:32:41,392 - Loading SCRAPPLE extension ...
+2021-10-11 11:32:41,510 -    Registering Data:  Fire.Severity.
+2021-10-11 11:32:41,511 -    Registering Data:  Fire.TimeOfLastEvent.
+2021-10-11 11:32:41,521 -    Begin parsing NECN SPECIES table.
+2021-10-11 11:32:41,529 -    Reading in Slope2.tif
+2021-10-11 11:32:41,617 -    Reading in upslope.tif
+2021-10-11 11:32:41,702 -    Reading in PercClay.tif
+2021-10-11 11:32:41,795 -    Loading Dead Wood table...
+2021-10-11 11:32:41,798 - Initializing SCRAPPLE Fire...
+2021-10-11 11:32:41,800 -    Reading in data from lightning1.tif
+2021-10-11 11:32:41,880 -    Reading in data from rx_equal1.tif
+2021-10-11 11:32:41,958 -    Reading in data from accidental1.tif
+2021-10-11 11:32:42,038 -    Reading in data from full_suppression.tif
+2021-10-11 11:32:42,117 -    Reading in data from full_suppression.tif
+2021-10-11 11:32:42,195 -    Reading in data from full_suppression.tif
+2021-10-11 11:32:42,332 - Using the following extensions ...
+   Extension Name            Extension Filename       
+   --------------            ------------------       
+   NECN Succession           NECN_Succession.txt      
+   SCRAPPLE                  SCRAPPLE_TCSI.txt        
+
+2021-10-11 11:32:42,333 - Current time: 1
+2021-10-11 11:32:42,333 - Running SCRAPPLE ...
+2021-10-11 11:32:42,373 -    Processing landscape for Fire events ...
+2021-10-11 11:32:42,376 -    Next, shuffle ignition sites...
+2021-10-11 11:32:42,822 -    Done processing fire days.  Next, write fire maps and summary fire files. ...
+2021-10-11 11:32:44,092 - Done running extension
+2021-10-11 11:32:44,093 - Running NECN Succession ...
+2021-10-11 11:32:44,386 - Current time: 2
+2021-10-11 11:32:44,387 - Running SCRAPPLE ...
+2021-10-11 11:32:44,393 -    Processing landscape for Fire events ...
+2021-10-11 11:32:44,395 -    Next, shuffle ignition sites...
+2021-10-11 11:32:44,810 -    Done processing fire days.  Next, write fire maps and summary fire files. ...
+2021-10-11 11:32:46,124 - Done running extension
+2021-10-11 11:32:46,125 - Running NECN Succession ...
+2021-10-11 11:32:46,400 - Current time: 3
+2021-10-11 11:32:46,401 - Running SCRAPPLE ...
+2021-10-11 11:32:46,408 -    Processing landscape for Fire events ...
+2021-10-11 11:32:46,408 -    Next, shuffle ignition sites...
+2021-10-11 11:32:46,785 -    Done processing fire days.  Next, write fire maps and summary fire files. ...
+2021-10-11 11:32:48,141 - Done running extension
+2021-10-11 11:32:48,143 - Running NECN Succession ...
+2021-10-11 11:32:48,461 - Current time: 4
+2021-10-11 11:32:48,463 - Running SCRAPPLE ...
+2021-10-11 11:32:48,470 -    Processing landscape for Fire events ...
+2021-10-11 11:32:48,471 -    Next, shuffle ignition sites...
+2021-10-11 11:32:48,914 -    Done processing fire days.  Next, write fire maps and summary fire files. ...
+2021-10-11 11:32:50,106 - Done running extension
+2021-10-11 11:32:50,108 - Running NECN Succession ...
+2021-10-11 11:32:50,483 - Current time: 5
+2021-10-11 11:32:50,484 - Running SCRAPPLE ...
+2021-10-11 11:32:50,491 -    Processing landscape for Fire events ...
+2021-10-11 11:32:50,491 -    Next, shuffle ignition sites...
+2021-10-11 11:32:50,948 -    Done processing fire days.  Next, write fire maps and summary fire files. ...
+2021-10-11 11:32:52,164 - Done running extension
+2021-10-11 11:32:52,165 - Running NECN Succession ...

@@ -1,6 +1,6 @@
-LandisData "NECN Succession"	<<"NECN Succession"
+LandisData "NECN Succession"	<<"NECN Succession" <<updated 9/9/2021 to NECN 6.8
 
-Timestep  1
+Timestep  5
 
 SeedingAlgorithm  WardSeedDispersal
 
@@ -8,24 +8,24 @@ InitialCommunities      	IC_TM_CSV.txt
 InitialCommunitiesMap   	ic_mapcode5.tif
 ClimateConfigFile		climate-generator.txt  
 
-SoilDepthMapName				SoilDepth.tif 
-SoilDrainMapName				SoilDrain.tif
-SoilBaseFlowMapName				BaseFFrac.tif  
-SoilStormFlowMapName				StormFFrac.tif 
-SoilFieldCapacityMapName			FieldCap2.tif
-SoilWiltingPointMapName				WiltPoint.tif
-SoilPercentSandMapName				PercSand.tif
-SoilPercentClayMapName				PercClay.tif
-InitialSOM1CsurfMapName				SOM1Csurface.tif 
-InitialSOM1NsurfMapName				SOMNsurfacev2.tif 
-InitialSOM1CsoilMapName				SOM1Csoil.tif 
-InitialSOM1NsoilMapName				SOMNsoilv2.tif 
-InitialSOM2CMapName				SOM2C.tif 
-InitialSOM2NMapName				SOMN2.tif 
-InitialSOM3CMapName				SOM3C.tif
-InitialSOM3NMapName				SOMN3.tif
-InitialDeadWoodSurfaceMapName			DeadWoodBiomass-10.img 
-InitialDeadCoarseRootsMapName			deadcoarseroots.tif
+SoilDepthMapName				"../input_rasters_reproject/SoilDepth.tif" 
+SoilDrainMapName				"../input_rasters_reproject/SoilDrain.tif"
+SoilBaseFlowMapName				"../input_rasters_reproject/BaseFFrac.tif"  
+SoilStormFlowMapName				"../input_rasters_reproject/StormFFrac.tif" 
+SoilFieldCapacityMapName			"../input_rasters_reproject/FieldCap2.tif"
+SoilWiltingPointMapName				"../input_rasters_reproject/WiltPoint.tif"
+SoilPercentSandMapName				"../input_rasters_reproject/PercSand.tif"
+SoilPercentClayMapName				"../input_rasters_reproject/PercClay.tif"
+InitialSOM1CsurfMapName				"../input_rasters_reproject/SOM1Csurface.tif" 
+InitialSOM1NsurfMapName				"../input_rasters_reproject/SOMNsurfacev2.tif" 
+InitialSOM1CsoilMapName				"../input_rasters_reproject/SOM1Csoil.tif" 
+InitialSOM1NsoilMapName				"../input_rasters_reproject/SOMNsoilv2.tif" 
+InitialSOM2CMapName				"../input_rasters_reproject/SOM2C.tif" 
+InitialSOM2NMapName				"../input_rasters_reproject/SOMN2.tif" 
+InitialSOM3CMapName				"../input_rasters_reproject/SOM3C.tif"
+InitialSOM3NMapName				"../input_rasters_reproject/SOMN3.tif"
+InitialDeadWoodSurfaceMapName			"../input_rasters_reproject/DeadWoodBiomass-10.tif" 
+InitialDeadCoarseRootsMapName			"../input_rasters_reproject/deadcoarseroots.tif"
 
 CalibrateMode 	no
 SmokeModelOutputs yes
@@ -67,65 +67,12 @@ LightEstablishmentTable
 	4	0.0	0.01	0.6	1.0	0.5	0.02
 	5	0.0	0.0	0.01	0.5	1.0	1.0
 		
-SpeciesParameters << some data from Sarah, some arbitrary
-			
->> Species 	Func				Min			Epi-											
->>	   ional		GDD	GDD	Jan	Max	Leaf	cormic	Leaf	FRoot	Wood	CRoot	Leaf  	FRoot 	Wood  	CRoot 	Littr 	Annual	Max
->> 	   Type	N-fix?	Min	Max	Temp	Drought	Long	re-sprout	Lign%	Lign%	Lign%	Lign%	CN    	CN    	CN    	CN    	CN	Biomass	Biomass
-AbieConc	4	N	400	3600	-10	0.93	8	N	0.17	0.2	0.25	0.25	30	30	333	222	100	55	100000
-AbieMagn	4	N	400	3400	-13	0.91	8	N	0.17	0.2	0.25	0.25	30	30	250	167	100	50	100000
-AcerMacr	2	N	550	3600	-3	0.5	1	N	0.18	0.22	0.28	0.32	24	30	400	80	62	50	20000
-AescCali	2	N	1100	4000	0	0.6	1	Y	0.18	0.22	0.28	0.32	24	30	400	80	62	40	10000
-AlnuRhom	2	Y	400	2950	-7	0.5	1	N	0.18	0.15	0.28	0.32	22	25	200	80	28	40	15000
->>AlnuRubr	2	Y	400	2950	-7	0.5	1	N	0.18	0.15	0.28	0.32	22	25	200	80	28	60	15000
-ArbuMenz	2	N	400	3750	-5	0.75	3	Y	0.18	0.22	0.28	0.32	25	30	400	80	100	45	20000
-CaloDecu	1	N	1100	3600	-18	0.97	4	N	0.1	0.2	0.25	0.25	48	48	500	333	100	50	100000
->>CercLedi	2	Y	200	2000	-12	0.9	3	Y	0.25	0.2	0.25	0.25	20	30	333	222	50	45	10000
->>ChryChry	2	N	750	2950	-1	0.7	3	N	0.18	0.22	0.28	0.32	25	30	400	80	100	40	20000
-CornNutt	2	N	500	2500	-10	0.7	1	Y	0.18	0.15	0.28	0.32	22	25	200	80	28	45	10000
-JuniOcci	1	N	400	5500	-14	0.99	6	N	0.25	0.2	0.25	0.25	20	30	333	222	50	45	20000
-LithDens	2	N	900	3150	2	0.8	1	Y	0.18	0.22	0.28	0.32	27	30	400	80	33	65	35000
-PinuAlbi	4	N	300	2400	-18	0.9	5.5	Y	0.27	0.2	0.25	0.25	80	80	333	222	100	30	15000
-PinuAtte	1	N	900	2500	1	0.8	2.5	N	0.28	0.2	0.25	0.25	48	48	250	167	100	30	15000
-PinuCont	4	N	500	2400	-18	0.87	3.5	N	0.25	0.2	0.25	0.25	48	48	500	333	100	30	15000
->>PinuCoul	1	N	900	3800	2	0.6	2.5	N	0.28	0.2	0.25	0.25	48	48	250	167	100	40	15000
->>PinuFlex	4	N	300	2400	-15	0.9	3.5	N	0.28	0.2	0.25	0.25	48	48	250	167	100	40	15000
-PinuJeff	1	N	900	2800	-5	0.95	6	N	0.28	0.2	0.25	0.25	48	48	250	167	100	60	100000
-PinuLamb	1	N	900	2800	-5	0.9	2.5	N	0.17	0.2	0.25	0.25	53	53	278	185	100	65	100000
-PinuMono	1	N	400	5500	-10	0.99	9	N	0.25	0.2	0.25	0.25	20	30	333	222	50	40	15000
-PinuMont	4	N	500	2200	-18	0.85	7	N	0.31	0.2	0.25	0.25	37	37	500	333	100	30	100000
-PinuPond	1	N	500	5500	-9	0.9	5	N	0.24	0.23	0.28	0.32	50	47	400	80	75	65	100000
-PinuSabi	1	N	900	4200	0	0.9	2.5	N	0.28	0.2	0.25	0.25	48	48	250	167	100	35	15000
-PinuWash	1	N	500	5500	-9	0.9	5	N	0.24	0.23	0.28	0.32	50	47	400	80	75	65	100000
->>PopuBals	2	N	900	5000	-7	0.4	1	Y	0.18	0.15	0.28	0.32	22	25	200	80	28	40	15000
-PopuTrem	2	N	600	3200	-10	0.82	1	Y	0.18	0.2	0.25	0.25	62	62	333	222	100	40	10000
-PseuMenz	1	N	300	4950	-12	0.91	6	N	0.24	0.3	0.28	0.32	42	36	400	80	77	65	100000
-QuerChry	5	N	700	4250	0	0.95	1	Y	0.18	0.22	0.28	0.32	27	30	400	80	33	65	25000
-QuerDoug	5	N	700	3950	0	0.95	1	Y	0.18	0.22	0.28	0.32	27	30	400	80	33	65	20000
-QuerGarr	5	N	700	3950	0	0.95	1	Y	0.18	0.22	0.28	0.32	27	30	400	80	33	65	20000
-QuerKell	5	N	850	4250	-1	0.95	1	Y	0.18	0.22	0.28	0.32	27	30	400	80	33	65	25000
->>QuerLoba	5	N	850	3950	-1	0.95	1	Y	0.18	0.22	0.28	0.32	27	30	400	80	33	40	20000
-QuerWisl	5	N	850	4250	-1	0.95	1	Y	0.18	0.22	0.28	0.32	27	30	400	80	33	65	20000
->>SequGiga	1	N	500	3500	-2	0.75	3.5	N	0.17	0.2	0.25	0.25	53	53	278	185	100	190	100000
-TaxuBrev	1	N	400	2500	-4	0.8	4.5	N	0.31	0.2	0.25	0.25	37	37	500	333	100	40	15000
-TorrCali	5	N	900	4000	0	0.7	3	Y	0.18	0.22	0.28	0.32	27	30	400	80	33	40	15000
-TsugMert	4	N	500	1400	-18	0.82	4.5	Y	0.24	0.2	0.25	0.25	80	80	333	222	100	45	90000
-UmbeCali	5	N	900	4000	0	0.7	3	Y	0.18	0.22	0.28	0.32	27	30	400	80	33	40	15000
-FX_R_SEED	3	Y	400	4000	-10	0.97	1.50	Y	0.25	0.2	0.25	0.25	20	28	333	222	50  	35	2900
-NOFX_R_SEED	3	N	400	4000	-10	0.97	1.50	Y	0.25	0.2	0.25	0.25	59	59	333	222	100 	35	2700
-NOFX_NOR_SEED	3	N	400	4000	-10	0.97	1.50	N	0.25	0.2	0.25	0.25	59	59	333	222	100 	35	2700
-									
-FunctionalGroupParameters << -  estimates from fhmem_century_succession.txt
->> Woody decay rate from Louie was 1.0. 	
->> Name		Index	PPDF1	PPDF2	PPDF3	PPDF4	FCFRAC	BTOLAI	KLAI	MAXLAI	PPRPTS2	PPRPTS3	Wood	Month	Age	Leaf 
->>	 		T-Mean	T-Max	T-shape	T-shape	leaf						DecayR	Wood	Mort	Drop
->>														Mort	Shape	Month CRFrac	FRFrac
-Conifers	1	20	40	1	3	0.3	0.004	3000	10	-0.01	0.05	0.05	0.0014	15	10	0.1	0.1
-Hardwoods	2	18	38	1	4	0.3	0.01	2000	20	-0.01	0.06	0.08	0.0018	15	10	0.1	0.1	
-Hardwoods_dry	5	18	40	1	4	0.4	0.007	2000	20	-0.01	0.045	0.08	0.0014	15	10	0.1	0.1	
-Shrub		3	20	42	1	4	0.4	0.022	200	5	-0.01	0.05	0.2	0.0019	15	10	0.1	0.1
-Firs		4	18	37	1	3	0.35	0.004	5000	12	-0.01	0.07	0.06	0.0013	15	10	0.1	0.1
+SpeciesParameters
+Species_CSV_File NECN_Spp_Table_test2.csv
 
+FunctionalGroupParameters 
+Functional_CSV_File NECN_Functional_Table_test.csv
+									
 FireReductionParameters
 >> Based on Stacy Drury's lit review/analysis. See 'Fuel consumption based on fire severity class.docx'
 >>	Severity	WoodLitter	Litter	  Cohort Wood 	Cohort Litter 		SOM

@@ -93,10 +93,14 @@ Fire model comparison:
 		AccidentalIgnitionsBinomialB0 3.309425
 		AccidentalIgnitionsBinomialB1 -0.094066
 
-		Results: 46.22 lightning fires per year (should be 0.22 for TCSI / 0.41 for Sierra)
-		80.875 accidental fires per year (should be 0.11 / 1.5)
-		 
-
+		Results: 46.22, 44.8 lightning fires per year (should be 0.22 for TCSI / 0.41 for Sierra)
+		80.875, 80.2 accidental fires per year (should be 0.73 / 2.0 for Sierra)
+		1240 ha burned accidental, should be 1.1/2.4
+		1600 ha burned lightning, should be 0.5/1.8
+		Fire size 22.8 ha, should be 3379/2692
+		Summary: way too many fires, not large enough. Lacking mega-fires.
+		Good distribution of dNBR,  
+		
 	Fit using all Sierra fires, Poisson model corrected for area: (Scenario2)
 		
 		>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
@@ -114,10 +118,13 @@ Fire model comparison:
 		AccidentalIgnitionsBinomialB1 -0.094066
 		
 		Results:
-			0.69 lightning fires per year (should be 0.22 for TCSI / 0.41 for Sierra)
-			1.34 accidental fires per year (should be 0.11 / 1.5 for Sierra)
-			34 lightning ha burned (should be 0.8 or 1.8)
-			16.6 accidental ha burned (should be 0.28 or 4.9)
+			0.69, 0.78 lightning fires per year (should be 0.22 for TCSI / 0.41 for Sierra)
+			1.34, 1.21 accidental fires per year (should be 0.73 / 2.0 for Sierra)
+			34, 31.3 lightning ha burned (should be 0.55 or 1.8)
+			16.6, 39 accidental ha burned (should be 1.80 or 4.9)
+			Fire size 35 ha, should be 3379/2692
+			Summary: A few too many fires, fires too small without mega-fires. dNBR is constrained.
+				Boxplot looks best
 			
 	Fit using all Sierra fires with correction; binomial model from just TCSI (Scenario3)	
 	
@@ -134,6 +141,15 @@ Fire model comparison:
 		LightningIgnitionsBinomialB1 0.13809
 		AccidentalIgnitionsBinomialB0 6.05490
 		AccidentalIgnitionsBinomialB1 -0.13918
+
+		Results:
+			0.675 accidental fires per year, should be 0.73/2.0
+			0.35 lightning fires per year, should be 0.22/0.41
+			30 accidental ha burned, should be 1.8/4.9
+			0.1 lightning ha burned, should be 0.54 / 1.82
+			Summary: good number of fires, but accidental fires too large. Lightning fires too small -- usually self-extinguish
+				
+		
 		
 	Fit using model from TCSI (Scenario4)
 	
@@ -150,7 +166,16 @@ Fire model comparison:
 		LightningIgnitionsBinomialB1 0.13809
 		AccidentalIgnitionsBinomialB0 6.05490
 		AccidentalIgnitionsBinomialB1 -0.13918
-		
+
+		Results:
+			5.8 accidental fires per year, sould be .7/2.0
+			1.375 lightning fires per year, should be .2/.4
+			94 accidental ha per year, should be 1.8/5
+			17 lightning ha per year, should be 0.54, 1.81
+			Average of 15.5 ha per burn, should be much much higher
+			Summary: too much fire, about a factor of 2-5, so not crazy.
+				fires are too small on average, no mega-fires		
+
 	Fit using model form TCSI, scaled to subset (Scenario5)
 	
 		>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
@@ -166,8 +191,28 @@ Fire model comparison:
 		LightningIgnitionsBinomialB1 0.13809
 		AccidentalIgnitionsBinomialB0 6.05490
 		AccidentalIgnitionsBinomialB1 -0.13918
+	
+			
+TODO check on dead roots raster and SOM1Clitter
+TODO check on why accidental fire raster got reprojected weird -- original is fine though
 
-			
-			
-			
+9/23/2021
+Ran models with new fire params from Charles -- documented in script. Seems to make somewhat too much fire
+
+MTBS data for individual fires dNBR is available -- you have to trick the site sort of. You can get individual fires here: https://mtbs.gov/direct-download
+Or you can download all the fire data within a polygon here: https://www.mtbs.gov/viewer/index.html . To download, you have to go to "fire bundle downloads" way at the bottom
+
+9/24/2021
+TODO:
+import and process fire spread polygons!
+calibrate fire spread on subset landscapes
+convert to Charles' ecoregions
+translate subset landscapes to full models
+get suppression data
+
+10-6-2021
+TODO:
+check on GridMet data vs MACA
+
+
 	

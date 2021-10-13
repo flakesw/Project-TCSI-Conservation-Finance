@@ -1,0 +1,33 @@
+LUCAS Model
+Contact: Benjamin Sleeter, USGS, bsleeter@usgs.gov
+Data Access: ftpext.usgs.gov/pub/wr/ca/menlo.park/bsleeter/CA_Assessment
+
+Land use/land cover (LULC) class identification code. 
+01 = Water, 
+02 = Developed, 
+03 = Transportation/Other Developed, 
+04 = Mining (not used), 
+05 = Barren, 
+06 = Forest, 
+07 = Grassland, 
+08 = Annual Agriculture, 
+09 = Wetlands, 
+10 = Shrublands, 
+11 = SnowIce, 
+12 = Perennial Agriculture
+
+File naming convention
+
+Example: "Sc1202-It0001-Ts2001-SClass.tif"
+Sc = Scenario numerical identifier
+It = Monte Carlo Iteration
+Ts = Timestep (year)
+SClass = State Class map (LULC map)
+
+Scenario ID's (ScXXXX)
+
+1075 = Historical Backcast
+1120 = BAU
+1201 = BAU+Medium Population Growth
+1202 = BAU+High Population Growth
+1203 = BAU+Low Population Growth
