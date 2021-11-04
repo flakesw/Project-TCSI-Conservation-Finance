@@ -22,7 +22,7 @@ LightningIgnitionsB1   0.035
 AccidentalIgnitionsB0  -4.0
 AccidentalIgnitionsB1  0.035
 
-MaximumFineFuels 5400 <<Derived from Fuel Loadings with Jonathan Long
+MaximumFineFuels 1500 <<Derived from Fuel Loadings with Jonathan Long
 
 >> Prescribed Fire Parameters
 MaximumRxWindSpeed 11

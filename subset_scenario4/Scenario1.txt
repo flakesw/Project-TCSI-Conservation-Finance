@@ -4,8 +4,8 @@ Duration 80
 
 Species 		species.txt
 
-Ecoregions 		ecoregions.txt
-EcoregionsMap 		TCSI_ecoregions_subset.tif
+Ecoregions 		"../necn/ecoregions.txt"
+EcoregionsMap 		"../input_rasters_subset/TCSI_ecoregions_subset.tif"
 CellLength 180 << meters, so cell area = 3.24 ha
 
 >> Succession Extension Initialization File

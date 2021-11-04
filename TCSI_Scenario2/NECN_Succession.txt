@@ -33,7 +33,7 @@ WaterDecayFunction Ratio <<Linear or Ratio
 
 ProbabilityEstablishAdjust 	0.6
 InitialMineralN			5.0
-InitialFineFuels		0.75
+InitialFineFuels		0.15 << initial fuels were way too high! SF 2021-10-27
 AtmosphericNSlope		0.004
 AtmosphericNIntercept		0.04
 Latitude			39.5

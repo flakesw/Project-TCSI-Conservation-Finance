@@ -25,8 +25,8 @@ DisturbancesRandomOrder no
 >> Output Extensions Initialization File
 >> ----------------- -------------------
 >>  "Output Max Species Age"		max-spp-age.output.txt
- >> "Output Biomass-by-Age"		output.biomass-by-age.txt
->>  "Output Biomass"			output-biomass.txt
+  "Output Biomass-by-Age"		output.biomass-by-age.txt
+  "Output Biomass"			output-biomass.txt
  >> "Output Biomass Community"		output_Biomass_Community.txt
 
 >>RandomNumberSeed 4,357

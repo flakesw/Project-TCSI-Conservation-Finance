@@ -4,31 +4,31 @@ Timestep  5
 
 SeedingAlgorithm  WardSeedDispersal
 
-InitialCommunities      	IC_TM_CSV.txt
-InitialCommunitiesMap   	ic_mapcode5_subset.tif
-ClimateConfigFile		climate-generator.txt  
+InitialCommunities      	"../necn/IC_TM_CSV.txt"
+InitialCommunitiesMap   	"../input_rasters_subset/ic_mapcode5_subset.tif"
+ClimateConfigFile		"../necn/climate-generator.txt"  
 
-SoilDepthMapName				SoilDepth_subset.tif 
-SoilDrainMapName				SoilDrain_subset.tif
-SoilBaseFlowMapName				BaseFFrac_subset.tif  
-SoilStormFlowMapName				StormFFrac_subset.tif 
-SoilFieldCapacityMapName			FieldCap2_subset.tif
-SoilWiltingPointMapName				WiltPoint_subset.tif
-SoilPercentSandMapName				PercSand_subset.tif
-SoilPercentClayMapName				PercClay_subset.tif
-InitialSOM1CsurfMapName				SOM1Csurface_subset.tif 
-InitialSOM1NsurfMapName				SOMNsurfacev2_subset.tif 
-InitialSOM1CsoilMapName				SOM1Csoil_subset.tif 
-InitialSOM1NsoilMapName				SOMNsoilv2_subset.tif 
-InitialSOM2CMapName				SOM2C_subset.tif 
-InitialSOM2NMapName				SOMN2_subset.tif 
-InitialSOM3CMapName				SOM3C_subset.tif
-InitialSOM3NMapName				SOMN3_subset.tif
-InitialDeadWoodSurfaceMapName			DeadWoodBiomass-10_subset.tif 
-InitialDeadCoarseRootsMapName			deadcoarseroots_subset.tif
+SoilDepthMapName				"../input_rasters_subset/SoilDepth_subset.tif" 
+SoilDrainMapName				"../input_rasters_subset/SoilDrain_subset.tif"
+SoilBaseFlowMapName				"../input_rasters_subset/BaseFFrac_subset.tif"  
+SoilStormFlowMapName				"../input_rasters_subset/StormFFrac_subset.tif" 
+SoilFieldCapacityMapName			"../input_rasters_subset/FieldCap2_subset.tif"
+SoilWiltingPointMapName				"../input_rasters_subset/WiltPoint_subset.tif"
+SoilPercentSandMapName				"../input_rasters_subset/PercSand_subset.tif"
+SoilPercentClayMapName				"../input_rasters_subset/PercClay_subset.tif"
+InitialSOM1CsurfMapName				"../input_rasters_subset/SOM1Csurface_subset.tif" 
+InitialSOM1NsurfMapName				"../input_rasters_subset/SOMNsurfacev2_subset.tif" 
+InitialSOM1CsoilMapName				"../input_rasters_subset/SOM1Csoil_subset.tif"
+InitialSOM1NsoilMapName				"../input_rasters_subset/SOMNsoilv2_subset.tif" 
+InitialSOM2CMapName				"../input_rasters_subset/SOM2C_subset.tif" 
+InitialSOM2NMapName				"../input_rasters_subset/SOMN2_subset.tif" 
+InitialSOM3CMapName				"../input_rasters_subset/SOM3C_subset.tif"
+InitialSOM3NMapName				"../input_rasters_subset/SOMN3_subset.tif"
+InitialDeadWoodSurfaceMapName			"../input_rasters_subset/DeadWoodBiomass-10_subset.tif" 
+InitialDeadCoarseRootsMapName			"../input_rasters_subset/deadcoarseroots_subset.tif"
 
 CalibrateMode 	no
-SmokeModelOutputs yes
+SmokeModelOutputs no
 WaterDecayFunction Ratio <<Linear or Ratio
 
 ProbabilityEstablishAdjust 	0.6

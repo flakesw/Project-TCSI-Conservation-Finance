@@ -1,0 +1,3 @@
+Climate_10_regions_historical.csv is ecoregion-level data for the version with 10 ecoregions, for the TCSI region
+-- Goes with TCSI_ecoregions_10.tif
+extracted_fwi_ca_region.csv is FWI extracted from the global FWI raster data product, for the entire Sierra

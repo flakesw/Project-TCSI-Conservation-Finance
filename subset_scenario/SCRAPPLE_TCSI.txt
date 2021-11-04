@@ -4,17 +4,17 @@ Timestep                            1
 
 Species_CSV_File	SCRPPLE_spp_sierra.csv
 
-AccidentalIgnitionsMap     	accidental_tcsi_subset.tif <<NEED
-LightningIgnitionsMap  		lightning_tcsi_subset.tif <<NEED
-RxIgnitionsMap  		rx_equal1_subset.tif <<NEED
+AccidentalIgnitionsMap     	"../input_rasters_subset/accidental_tcsi_subset.tif"
+LightningIgnitionsMap  		"../input_rasters_subset/lightning_tcsi_subset.tif"
+RxIgnitionsMap  		"../input_rasters_subset/rx_equal1_subset.tif" <<NEED
 
-AccidentalSuppressionMap	full_suppression_subset.tif <<NEED
-LightningSuppressionMap		full_suppression_subset.tif <<NEED
-RxSuppressionMap		full_suppression_subset.tif <<NEED
+AccidentalSuppressionMap	"../input_rasters_subset/full_suppression_subset.tif" <<NEED
+LightningSuppressionMap		"../input_rasters_subset/full_suppression_subset.tif" <<NEED
+RxSuppressionMap		"../input_rasters_subset/full_suppression_subset.tif" <<NEED
 
-GroundSlopeMap Slope2_subset.tif		
-UphillSlopeAzimuthMap  upslope_subset.tif	
-ClayMap PercClay_subset.tif
+GroundSlopeMap "../input_rasters_subset/Slope2_subset.tif"		
+UphillSlopeAzimuthMap  "../input_rasters_subset/upslope_subset.tif"	
+ClayMap "../input_rasters_subset/PercClay_subset.tif"
 
 >>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
 LightningIgnitionsB0 -2.729175 

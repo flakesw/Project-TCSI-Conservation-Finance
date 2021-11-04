@@ -1,8 +1,8 @@
 LandisData "Biomass Harvest"  <<edited 7-10-20 
 
 Timestep 1
-ManagementAreas "./tz1_20_ssp2_v3.tif"
-Stands	"./stands_ssp2_20_180_v5.tif"
+ManagementAreas "../input_rasters_subset/tz1_20_ssp2_v3.tif"
+Stands	"../input_rasters_subset/stands_ssp2_20_180_v5.tif"
 
 >> -----------------------------------------
 >> PRESCRIPTIONS
