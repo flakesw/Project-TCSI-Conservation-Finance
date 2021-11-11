@@ -144,7 +144,7 @@ for(k in 1:20){
       }
       
       #calculate potential burn based on currently burning cells
-      potential_burn <- adjacent(burning, cells = which(values(burning) == 1), directions = 4, pairs = FALSE, include = FALSE) %>%
+      potential_burn <- adjacent(burning, cells = which(values(burning) == 1), directions = 8, pairs = FALSE, include = FALSE) %>%
         `[`(!(. %in% which(values(burned) == 1))) #remove cells that already burned
       
       
