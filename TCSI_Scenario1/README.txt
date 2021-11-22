@@ -1,1 +1,0 @@
-original parameterization from Charles

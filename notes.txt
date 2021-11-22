@@ -214,5 +214,9 @@ get suppression data
 TODO:
 check on GridMet data vs MACA
 
+11-11-2021
+
+Starting model runs using original fire spread and scenarios, on subset landscape
+
 
 	

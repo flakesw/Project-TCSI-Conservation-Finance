@@ -4,25 +4,33 @@ Timestep                            1
 
 Species_CSV_File	SCRPPLE_spp_sierra.csv
 
-AccidentalIgnitionsMap     	accidental1.tif <<NEED
-LightningIgnitionsMap  		lightning1.tif <<NEED
-RxIgnitionsMap  		rx_equal1.tif <<NEED
+AccidentalIgnitionsMap     	"../input_rasters_reproject/accidental_tcsi.tif"
+LightningIgnitionsMap  		"../input_rasters_reproject/lightning_tcsi.tif"
+RxIgnitionsMap  		"../input_rasters_reproject/rx_equal1.tif" <<NEED
 
-AccidentalSuppressionMap	full_suppression.tif <<NEED
-LightningSuppressionMap		full_suppression.tif <<NEED
-RxSuppressionMap		full_suppression.tif <<NEED
+AccidentalSuppressionMap	"../input_rasters_reproject/full_suppression.tif" <<NEED
+LightningSuppressionMap		"../input_rasters_reproject/full_suppression.tif" <<NEED
+RxSuppressionMap		"../input_rasters_reproject/full_suppression.tif" <<NEED
 
-GroundSlopeMap Slope2.tif		
-UphillSlopeAzimuthMap  upslope.tif	
-ClayMap PercClay.tif
+GroundSlopeMap "../input_rasters_reproject/Slope2.tif"		
+UphillSlopeAzimuthMap  "../input_rasters_reproject/upslope.tif"	
+ClayMap "../input_rasters_reproject/PercClay.tif"
 
->>Updated on 2/20 w new fits params
-LightningIgnitionsB0   -4.0
-LightningIgnitionsB1   0.035
-AccidentalIgnitionsB0  -4.0
-AccidentalIgnitionsB1  0.035
+>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+LightningIgnitionsB0 -6.770389 <<-2.729175 before scaling
+LightningIgnitionsB1  0.087775
 
-MaximumFineFuels 1500 <<Derived from Fuel Loadings with Jonathan Long
+AccidentalIgnitionsB0   -4.678591 <<-0.63738 before scaling
+AccidentalIgnitionsB1   0.01361
+IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+>>> Zero inflated model <<<<<<<
+LightningIgnitionsBinomialB0 -1.13297
+LightningIgnitionsBinomialB1 0.13809
+AccidentalIgnitionsBinomialB0 6.05490
+AccidentalIgnitionsBinomialB1 -0.13918
+
+MaximumFineFuels 1000 <<Set to 1000, sf 2021-11-11; Originally 5400, Derived from Fuel Loadings with Jonathan Long
 
 >> Prescribed Fire Parameters
 MaximumRxWindSpeed 11

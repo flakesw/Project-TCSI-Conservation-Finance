@@ -1,10 +1,10 @@
 LandisData "Climate Config"				
 		
-ClimateTimeSeries			Daily_SequencedYears
+ClimateTimeSeries			Daily_RandomYears
 ClimateFile				"../Climate_IC/tcsi_idaho_v5.csv"
 ClimateFileFormat			Daily_Temp-K_Precip-mmDay
 
-SpinUpClimateTimeSeries			Daily_SequencedYears
+SpinUpClimateTimeSeries			Daily_RandomYears
 SpinUpClimateFile			"../Climate_IC/tcsi_idaho_v5.csv"
 SpinUpClimateFileFormat			Daily_Temp-K_Precip-mmDay
 

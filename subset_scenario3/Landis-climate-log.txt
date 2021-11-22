@@ -2,13 +2,13 @@
    Converting raw data from text file: ../Climate_IC/tcsi_idaho_v5.csv, Format=daily_temp-k_precip-mmday, Temporal=Daily.
    Loading future weather data from file ../Climate_IC/tcsi_idaho_v5.csv ...
    Converting raw data from text file: ../Climate_IC/tcsi_idaho_v5.csv, Format=daily_temp-k_precip-mmday, Temporal=Daily.
-Core.StartTime = 0, Core.EndTime = 80.
-Core.StartTime = 0, Core.EndTime = 80.
-Core.StartTime = 0, Core.EndTime = 80.
-Core.StartTime = 0, Core.EndTime = 80.
-Core.StartTime = 0, Core.EndTime = 80.
-Core.StartTime = 0, Core.EndTime = 80.
-Core.StartTime = 0, Core.EndTime = 80.
-Core.StartTime = 0, Core.EndTime = 80.
-Core.StartTime = 0, Core.EndTime = 80.
-Core.StartTime = 0, Core.EndTime = 80.
+Core.StartTime = 0, Core.EndTime = 41.
+Core.StartTime = 0, Core.EndTime = 41.
+Core.StartTime = 0, Core.EndTime = 41.
+Core.StartTime = 0, Core.EndTime = 41.
+Core.StartTime = 0, Core.EndTime = 41.
+Core.StartTime = 0, Core.EndTime = 41.
+Core.StartTime = 0, Core.EndTime = 41.
+Core.StartTime = 0, Core.EndTime = 41.
+Core.StartTime = 0, Core.EndTime = 41.
+Core.StartTime = 0, Core.EndTime = 41.

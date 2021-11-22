@@ -1,7 +1,0 @@
-SimulationYear,DayOfYear,AttemptedNumberIgnitions,ActualNumberIgnitions,FireWeatherIndex,IgnitionType,
-1, 9, 1, 1, 0, Lightning, 
-1, 13, 1, 1, 1.18966865076348, Lightning, 
-1, 26, 1, 1, 2.67993390769294, Accidental, 
-1, 39, 1, 1, 4.18002521543445, Accidental, 
-1, 165, 1, 1, 13.1815331599574, Accidental, 
-1, 167, 1, 1, 18.2999038831124, Accidental, 

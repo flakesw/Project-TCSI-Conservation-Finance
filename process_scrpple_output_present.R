@@ -1,16 +1,122 @@
 # process outputs for the subset landscape
+# TODO:
+# focus on variables: area burned, area burned at high intensity, AGB, biodiversity, 
+#           pyrodiversity, location of fire (e.g. WUI vs wildlands), harvested biomass, emissions
+#  a good idea for a paper! What is the role of fuels in recent fires?
+#  If fires are less constrained by fuels, does that suggest a different management path?
+
 
 library("raster")
 library("tidyverse")
 library("sf")
 library("vioplot")
 
-subset_landscape <- FALSE
-subset_poly <- sf::st_read("../masks_boundaries/subset_polygon/subset_polygon.shp")
+setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance")
+
+years <- 1:41
+#need to summarize fire data to 5-year chunks to compare with NECN data
+year_bins <- cut(years, breaks = seq(0,40, by = 5))
+
+subset_landscape <- TRUE
+subset_poly <- sf::st_read("C:/Users/Sam/Documents/Research/TCSI conservation finance/masks_boundaries/subset_polygon/subset_polygon.shp")
 
 
 ## SCRPPLE outputs
-setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance/TCSI_Scenario2")
+# setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance/subset_scenario1")
+
+
+#what are the names for the scenarios? 
+scenarios <- c("subset_scenario1", "subset_scenario2", "subset_scenario3",
+               "subset_scenario4", "subset_scenario5", "subset_scenario6",
+               "subset_scenario1_miroc", "subset_scenario2_miroc", "subset_scenario3_miroc")
+
+#process SCRPPLE data
+
+scr_paths <- paste0("./", scenarios, "/social-climate-fire")
+scr_summary_paths <- paste0("./", scenarios, "/scrapple-summary-log.csv")
+
+#import fire summary data
+scr_summaries <- lapply(scr_summary_paths, read.csv) %>%
+  bind_rows(.id = "id") %>%
+  mutate(TotalBurnedSites = TotalBurnedSitesAccidental + 
+                            TotalBurnedSitesLightning + 
+                            TotalBurnedSitesRx,
+         TotalNumberFires = NumberFiresAccidental + 
+                            NumberFiresLightning + 
+                            NumberFiresRx)
+
+#plot number of fires over time for each scenario
+ggplot(scr_summaries, aes(x = SimulationYear, y = TotalBurnedSitesAccidental,
+                             colour = id)) +
+  geom_point()
+
+
+#-------------------------------------------------------------------------------
+# process fire rasters
+
+get_burn_intensity <- function(raster, intensity){
+  return(sum(values(raster) >= intensity))
+}
+
+
+intensity_paths <- paste0(rep(scr_paths, each = length(years)), "/fire-intensity-", years, ".img")
+
+high_intensity_cells <- NA
+for(i in 1:length(intensity_paths)){
+  #TODO remake this a purrr::map workflow
+  high_intensity_cells[i] <- raster(intensity_paths[i]) %>% 
+    get_burn_intensity(., 4)
+}
+
+scr_summaries$TotalSitesHighIntensity <- high_intensity_cells
+
+#TODO extract more information from rasters?
+
+#aggregate to five-year chunks
+scr_summaries_5_year <- scr_summaries %>%
+  dplyr::mutate(year_round = plyr::round_any(SimulationYear, 5, f = ceiling)) %>%
+  dplyr::group_by(id, year_round) %>%
+  dplyr::summarise(across(where(is.numeric), sum))
+
+#-------------------------------------------------------------------------------
+# process NECN outputs
+necn_annual_paths <- paste0("./", scenarios, "/NECN-succession-log-short.csv")
+
+necn_summaries <- lapply(necn_annual_paths, read.csv) %>%
+  bind_rows(.id = "id") 
+
+
+ggplot(necn_summaries, aes(x = Time, y = AGB, colour = id)) + 
+  geom_point() + 
+  geom_smooth()
+ggplot(necn_summaries, aes(x = Time, y = SOMTC, colour = id)) + 
+  geom_point() + 
+  geom_smooth()
+
+
+
+plot(necn_summaries$AGB ~ scr_summaries_5_year$TotalBurnedSitesAccidental)
+plot(necn_summaries$AGB ~ scr_summaries_5_year$TotalSitesHighIntensity)
+plot(necn_summaries$AGB ~ scr_summaries_5_year$TotalSitesHighIntensity)
+
+#seems like some Rx fires got out of control? #TODO check on fire intensity for Rx vs other fires
+plot(scr_summaries_5_year$TotalSitesHighIntensity ~ scr_summaries_5_year$TotalBurnedSitesRx)
+plot(scr_summaries_5_year$TotalSitesHighIntensity ~ scr_summaries_5_year$TotalBurnedSites)
+
+
+#-------------------------------------------------------------------------------
+# process NECN rasters
+
+necn_paths <- paste0("./", scenarios, "/NECN")
+
+
+
+
+
+
+#-------------------------------------------------------------------------------
+# old stuff
+
 
 # setwd("./subset_scenario/social-climate-fire")
 

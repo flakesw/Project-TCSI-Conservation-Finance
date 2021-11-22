@@ -1,6 +1,7 @@
-ibrary("raster")
+library("raster")
+library("tidyverse")
 
-setwd("../social-climate-fire/")
+setwd("./analysis")
 
 project_to_template <- function(input_raster, template){
   #function to project landis input rasters with no CRS to an input file
@@ -20,7 +21,7 @@ if(!dir.exists("./projected")){
   dir.create("./projected")
 }
 
-template <- raster("../mask.tif")
+template <- raster("../masks_boundaries/subset_mask.tif")
 
 raster_list <- list.files()
 raster_list <- raster_list[extension(raster_list) %in% c(".img", ".tif")]

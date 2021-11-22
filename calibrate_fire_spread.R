@@ -5,7 +5,10 @@ library("raster")
 
 setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance/")
 
-#TODO expand to sierra region!!
+#TODO expand to sierra region
+#TODO check what happens when there are gaps in spread data -- missing days
+#TODO check what happens when fire boundary doesn't increase each timestep
+#TODO add in 2020 and 2021 fires
 
 template <- raster("./masks_boundaries/mask.tif")
 values(template) <- 1
@@ -84,7 +87,11 @@ spread_data <- data.frame(fire_name = character(100000),
 # as data gets added to the dataframe, so we can avoid recursively binding rows
 rowtracker <- 1
 #-------------------------------------------------------------------------------
-# do this each year
+# nested loop goes through each year, finds fires in that year,
+# then loops through fires, then through days per fire. 
+# The loop extracts the identity of potential fire cells and whether or not 
+# fire spread successfully to those cells
+
 k <- 1
 years <- 2000:2019
 for(k in 1:20){
@@ -144,7 +151,8 @@ for(k in 1:20){
       }
       
       #calculate potential burn based on currently burning cells
-      potential_burn <- adjacent(burning, cells = which(values(burning) == 1), directions = 8, pairs = FALSE, include = FALSE) %>%
+      potential_burn <- adjacent(burning, cells = which(values(burning) == 1),
+                                 directions = 4, pairs = FALSE, include = FALSE) %>%
         `[`(!(. %in% which(values(burned) == 1))) #remove cells that already burned
       
       
@@ -254,8 +262,9 @@ spread_data<- spread_data %>%
            U_b * ((Ua_Ub^2) + 2*(Ua_Ub) * sin(slope) * cos(relative_wd) + sin(slope)^2)^0.5
   )
                   
-
+library("vioplot")
 boxplot(spread_data$FWI ~ spread_data$success)
+vioplot(spread_data$FWI ~ spread_data$success)
 t.test(spread_data$FWI ~ spread_data$success)
 boxplot(spread_data$fuel ~ spread_data$success)
 t.test(spread_data$fuel ~ spread_data$success)
@@ -280,6 +289,7 @@ model <- glm(success ~ scale(FWI) + fuel + scale(eff_wspd),
              family = "binomial")
 summary(model)
 plot(effects::allEffects(model))
+
 
 #-------------------------------------------------------------------------------
 # recycling can
