@@ -1,6 +1,0 @@
-Time,ROS,AgentName,CohortsKilled,DamagedSites,TotalBiomassMortality,MeanSeverity,ClimateThreshold1,ClimateThreshold2,
-1, 1, WPBR_chronic, 9, 1, 1190, 1, 0, 1.62, 
-2, 1, WPBR_chronic, 12, 2, 2981, 1, 16.04, 2.15, 
-3, 1, WPBR_chronic, 5, 2, 1034, 1, 32.09, 5.6, 
-4, 1, WPBR_chronic, 17, 1, 4706, 1, 47.85, 2.85, 
-5, 1, WPBR_chronic, 11, 6, 3097, 1, 56.62, 4.44, 

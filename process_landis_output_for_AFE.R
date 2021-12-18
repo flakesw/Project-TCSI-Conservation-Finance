@@ -31,9 +31,36 @@ scenarios <- data.frame(scenario_name = c("subset_scenario1", "subset_scenario2"
                "subset_scenario4", "subset_scenario5", "subset_scenario6",
                "subset_scenario1_miroc", "subset_scenario2_miroc", "subset_scenario3_miroc",
                "subset_scenario4_miroc", "subset_scenario5_miroc", "subset_scenario6_miroc"),
-               climate = c(rep("historical", 6), rep("miroc8.5", 6)),
-               management = c("minimal", ""))
+               climate = c(rep("Historical", 6), rep("RCP8.5", 6)),
+               management = rep(c("Minimal", "Minimal", "Moderate", "Moderate", "Maximal", "Maximal"), 2))
 
+scenarios <- scenarios[c(1,3,6,7,9,12), ]
+scenarios$id <- as.character(c(1,2,3,4,5,6))
+
+#----------------------------
+#climate data
+#
+
+historical <- read.csv("./subset_scenario1/Climate-future-input-log.csv") %>%
+  group_by(Year) %>%
+  filter(Timestep > 210 & Timestep < 300) %>%
+  summarise(mean_fwi = mean(FWI),
+            max_fwi = max(FWI))
+miroc <- read.csv("./subset_scenario1_miroc/Climate-future-input-log.csv")%>%
+  group_by(Year) %>%
+  filter(Timestep > 210 & Timestep < 300) %>%
+  summarise(mean_fwi = mean(FWI),
+            max_fwi = max(FWI))
+
+plot(historical$max_fwi ~ I(historical$Year - 1980), type = "l",
+     ylim = c(40, 90), lwd = 2, col = "#1b9e77",
+     xlab = "Year",
+     ylab = "Fire Weather Index")
+lines(miroc$max_fwi ~ I(miroc$Year-2020), col = "#d95f02", lwd = 2)
+# lines(historical$max_fwi ~ historical$Year, col = "#1b9e77", lwd = 2)
+# lines(miroc$max_fwi ~ I(miroc$Year-40), col = "#d95f02", lwd = 2)
+# abline(h = mean(historical$max_fwi))
+# abline(h = mean(miroc$max_fwi))
 
 #process SCRPPLE data
 
@@ -50,10 +77,17 @@ scr_summaries <- lapply(scr_summary_paths, read.csv) %>%
                             NumberFiresLightning + 
                             NumberFiresRx)
 
+scr_summaries %>% mutate(TotalBurnedSites = TotalBurnedSites * 3.24 / 0.18) -> scr_summaries
+
+
 #plot number of fires over time for each scenario
-ggplot(scr_summaries, aes(x = SimulationYear, y = TotalBurnedSitesAccidental,
+
+ggplot(scr_summaries[scr_summaries$id %in% c(1,4), ], aes(x = SimulationYear, y = TotalBurnedSites,
                              colour = id)) +
-  geom_point() + geom_smooth()
+  geom_point() + 
+  geom_line() + 
+  scale_color_manual(values=c("#1b9e77", "#d95f02"), labels = c("Historical", "RCP8.5")) +
+  ylab("Area burned (ha)")
 
 
 #-------------------------------------------------------------------------------
@@ -70,7 +104,7 @@ high_intensity_cells <- NA
 for(i in 1:length(intensity_paths)){
   #TODO remake this a purrr::map workflow
   high_intensity_cells[i] <- raster(intensity_paths[i]) %>% 
-    get_burn_intensity(., 4)
+    get_burn_intensity(., 3)
 }
 
 scr_summaries$TotalSitesHighIntensity <- high_intensity_cells
@@ -81,8 +115,9 @@ for(i in 1:length(scr_paths)){
   fire_stack <- stack(paste0(rep(scr_paths[i], each = length(years)), "/fire-intensity-", years, ".img"))
 
   max_intensity <- max(fire_stack)
+  max_intensity <- reclassify(max_intensity, c(4, 999, 4))
   
-  fire_count <- sum(reclassify(fire_stack, c(0,1,0,1,999,1), right = FALSE))
+  fire_count <- sum(reclassify(fire_stack, c(0,2,0,2,999,1), right = FALSE))
   
   writeRaster(max_intensity, paste0("./analysis/max_intensity_", scenarios$scenario_name[i], ".tif"), overwrite = TRUE)
   writeRaster(max_intensity, paste0("./analysis/n_burned_", scenarios$scenario_name[i], ".tif"), overwrite = TRUE)
@@ -110,26 +145,68 @@ plot(scr_summaries_5_year$TotalSitesHighIntensity ~ scr_summaries_5_year$TotalBu
 plot(scr_summaries_5_year$TotalSitesHighIntensity ~ scr_summaries_5_year$TotalBurnedSites)
 
 
+#high intensity fire
+ggplot(scr_summaries[scr_summaries$id %in% c(1,4), ], aes(x = SimulationYear, y = TotalSitesHighIntensity,
+                                                          colour = id)) +
+  geom_point() + 
+  geom_line() + 
+  scale_color_manual(values=c("#1b9e77", "#d95f02"), labels = c("Historical", "RCP8.5")) +
+  ylab("Area burned (ha)")
+
+
+
+#maps of fire intensity
+library("viridis")
+cuts <- c(0,1,2,3,4)
+pal <- c("white", "gray", viridis(50)[10], viridis(50)[20], viridis(50)[30])
+
+map1 <- raster("./analysis/max_intensity_subset_scenario1.tif")
+plot(map1, col= pal)
+map2 <- raster("./analysis/max_intensity_subset_scenario3.tif")
+plot(map2, col = pal)
+map3 <- raster("./analysis/max_intensity_subset_scenario1_miroc.tif")
+plot(map3, col = pal)
+map4 <- raster("./analysis/max_intensity_subset_scenario3_miroc.tif")
+plot(map4, col = pal)
+# map3 <- raster("./analysis/max_intensity_subset_scenario6.tif")
+# map4 <- raster("./analysis/max_intensity_subset_scenario6_miroc.tif")
 #-------------------------------------------------------------------------------
 # process NECN outputs
-necn_annual_paths <- paste0("./", scenarios, "/NECN-succession-log-short.csv")
+necn_annual_paths <- paste0("./", scenarios$scenario_name, "/NECN-succession-log-short.csv")
 
 necn_summaries <- lapply(necn_annual_paths, read.csv) %>%
   bind_rows(.id = "id") 
 
+necn_summaries <- left_join(necn_summaries, scenarios)
+necn_summaries$management <- factor(necn_summaries$management, levels = unique(necn_summaries$management))
 
-ggplot(necn_summaries, aes(x = Time, y = AGB, colour = id)) + 
-  geom_point() + 
-  geom_smooth()
+ggplot(necn_summaries, aes(x = Time, y = AGB, colour = climate, 
+                           shape = management))+ 
+  geom_point(size = 2) + 
+  geom_smooth(se = FALSE, aes(linetype=management, color=climate)) + 
+  scale_color_manual(values=c("#1b9e77", "#d95f02"), labels = c("Historical", "RCP8.5"))
+
 ggplot(necn_summaries, aes(x = Time, y = SOMTC, colour = id)) + 
   geom_point() + 
   geom_smooth()
 
-
-
 plot(necn_summaries$AGB ~ scr_summaries_5_year$TotalBurnedSitesAccidental)
 plot(necn_summaries$AGB ~ scr_summaries_5_year$TotalSitesHighIntensity)
 plot(necn_summaries$AGB ~ scr_summaries_5_year$TotalSitesHighIntensity)
+
+#total high intensity fire versus aboveground biomass
+necn_all <- necn_summaries %>%
+  filter(Time == 40) 
+
+high_intensity_fire_all <- scr_summaries %>%
+  group_by(id) %>%
+  summarise(total_high_intensity_fire = sum(TotalSitesHighIntensity),
+            total_fire = sum(TotalBurnedSites))
+
+plot(necn_all$AGB ~ high_intensity_fire_all$total_high_intensity_fire)
+
+plot(high_intensity_fire_all$total_high_intensity_fire ~ high_intensity_fire_all$total_fire)
+
 
 #-------------------------------------------------------------------------------
 # process NECN rasters
@@ -140,7 +217,7 @@ necn_paths <- paste0("./", scenarios, "/NECN")
 #-------------------------------------------------------------------------------
 # beetles
 
-beetle_all_years_paths <- paste0("./", scenarios, "/bda_log.csv")
+beetle_all_years_paths <- paste0("./", scenarios$scenario_name, "/bda_log.csv")
 
 beetle_all_year_summaries <- lapply(beetle_all_years_paths, read.csv) %>%
   bind_rows(.id = "id") %>%
@@ -161,18 +238,28 @@ ggplot(beetle_condensed_year, aes(x = Time, y = TotalBiomassMortality, colour = 
 
 
 beetle_summaries_5_year <- beetle_condensed_year %>%
-  dplyr::mutate(year_round = plyr::round_any(Time, 5, f = ceiling)) %>%
-  dplyr::group_by(id, year_round) %>%
-  dplyr::summarise(across(where(is.numeric), sum))
+  dplyr::mutate(SimulationYear = plyr::round_any(Time, 5, f = ceiling)) %>%
+  dplyr::group_by(id, SimulationYear) %>%
+  dplyr::summarise(across(where(is.numeric), sum)) %>% left_join(scenarios)
+beetle_summaries_5_year$management <- factor(beetle_summaries_5_year$management, levels = unique(beetle_summaries_5_year$management))
 
-ggplot(beetle_summaries_5_year, aes(x = year_round, y = TotalBiomassMortality, colour = id)) + 
-  geom_point() +
-  geom_smooth()
+ggplot(beetle_summaries_5_year, aes(x = SimulationYear, y = TotalBiomassMortality, colour = climate, 
+                                    shape = management))+ 
+  geom_point(size = 2) + 
+  geom_smooth(se = FALSE, aes(linetype=management, color=climate)) + 
+  scale_color_manual(values=c("#1b9e77", "#d95f02"), labels = c("Historical", "RCP8.5"))
+
+beetles_all_summary <- beetle_summaries_5_year %>%
+  group_by(id) %>%
+  summarise(all_beetle_mortality = sum(TotalBiomassMortality))
+  
 
 #-------------------------------------------------------------------------------
-
-
-
+# species maps
+map1 <- raster("./subset_scenario6_miroc/biomass/AbieConc-0.img")
+map2 <- raster("./subset_scenario6_miroc/biomass/AbieConc-40.img")
+map3 <- map2 - map1
+plot(map3)
 
 #-------------------------------------------------------------------------------
 # old stuff
@@ -395,7 +482,7 @@ hist(log(short_tcsi$FIRE_SIZE / 2.47))
 mean(log(short_tcsi$FIRE_SIZE / 2.47))
 hist(log(short_ca$FIRE_SIZE / 2.47))
 mean(log(short_ca$FIRE_SIZE / 2.47))
-vioplot(log(events$TotalSitesBurned*3.24), log(short_tcsi$FIRE_SIZE / 2.47),
+vioplot(log(events$TotalSitesBurned*3.24/0.18), log(short_tcsi$FIRE_SIZE / 2.47),
         log(short_ca$FIRE_SIZE / 2.47), col = c("gray", "blue", "blue"))
 
 #time of year of fires

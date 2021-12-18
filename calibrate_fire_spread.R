@@ -284,7 +284,7 @@ spread_data$fuel <- ifelse(spread_data$fuel < max_fuel,
 #-------------------------------------------------------------------------------
 # fit model to fire spread
 library("lme4")
-model <- glm(success ~ scale(FWI) + fuel + scale(eff_wspd),
+model <- glm(success ~ FWI + fuel + eff_wspd,
              data = spread_data,
              family = "binomial")
 summary(model)

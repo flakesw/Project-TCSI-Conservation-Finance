@@ -218,5 +218,9 @@ check on GridMet data vs MACA
 
 Starting model runs using original fire spread and scenarios, on subset landscape
 
+11-30-2021
+
+TODO check on fire intensity -- are there 10 categories or 3? Why is max intensity for one model run 11 where others is 4? 
+
 
 	

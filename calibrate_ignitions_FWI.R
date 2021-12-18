@@ -27,6 +27,9 @@ short_ca <- readRDS("./calibration data/short_ca.RDS")%>%
 subset_polygon <- sf::st_read("./masks_boundaries/subset_polygon/subset_polygon.shp") %>%
   sf::st_transform(crs(short_ca))
 
+tcsi_polygon <- sf::st_read("./masks_boundaries/tcsi_area_shapefile/TCSI_v2.shp") %>%
+  sf::st_transform(crs(short_ca))
+
 fwi_landis <- read.csv("./calibration data/climate-future-input-log_for_calibration.csv")
 #add a date column
 fwi_landis$date <- parse_date_time(as.character(fwi_landis$Year), orders = "y")
@@ -85,7 +88,7 @@ tcsi_fwi_data_merge_accidental <- dplyr::left_join(fwi_tcsi[, c("date", "fwi")],
 plot(n.fires ~ fwi, data = all_fwi_data_merge_lightning)
 plot(n.fires ~ fwi, data = all_fwi_data_merge_accidental)
 
-area_ca_region <- sf::st_area(ca_region)
+area_ca_region <- sf::st_area(tcsi_poly)
 area_subset <- sf::st_area(subset_polygon)
 scaling_coef <- as.numeric(area_subset/area_ca_region)
 log(scaling_coef)
