@@ -1,0 +1,10 @@
+0 = no suppression, wilderness far from roads
+1 = remote public land, far from road
+2 = private land; in buffer from settlements
+3 = WUI defense
+
+First attempt, using msotly data from Silvis Lab
+0 = wilderness
+1 = other forest
+2 = forest, low housing density
+3 = WUI or intermix

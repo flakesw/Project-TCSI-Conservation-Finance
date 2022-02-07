@@ -1,0 +1,40 @@
+---
+title: "Working with rasters and LANDIS-II"
+author: "Sam Flake"
+date: "8/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## LANDIS-II
+
+LANDIS-II is a flexible landscape simulation model, widely used for improving understanding and forecasting forested landscapes. 
+
+LANDIS-II takes two kinds of inputs: .txt files which give the parameters for the model, and raster files which describe the landscape -- the initial communities, the abiotic conditions, fuels, topography, and other important variables. While rasters are an intuitive way to store spatial data, working with rasters isn't always straightforward. 
+
+This vignette doesn't require LANDIS-II to be installed, but it will present rasters used in LANDIS-II. See xx for details on the model.
+
+Rasters for LANDIS-II have a few general requirements and best practices:
+
+#TODO list these
+
+#TODO create some example rasters, use NECN examples
+
+In this vignette, we will tackle a seemingly simple problem: taking a LANDIS-II landscape and creating a smaller subset of the landscape. Sometimes this is needed to reduce the processing time for a LANDIS-II run, to allow faster iterations when calibrating the model. But this process brings up some important potential pitfalls we need to avoid. 
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
