@@ -1,0 +1,48 @@
+2022-03-04 10:24:04,077 - LANDIS-II 7.0 (7)
+2022-03-04 10:24:04,097 - 
+2022-03-04 10:24:04,226 - Loading scenario from file "Scenario1.txt" ...
+2022-03-04 10:24:04,395 - Initialized random number generator with seed = 1,714,565,497
+2022-03-04 10:24:04,396 - Loading species data from file "../../Inputs/other_extensions/species.txt" ...
+2022-03-04 10:24:04,441 - Loading ecoregions from file "../../Inputs/necn/ecoregions.txt" ...
+2022-03-04 10:24:04,471 - Initializing landscape from ecoregions map "../../Inputs/input_rasters_reproject/TCSI_ecoregions.tif" ...
+2022-03-04 10:24:04,494 - Cell length = 180 m, cell area = 3.24 ha
+2022-03-04 10:24:04,497 - Map dimensions: 800 rows by 650 columns = 520,000 cells
+2022-03-04 10:24:04,597 - Sites: 275,083 active (52.9%), 244,917 inactive (47.1%)
+2022-03-04 10:24:04,777 - Loading NECN Succession extension ...
+2022-03-04 10:24:04,847 -    Registering Data:  Succession.LeafBiomassCohorts.
+2022-03-04 10:24:04,849 -    Registering Data:  Succession.AgeCohorts.
+2022-03-04 10:24:04,849 -    Registering Data:  Succession.BiomassCohorts.
+2022-03-04 10:24:04,849 -    Registering Data:  Succession.FineFuels.
+2022-03-04 10:24:04,849 -    Registering Data:  Succession.SmolderConsumption.
+2022-03-04 10:24:04,849 -    Registering Data:  Succession.FlamingConsumption.
+2022-03-04 10:24:04,849 -    Registering Data:  Succession.CWD.
+2022-03-04 10:24:04,849 -    Registering Data:  Succession.PET.
+2022-03-04 10:24:07,540 -    Begin parsing NECN SPECIES table.
+2022-03-04 10:24:07,569 -    Begin parsing FUNCTIONAL GROUP table.
+2022-03-04 10:24:07,576 -    Begin reading FIRE REDUCTION parameters.
+2022-03-04 10:24:07,577 -    Begin reading HARVEST REDUCTION parameters.
+2022-03-04 10:24:07,582 - Initializing NECN Succession ...
+2022-03-04 10:24:07,638 -   Read in data from ../../Inputs/input_rasters_reproject/SoilDepth.tif
+2022-03-04 10:24:07,740 -   Read in data from ../../Inputs/input_rasters_reproject/SoilDrain.tif
+2022-03-04 10:24:07,918 -   Read in data from ../../Inputs/input_rasters_reproject/BaseFFrac.tif
+2022-03-04 10:24:08,082 -   Read in data from ../../Inputs/input_rasters_reproject/StormFFrac.tif
+2022-03-04 10:24:08,204 -   Read in data from ../../Inputs/input_rasters_reproject/FieldCap2.tif
+2022-03-04 10:24:08,352 -   Read in data from ../../Inputs/input_rasters_reproject/WiltPoint.tif
+2022-03-04 10:24:08,520 -   Read in data from ../../Inputs/input_rasters_reproject/PercSand.tif
+2022-03-04 10:24:08,676 -   Read in data from ../../Inputs/input_rasters_reproject/PercClay.tif
+2022-03-04 10:24:08,841 -   Read in data from ../../Inputs/input_rasters_reproject/SOM1Csurface.tif
+2022-03-04 10:24:09,048 -   Read in data from ../../Inputs/input_rasters_reproject/SOMNsurfacev2.tif
+2022-03-04 10:24:09,245 -   Read in data from ../../Inputs/input_rasters_reproject/SOM1Csoil.tif
+2022-03-04 10:24:09,440 -   Read in data from ../../Inputs/input_rasters_reproject/SOMNsoilv2.tif
+2022-03-04 10:24:09,625 -   Read in data from ../../Inputs/input_rasters_reproject/SOM2C.tif
+2022-03-04 10:24:09,814 -   Read in data from ../../Inputs/input_rasters_reproject/SOMN2.tif
+2022-03-04 10:24:10,028 -   Read in data from ../../Inputs/input_rasters_reproject/SOM3C.tif
+2022-03-04 10:24:10,238 -   Read in data from ../../Inputs/input_rasters_reproject/SOMN3.tif
+2022-03-04 10:24:10,469 -   Read in data from ../../Inputs/input_rasters_reproject/DeadWoodBiomass-10.tif
+2022-03-04 10:24:10,863 -   Read in data from ../../Inputs/input_rasters_reproject/deadcoarseroots.tif
+2022-03-04 10:24:11,151 -    Loading weather data ...
+2022-03-04 10:29:33,063 -    Registering Data:  TimeOfLastSuccession.
+2022-03-04 10:29:33,064 -    Registering Data:  Shade.
+2022-03-04 10:29:33,067 -    Creating Dispersal Neighborhood List.
+2022-03-04 10:29:33,067 -    Dispersal:  NeighborRadius=3090, CellLength=180, numCellRadius=17
+2022-03-04 10:29:33,381 -    Loading initial communities from file "../../Inputs/necn/IC_TM_CSV.txt" ...

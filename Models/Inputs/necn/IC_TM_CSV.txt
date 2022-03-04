@@ -1,0 +1,4 @@
+LandisData	"Initial Communities"
+>> SE Landis IC input of single species,single cohort TM
+
+CSV_File "../../Inputs/Climate_IC/TCSI_IC6.csv"

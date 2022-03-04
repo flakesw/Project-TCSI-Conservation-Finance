@@ -45,17 +45,21 @@ TCSI_IC6.csv
 */calibration data/mtbs
 */calibration data/short
 */calibration data/wfigs_incidents
-*/calibration data/geomac fire boundaries
-*/calibration data/mtbs
-*/Inputs/climate_IC/
+*/calibration data/geomac fire boundaries/*
+*/calibration data/mtbs/*
+*/Inputs/climate_IC/*
 */original TCSI inputs/climate_IC/*
 !Models/Inputs/original TCSI inputs/climate_IC/180m_IC5.csv
 !Models/Inputs/original TCSI inputs/climate_IC/TCSI_cnrm85_3.csv
-!Models/Inputs/original TCSI inputs/climate_IC/TCSI_hadgem_85_3.csv
-!Models/Inputs/original TCSI inputs/climate_IC/tcsi_idaho_v5.csv
-!Models/Inputs/original TCSI inputs/climate_IC/TCSI_miroc5_85_3.csv
-!Models/Inputs/original TCSI inputs/climate_IC/180m_IC5.csv
-!Models/Inputs/original TCSI inputs/climate_IC/TCSI_cnrm85_3.csv
-!Models/Inputs/original TCSI inputs/climate_IC/TCSI_hadgem_85_3.csv
-!Models/Inputs/original TCSI inputs/climate_IC/tcsi_idaho_v5.csv
-!Models/Inputs/original TCSI inputs/climate_IC/TCSI_miroc5_85_3.csv
+Models/Inputs/original TCSI inputs/climate_IC/TCSI_hadgem_85_3.csv
+Models/Inputs/original TCSI inputs/climate_IC/tcsi_idaho_v5.csv
+Models/Inputs/original TCSI inputs/climate_IC/TCSI_miroc5_85_3.csv
+Models/Inputs/original TCSI inputs/climate_IC/180m_IC5.csv
+Models/Inputs/original TCSI inputs/climate_IC/TCSI_cnrm85_3.csv
+Models/Inputs/original TCSI inputs/climate_IC/TCSI_hadgem_85_3.csv
+Models/Inputs/original TCSI inputs/climate_IC/tcsi_idaho_v5.csv
+Models/Inputs/original TCSI inputs/climate_IC/TCSI_miroc5_85_3.csv
+Models/Inputs/original TCSI inputs/climate_IC/TCSI_miroc5_85_3.csv
+Models/Inputs/original TCSI inputs/climate_IC/tcsi_idaho_v5.csv
+Models/Inputs/original TCSI inputs/climate_IC/TCSI_hadgem_85_3.csv
+Models/Inputs/original TCSI inputs/climate_IC/180m_IC5.csv

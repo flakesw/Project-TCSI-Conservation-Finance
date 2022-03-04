@@ -1,0 +1,248 @@
+This is just a scratch sheet / journal for Sam. Nothing much of use in here for anyone else.
+
+---2021-07-30
+Model is running with NECN 6.7 and SCRPPLE 3.13
+
+To update to NECN 6.8/SCRPPLE 3.2 and use the updated climate library, we need to:
+
+-fix this error:
+
+	2021-07-30 12:33:00,309 -    Begin parsing FUNCTIONAL GROUP table.
+	2021-07-30 12:33:00,334 - Error at line 123 of file "NECN_Succession.txt":
+  	Found the name "Conifers" but expected "Functional_CSV_File"
+
+-TODO: to update to NECN 6.8, we need to transfer material from NECN.txt to external csv files
+
+Note: TCSI_IC6.csv is a version of the IC without small cohorts
+Note: 180m_IC5.csv contans all the small cohorts and is slow to run
+Note: the 90m version takes weeks to run and was abandoned by Charles
+
+Rasters are in a weird CRS, EPSG 2163 -- US National Atlas Equal Area
+
+---2021-08-11
+
+Updated lightning and accidental ignitions rasters (lightning_masked_tcsi.tif and acc_masked_tcsi.tif).
+Created masks to subset the study area. 
+
+---2021-08-15
+
+Started a run (Scenario 2) with altered SCRPPLE parameters which hopefully create more fire
+
+---2021-08-16
+
+Some problems with the stand and management area rasters -- data type isn't unsigned integer?
+
+stands180_yr20 and stands180_ssp5_yr20 seem like they're identical?
+
+stands1_ssp2_yr20_v4 is continuous surface -- no weird gaps and discontinuities like other rasters
+
+The simulation does work using the original rasters: ./tz1_20_ssp2_v3.tif and ./stands180_yr20.tif
+
+emailed Charles to ask for advice
+
+Weird problem with "Value was either too large or too small for a UInt32." NAvalue is -INF, INT4S data type for original raster
+Why does it create problems when we subset it?
+
+In the end, it was caused by R introducing NAs -- true NAs, not NAvalue (NoData values). So finicky. 
+
+Charles said: The SSP2 vs SSP5 are based on the EPA ICLUS data, and have different development footprints (though the difference is marginal at 2020).  The idea was that I would run both and swap out the management areas through time.  This prompted me to try and build a "universal" stand file that would be compatible with all the different management zone maps, which didn't work.  The only compatible stand map had a unique value per cell, which bumped into that number of stands limit issue messing up harvest.
+So the stand map should be the same throughout all the scenarios as the only set that actually works is this combo: ManagementAreas "./tz1_20_ssp2_v3.tif" Stands "./stands_ssp2_20_180_v5.tif".  The rapidly increasing version number is out of frustration--LANDIS only accepts rasters that are signed "INT4S" or "FLT4S" (but it depends on the input which is not documented) and have a NA value set to 0.  Any other NA value leads to errors.
+The other headache with updating the management areas maps through time is the encroachment of the WUI on restricted land uses.  One of the issues is that wilderness/roadless regulations trump WUI areas, so I had to do all sorts of masking to ensure treatments weren't going into areas where they couldn't.  The highest version of each management area should work?  I can't recall the extent of my testing though.  The yrXX ending equals 20XX, so yr80 corresponds to 2080 or _20_ is 2020.  The stands1 vs stands4 has to do with the underlying fishnet grid to create stands, with the stands1 grid being too small.  Anyway, things got too complicated and I ran out of time.  If you are going to have to deal with the management zones through time, I would recommend creating a separate stand map for each time, even though it probably will prevent easy restarting of the model?
+Let me know if you have any other questions.
+
+Summary: use "./tz1_20_ssp2_v3.tif" and "./stands_ssp2_20_180_v5.tif"
+
+---2021-08-18
+Fires are weird, but the problem is mostly because there aren't enough ignitions in the TCSI using MTBS or Short dataset. 
+Plan: calculate FWI for a bigger area and use a larger number of points from Short
+
+TODO update to NECN 6.8
+
+--2021-08-26
+Got fires from the whole Sierra Nevada. Experimented using FWI from NASA Global GWI dataset, but ended up
+using FWI from TCSI with fires from whole SN. Got okay model fit, but might not represent the really
+crazy fire years? 
+
+TODO: check that some parameters are appropriately downscaled:
+	Ignition model DONE -- after correction, number of ignitions is pretty good!
+	AGB and ANPP -- TODO check that cell size is corrected for
+	Pest
+	
+
+Changes to species table:
+	LeafLongevity needs to be an integer
+	N/Y need to be changed to TRUE/FALSE
+	Need to remove species not present -- not just comment them out
+
+Way too many fires when applying the uncorrected model, but way too few when subtracting the "scaling coefficient" to reduce the number of fires.
+
+--2021-08-27
+
+Fire model comparison:
+
+	Fit using all Sierra fires: (Scenario1)
+		>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+		LightningIgnitionsB0 -2.729175 
+		LightningIgnitionsB1  0.087775
+
+		AccidentalIgnitionsB0   -0.63738
+		AccidentalIgnitionsB1   0.01361
+		IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+		>>> Zero inflated model <<<<<<<
+		LightningIgnitionsBinomialB0 3.144824
+		LightningIgnitionsBinomialB1 -0.030999 
+		AccidentalIgnitionsBinomialB0 3.309425
+		AccidentalIgnitionsBinomialB1 -0.094066
+
+		Results: 46.22, 44.8 lightning fires per year (should be 0.22 for TCSI / 0.41 for Sierra)
+		80.875, 80.2 accidental fires per year (should be 0.73 / 2.0 for Sierra)
+		1240 ha burned accidental, should be 1.1/2.4
+		1600 ha burned lightning, should be 0.5/1.8
+		Fire size 22.8 ha, should be 3379/2692
+		Summary: way too many fires, not large enough. Lacking mega-fires.
+		Good distribution of dNBR,  
+		
+	Fit using all Sierra fires, Poisson model corrected for area: (Scenario2)
+		
+		>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+		LightningIgnitionsB0 -6.770389 <<-2.729175 before scaling
+		LightningIgnitionsB1  0.087775
+
+		AccidentalIgnitionsB0   -4.678591 <<-0.63738 before scaling
+		AccidentalIgnitionsB1   0.01361
+		IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+		>>> Zero inflated model <<<<<<<
+		LightningIgnitionsBinomialB0 3.144824
+		LightningIgnitionsBinomialB1 -0.030999 
+		AccidentalIgnitionsBinomialB0 3.309425
+		AccidentalIgnitionsBinomialB1 -0.094066
+		
+		Results:
+			0.69, 0.78 lightning fires per year (should be 0.22 for TCSI / 0.41 for Sierra)
+			1.34, 1.21 accidental fires per year (should be 0.73 / 2.0 for Sierra)
+			34, 31.3 lightning ha burned (should be 0.55 or 1.8)
+			16.6, 39 accidental ha burned (should be 1.80 or 4.9)
+			Fire size 35 ha, should be 3379/2692
+			Summary: A few too many fires, fires too small without mega-fires. dNBR is constrained.
+				Boxplot looks best
+			
+	Fit using all Sierra fires with correction; binomial model from just TCSI (Scenario3)	
+	
+		>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+		LightningIgnitionsB0 -6.770389 <<-2.729175 before scaling
+		LightningIgnitionsB1  0.087775
+
+		AccidentalIgnitionsB0   -4.678591 <<-0.63738 before scaling
+		AccidentalIgnitionsB1   0.01361
+		IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+		>>> Zero inflated model <<<<<<<
+		LightningIgnitionsBinomialB0 -1.13297
+		LightningIgnitionsBinomialB1 0.13809
+		AccidentalIgnitionsBinomialB0 6.05490
+		AccidentalIgnitionsBinomialB1 -0.13918
+
+		Results:
+			0.675 accidental fires per year, should be 0.73/2.0
+			0.35 lightning fires per year, should be 0.22/0.41
+			30 accidental ha burned, should be 1.8/4.9
+			0.1 lightning ha burned, should be 0.54 / 1.82
+			Summary: good number of fires, but accidental fires too large. Lightning fires too small -- usually self-extinguish
+				
+		
+		
+	Fit using model from TCSI (Scenario4)
+	
+		>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+		LightningIgnitionsB0 -10.89757 <<-2.729175 before scaling
+		LightningIgnitionsB1  0.27667
+
+		AccidentalIgnitionsB0   -0.58811 <<-0.63738 before scaling
+		AccidentalIgnitionsB1   -0.03846
+		IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+		>>> Zero inflated model <<<<<<<
+		LightningIgnitionsBinomialB0 -1.13297 
+		LightningIgnitionsBinomialB1 0.13809
+		AccidentalIgnitionsBinomialB0 6.05490
+		AccidentalIgnitionsBinomialB1 -0.13918
+
+		Results:
+			5.8 accidental fires per year, sould be .7/2.0
+			1.375 lightning fires per year, should be .2/.4
+			94 accidental ha per year, should be 1.8/5
+			17 lightning ha per year, should be 0.54, 1.81
+			Average of 15.5 ha per burn, should be much much higher
+			Summary: too much fire, about a factor of 2-5, so not crazy.
+				fires are too small on average, no mega-fires		
+
+	Fit using model form TCSI, scaled to subset (Scenario5)
+	
+		>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+		LightningIgnitionsB0 -13.075114
+		LightningIgnitionsB1  0.27667
+
+		AccidentalIgnitionsB0   -2.765654 
+		AccidentalIgnitionsB1   -0.03846
+		IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+		>>> Zero inflated model <<<<<<<
+		LightningIgnitionsBinomialB0 -1.13297 
+		LightningIgnitionsBinomialB1 0.13809
+		AccidentalIgnitionsBinomialB0 6.05490
+		AccidentalIgnitionsBinomialB1 -0.13918
+	
+			
+TODO check on dead roots raster and SOM1Clitter
+TODO check on why accidental fire raster got reprojected weird -- original is fine though
+
+9/23/2021
+Ran models with new fire params from Charles -- documented in script. Seems to make somewhat too much fire
+
+MTBS data for individual fires dNBR is available -- you have to trick the site sort of. You can get individual fires here: https://mtbs.gov/direct-download
+Or you can download all the fire data within a polygon here: https://www.mtbs.gov/viewer/index.html . To download, you have to go to "fire bundle downloads" way at the bottom
+
+9/24/2021
+TODO:
+import and process fire spread polygons!
+calibrate fire spread on subset landscapes
+convert to Charles' ecoregions
+translate subset landscapes to full models
+get suppression data
+
+10-6-2021
+TODO:
+check on GridMet data vs MACA
+
+11-11-2021
+
+Starting model runs using original fire spread and scenarios, on subset landscape
+
+11-30-2021
+
+TODO check on fire intensity -- are there 10 categories or 3? Why is max intensity for one model run 11 where others is 4? 
+
+2-2-2022
+
+Lots of updates not documented.
+Fire suppression -- changed parameters and maps
+LAI -- changed biomass/LAI relationship
+
+2-4-2022
+
+New fire spread:
+ignitions are dead on!
+Area burned is somewhat too low
+Accidental: 40 or 120, need 440
+Lightning: way too little fire! Maybe it's being suppressed too much?
+
+Running with updated fire spread (parameters directly from regression)
+
+
+
+2-13-2022
+Need to change fuels to just 10-hr fuels; keep fine fuels the same at 1000
+
+	
