@@ -11,13 +11,13 @@ CellLength 180 << meters, so cell area = 3.24 ha
 >> Succession Extension Initialization File
 >> -------------------- -------------------
 
-"NECN Succession"	"../../Inputs/necn/NECN_Succession_historical.txt" 					
+"NECN Succession"	"../../Inputs/necn/NECN_Succession_historical.txt" 					>>change for climate scenario
 
 
 >> Disturbance Extensions Initialization File
 >> ---------------------- -------------------
-	"SCRAPPLE"		"../../Inputs/scrpple/scrpple_scenario1.txt"					
-	"Biomass Harvest Biomass Rank"	"../../Inputs/management_scenarios/output-biom-harvest_s1_1.txt"	
+	"SCRAPPLE"		"../../Inputs/scrpple/SCRAPPLE_TCSIv3.txt"					>>change for fire regime/suppression
+	"Biomass Harvest Biomass Rank"	"../../Inputs/management_scenarios/output-biom-harvest_s6.txt"	>>change for management scenario
     	"Biomass BDA"           "../../Inputs/bda/biomass-BDA-input.txt"
 
 DisturbancesRandomOrder no

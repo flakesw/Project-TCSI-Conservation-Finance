@@ -1,5 +1,8 @@
 #download data needed to predict site-level severity from climate and fuels
 
+#TODO change to previous-year PET and CWD
+#TODO change to RDBNR
+
 library("geoknife")
 library("sf")
 library("raster")
@@ -79,7 +82,7 @@ aspect_full <- read_stars("./Parameterization/calibration data/topography/sierra
 mtbs_folder <- "D:/Data/mtbs_all_fires"
 
 #these rasters are squares which extend past the fire boundary
-mtbs_dnbr <- list.files(path = mtbs_folder, pattern = "*_dnbr.tif", 
+mtbs_dnbr <- list.files(path = mtbs_folder, pattern = "*_rdnbr.tif", 
                         full.names = TRUE, recursive = TRUE)
 
 mtbs_sev <- list.files(path = mtbs_folder, pattern = "*_dnbr6.tif", 
@@ -440,10 +443,10 @@ row_tracker <- 1
 
 start_time <- Sys.time()
 
-for(i in 1:701){
+#restart with i = 332
+
+for(i in 1:length(mtbs_shape)){
   
-#TODO: for some reason blank rows are being retained in the data_catcher,
-  #probably somewhere the row_tracker is being updated erroneously
   error_flag <- FALSE
   try_again <- FALSE
 
@@ -661,8 +664,8 @@ for(i in 1:701){
                      pet = rep(clim[1], ncells)[cells_burned],
                      cwd = rep(clim[3], ncells)[cells_burned],
                      ews = eff_ws[cells_burned],
-                     fine_fuel = ifelse(is.na(fuel), NA, fuel$fine_fuel[cells_burned]),
-                     ladder_fuel = ifelse(is.na(fuel), NA, fuel$ladder_fuel[cells_burned])
+                     fine_fuel = ifelse(is.null(nrow(fuel)), NA, fuel$fine_fuel[cells_burned]),
+                     ladder_fuel = ifelse(is.null(nrow(fuel)), NA, fuel$ladder_fuel[cells_burned])
   )
   
  
@@ -684,6 +687,8 @@ end_time - start_time
 #* Analyze the data
 #*******************************************************************************
 library("tidyverse")
+library("lme4")
+library("effects")
 #import data
 fire_severity_data <- list.files("./Parameterization/calibration data/fire severity/",
                                  full.names = TRUE)
@@ -700,34 +705,57 @@ col_types <- list(
 )
 
 #readr is incredible
-data_all <- fire_severity_data[1:32] %>% 
+data_all <- fire_severity_data %>% 
   purrr::map_df(~read_csv(., col_types = col_types)) %>%
-  dplyr::filter(dnbr > 0)
+  dplyr::filter(dnbr > 0) %>%
+  dplyr::mutate(fine_fuel = ifelse(fine_fuel > 1000, 1, fine_fuel/1000)) %>%
+  dplyr::mutate(dnbr = ifelse(dnbr < 100, 100, dnbr)) %>%
+  dplyr::mutate(dnbr = ifelse(dnbr > 1000, 1000, dnbr))
 
-data_fuel <- read_csv(fire_severity_data[33], col_types = col_types)
+data_with_fuel <- data_all %>%
+  dplyr::filter(!is.na(fine_fuel))
+
+# plot(dnbr ~ ladder_fuel, data = data_with_fuel)
+
+with(gamma("inverse"), {
+  print(valideta)
+  print(validmu)
+})
+
+test <- lm(dnbr ~ clay + cwd + fine_fuel + ews + 0, data = data_all)
+summary(test)
+
+test_gamma <- glm(I(1/dnbr) ~ clay + cwd + pet + fine_fuel + ews + 0, data = data_all, family = Gamma(link = "inverse"))
+summary(test_gamma)
+
+plot(allEffects(test_gamma, partial.residuals = FALSE))
 
 
-model < - 
+
+# 
+# test_lmm <- lmer(dnbr ~ scale(clay) + scale(pet) + scale(cwd) + scale(ews) + scale(fine_fuel) + scale(ladder_fuel) + 0 + (1|fire_name), data = data_all)
+# summary(test_lmm)
+# 
+# table(data_all$fire_name)
 
 #visualize raw data
-plot(data$dnbr ~ data$cwd)
-abline(lm(data$dnbr ~ data$cwd))
+plot(data_all$dnbr ~ data_all$cwd)
+abline(lm(data_all$dnbr ~ data_all$cwd))
 
-plot(data$dnbr ~ data$pet)
-abline(lm(data$dnbr ~ data$pet))
+plot(data_all$dnbr ~ data_all$pet)
+abline(lm(data_all$dnbr ~ data_all$pet))
 
-plot(data$dnbr ~ data$ews)
-abline(lm(data$dnbr ~ data$ews))
+plot(data_all$dnbr ~ data_all$ews)
+abline(lm(data_all$dnbr ~ data_all$ews))
 
-plot(data$dnbr ~ data$clay)
-abline(lm(data$dnbr ~ data$clay))
+plot(data_all$dnbr ~ data_all$clay)
+abline(lm(data_all$dnbr ~ data_all$clay))
 
+plot(data_all$dnbr ~ data_all$ladder_fuel)
+abline(lm(data_all$dnbr ~ data_all$ladder_fuel))
 
-plot(data$dnbr ~ data$ladder_fuel)
-abline(lm(data$dnbr ~ data$ladder_fuel))
-
-plot(data$dnbr ~ data$fine_fuel)
-abline(lm(data$dnbr ~ data$fine_fuel))
+plot(data_all$dnbr ~ data_all$fine_fuel)
+abline(lm(data_all$dnbr ~ data_all$fine_fuel))
 
 plot(data$pet ~ data$ews)
 abline(lm(data$pet ~ data$ews))
