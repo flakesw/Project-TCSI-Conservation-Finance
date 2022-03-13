@@ -1,14 +1,9 @@
 library("sf")
 library("tidyverse")
 library("raster")
-# library("zoom")
+library("stars")
 
 setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance/")
-
-#TODO expand to sierra region
-#TODO check what happens when there are gaps in spread data -- missing days
-#TODO check what happens when fire boundary doesn't increase each timestep
-#TODO add in 2020 and 2021 fires
 
 template <- raster("./Models/Inputs/masks_boundaries/mask.tif")
 raster::values(template) <- 1
@@ -19,34 +14,49 @@ tcsi_poly <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_area_shapefile/T
   sf::st_zm() %>%
   sf::st_transform(crs(template))
 
-# mtbs <- 
+sierra_template <- template
+extent(sierra_template) <- extent(sierra_poly)
+sierra_template <- raster::mask(sierra_template, sierra_poly, update.value = 1)
 
+daily_perims_all <- sf::st_read("./Parameterization/calibration data/geomac_all_years/perims_2000_2021.shp") %>%
+  sf::st_transform(crs = sf::st_crs(sierra_poly)) %>%
+  sf::st_intersection(sierra_poly) %>%
+  dplyr::filter(fireyear >= 2000)
 
-# final_perims <- sf::st_read("./calibration data/geomac fire boundaries/Historic_GeoMAC_Perimeters_Combined_2000-2018-shp/US_HIST_FIRE_PERIMTRS_2000_2018_DD83.shp") %>%
-#   sf::st_transform(crs = sf::st_crs(tcsi_poly)) %>%
-#   sf::st_intersection(tcsi_poly)
-# 
-# plot(st_geometry(final_perims))
+#recalculate area -- the gisacres column is a crazy mess, no idea what happened there
+test<- map(sf::st_geometry(daily_perims_all), ~ sf::st_area(.)) %>%
+  unlist() %>%
+  `/`(4046.86) #convert to acres
 
+plot(test ~ daily_perims_all$gisacres,
+     xlim = c(0, 4e+05))
 
-#TODO make polygons enclosing fires to compare with other datasets, see https://gis.stackexchange.com/questions/345823/identify-spatially-contiguous-clusters-in-raster-data-using-kmeans
+#fix dates
+library(lubridate)
+daily_perims_all$perimeterd
+normal_format <- which((substr(daily_perims_all$perimeterd, 1, 4) %in% c(2000:2022)))
+different_format <- which(!(substr(daily_perims_all$perimeterd, 1, 4) %in% c(2000:2022)))
 
+dates_with_time <- mdy_hms(daily_perims_all[different_format, ]$perimeterd)
+dates_mdy <- mdy(daily_perims_all[different_format, ]$perimeterd)
 
-#2019 -- just Caples fire, which was an escaped prescribed burn (data collection starts with 1080 acre fire, when it was transitioned
-#to a wildfire
-# daily_perims_2019 <- sf::st_read("./calibration data/geomac fire boundaries/2019_perimeters_dd83/2019_perimeters_dd83.shp") %>%
-#   sf::st_transform(crs = sf::st_crs(tcsi_poly)) %>%
-#   sf::st_intersection(tcsi_poly)
-# 
-# daily_perims_2018 <- sf::st_read("./calibration data/geomac fire boundaries/2018_perimeters_dd83/2018_perimeters_dd83.shp") %>%
-#   sf::st_transform(crs = sf::st_crs(tcsi_poly)) %>%
-#   sf::st_intersection(tcsi_poly)
+dates_fixed <- ifelse(!is.na(dates_with_time), 
+                      as.character(dates_with_time, format = "%Y-%m-%d"), 
+                      as.character(dates_mdy, format = "%Y-%m-%d"))
 
-daily_perims_all <- sf::st_read("./Parameterization/calibration data/geomac fire boundaries/combined_boundaried_2000-2019.shp") %>%
-  sf::st_transform(crs = sf::st_crs(tcsi_poly)) %>%
-  sf::st_intersection(tcsi_poly) %>%
-  dplyr::mutate(gisacres = as.numeric(gisacres), perimeterd = as.Date(perimeterd))
+daily_perims_all[different_format, ]$perimeterd <- dates_fixed
 
+#explore data
+#396 fires with more than 10 daily perimeters!
+length(table(daily_perims_all$incidentna)[table(daily_perims_all$incidentna) > 10])
+
+test <- daily_perims_all %>% 
+  group_by(incidentna) %>%
+  slice_max(gisacres) %>%
+  group_by(fireyear) %>%
+  summarise(area_burned = sum(gisacres), .groups = "keep")
+
+plot(test$area_burned ~ test$fireyear)
 
 #-------------------------------------------------------------------------------
 # get FWI data
@@ -58,42 +68,77 @@ daily_perims_all <- sf::st_read("./Parameterization/calibration data/geomac fire
 # for now, use landis output -- prevents us from extrapolating outside of the study area, though
 # in future, find a gridded product (e.g. daymet) that covers whole sierra
 
-climate <- read.csv("./calibration data/climate/Climate_10_regions_historical.csv")
-ecoregions <- raster("./calibration data/climate/TCSI_ecoregions_10.tif")
+# climate <- read.csv("./calibration data/climate/Climate_10_regions_historical.csv")
+# ecoregions <- raster("./calibration data/climate/TCSI_ecoregions_10.tif")
 
-#topography layers (needed for relative windspeed)
-# TODO: import new rasters
-uphill <- raster("./calibration data/climate/Upslope.tif")
-slope <- raster("./calibration data/climate/slope.tif")
 
-# import fuels data -- see create_fine_fuels_from_LANDFIRE.R script
-fuels <- stack("./calibration data/landfire/landfire_fuels_all_years.tif")
+#-------------------------------------------------------------------------------
+# Import slope and aspect from DEM
+#-------------------------------------------------------------------------------
+# these rasters in the wrong CRS, but it takes a  ton of RAM to reproject them.
+# Instead, I'll project the fire boundary to match, and then crop and reproject.
+# It's actually really  fast to do it this way.
 
-# import annual mtbs fire severity -- see combine_mtbs_mosaics.R
-mtbs <- stack("./calibration data/mtbs/severity_mosaic/combined_mosaic.tif")
+slope_full <- read_stars("./Parameterization/calibration data/topography/sierra_slope.tif")
+
+aspect_full <- read_stars("./Parameterization/calibration data/topography/sierra_aspect.tif")
+
+#-------------------------------------------------------------------------------
+#LANDFIRE layers
+#-------------------------------------------------------------------------------
+# layers of fine fuels and ladder fuels, see create_fine_and_ladder_fuels_from_landfire_whole_sierra.R
+landfire_2001_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2001.tif")
+landfire_2001_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2001.tif")
+landfire_2012_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2012.tif")
+landfire_2012_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2012.tif")
+landfire_2014_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2014.tif")
+landfire_2014_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2014.tif")
+landfire_2019_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2019.tif")
+landfire_2019_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2019.tif")
+landfire_2020_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2020.tif")
+landfire_2020_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2020.tif")
+landfire_2021_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2021.tif")
+landfire_2021_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2021.tif")
+
+
+#-----------------------------------------------------------------------------------
+# MTBS severity mosaics
+#-------------------------------------------------------------------------------
+#used for combustion buoyancy. We'll import them one year at a time as needed
+mtbs_folder <- "C:/Users/Sam/Documents/Research/TCSI conservation finance/Parameterization/calibration data/mtbs/severity_mosaic/composite_data/MTBS_BSmosaics"
+mtbs_list <- list.files(mtbs_folder, pattern = "*.tif", recursive = TRUE, full.names = TRUE)
+
+
+#*******************************************************************************
+# Extract fire spread information
+#*******************************************************************************
 
 # initialize dataframe to catch the data
 # we just need to know the date and cell location,
 # and then we can do another loop to extract the fwi, fuels, and windspeed
 
-spread_data <- data.frame(fire_name = character(100000),
-                               year = numeric(100000),
-                               day = numeric(100000),
-                               cell = numeric(100000),
-                               success = logical(100000)
+spread_data <- data.frame(fire_name = character(1000000),
+                               year = numeric(1000000),
+                               day = numeric(1000000),
+                               cell = numeric(1000000),
+                               success = logical(1000000),
+                               days_between = numeric(1000000)
                                )
+
+years <- 2000:2021
 
 # this little guy keeps track of what row we're on, and gets incremented
 # as data gets added to the dataframe, so we can avoid recursively binding rows
 rowtracker <- 1
+
+error_flag <- FALSE
 #-------------------------------------------------------------------------------
 # nested loop goes through each year, finds fires in that year,
 # then loops through fires, then through days per fire. 
 # The loop extracts the identity of potential fire cells and whether or not 
 # fire spread successfully to those cells
 
-years <- 2000:2019
-for(k in 1:20){
+for(k in 19:22){
   year <- years[k]
 
   daily_perims <- daily_perims_all %>%
@@ -106,40 +151,69 @@ for(k in 1:20){
     dplyr::summarise(incidentna = dplyr::first(incidentna),
                      n_days = n_distinct(perimeterd),
                      max_size = max(gisacres)) %>%
-    filter(n_days >= 2) #TODO add other criteria?
+    filter(n_days >= 3) #TODO add other criteria?
   
   if(nrow(fires_current_year) == 0){
-    print(paste0("No fires that lasted 2 or more days in year ", year))
+    message(paste0("No fires that lasted 2 or more days in year ", year))
     next()
   }
-  #fire <- "Ralston"
+
   for(fire in fires_current_year$incidentna){
     
-    current_fire <- daily_perims[daily_perims$incidentna == fire, ] %>%
+    current_fire <- tryCatch(
+      {
+        daily_perims[daily_perims$incidentna == fire, ] %>%
         arrange(perimeterd) %>%
         group_by(perimeterd) %>%
         slice_max(gisacres) %>%
+        distinct(gisacres, .keep_all = TRUE) %>% #in case there's duplicate polygons with the same gisacres and date
         ungroup() %>%
-        mutate(spread = gisacres - dplyr::lag(gisacres, default = NA))
-      # plot(st_geometry(current_fire))
-      # plot(current_fire$gisacres ~ current_fire$perimeterd)
-      # plot(current_fire$spread ~ current_fire$perimeterd) #all spread is > 0
-      
-    # burn_days <- min(current_fire$perimeterd):max(current_fire$perimeterd)
-      
+        mutate(spread = gisacres - dplyr::lag(gisacres, default = NA),
+               days_between = as.Date(perimeterd) - dplyr::lag(as.Date(perimeterd), default = NA)) %>%
+        sf::st_cast("MULTIPOLYGON")
+      },
+      error=function(cond) {
+        
+        message(paste("Error processing fire", fire))
+        message("Here's the original error message:")
+        message(cond)
+        error_flag <<- TRUE
+        
+      }
+    )
+    if(error_flag) next()
+    
+    print(fire)
+    plot(st_geometry(current_fire))
+    plot(current_fire$gisacres ~ as.Date(current_fire$perimeterd))
+    plot(current_fire$spread ~ as.Date(current_fire$perimeterd)) #all spread is > 0
+    
+    if(sum(current_fire$days_between == 1, na.rm = TRUE) < 1){
+      message("Skipping fire due to lack of successive daily perimeters")
+      next()
+    }
+    
+    #if fire decreases in size, use previous fire polygon
+    for(i in 2:nrow(current_fire)){
+      if(!is.na(current_fire$spread[i]) & current_fire$spread[i] < 0){
+        sf::st_geometry(current_fire)[i] <-  sf::st_geometry(current_fire[i-1, ])
+      }
+    }
+    
+    #if data looks good, then do the loop to get potential/burned cells
     for(i in 1:length(unique(current_fire$perimeterd))){
-      
+      print(i)
       #TODO check if data for burn day
       #if day is burning
       if(i == 1){
-        burning <- raster::mask(template, current_fire[i, ], updatevalue = NA) # 1 means "burning"
+        burning <- raster::mask(sierra_template, current_fire[i, ], updatevalue = NA) # 1 means "burning"
         burned <- burning
       }else{
         # cells within the polygon this timestep, minus the ones that were burned as of
         # the previous timestep
-        burning <- raster::mask(template, current_fire[i, ], updatevalue = NA) %>%
+        burning <- raster::mask(sierra_template, current_fire[i, ], updatevalue = NA) %>%
           mask(previous_burned, inverse = TRUE) #burned from last timestep
-        burned <- raster::mask(template, current_fire[i, ], updatevalue = NA)
+        burned <- raster::mask(sierra_template, current_fire[i, ], updatevalue = NA)
         
         
         #for the potential cells added last timestep, which ones ended up burning this timestep?
@@ -157,8 +231,12 @@ for(k in 1:20){
       
       previous_burned <- burned #update for next timestep
       
+      plot(burned, ext = st_bbox(current_fire))
+      
       n_potential <- length(potential_burn)
       if(n_potential == 0) next()
+      
+      print(rowtracker)
       
       first_row <- rowtracker
       last_row <- first_row + n_potential -1
@@ -167,9 +245,10 @@ for(k in 1:20){
       #add daily fire data to dataframe
       spread_data$fire_name[first_row:last_row] <- current_fire$incidentna[i]
       spread_data$year[first_row:last_row] <- current_fire$fireyear[i]
-      spread_data$day[first_row:last_row] <- format(current_fire$perimeterd[i], "%j")
+      spread_data$day[first_row:last_row] <- format(as.Date(current_fire$perimeterd[i]), "%j")
       spread_data$cell[first_row:last_row] <- potential_burn
       spread_data$success[first_row:last_row] <- F
+      spread_data$days_between[first_row:last_row] <- current_fire$days_between[i]
       
       #the loop ends on the last day of the fire, so spread success is left as FALSE
     }
@@ -178,8 +257,9 @@ for(k in 1:20){
  
 } 
 
-#-------------------------------------------------------------------------------
+#*******************************************************************************
 # extract climate variables for each cell
+#*******************************************************************************
 
 spread_data <- spread_data[1:last_row, ]
 
@@ -225,7 +305,7 @@ spread_data <- spread_data %>%
   )
     
 #find which cell is upwind of each cell
-rowcols <- rowColFromCell(template, spread_data$cell)
+rowcols <- rowColFromCell(sierra_template, spread_data$cell)
 rowcol_new <- rowcols
 
 rowcol_new[, 1] <- rowcols[, 1] + ifelse(spread_data$rose =="North",
@@ -237,7 +317,7 @@ rowcol_new[, 2] <- rowcols[, 2] + ifelse(spread_data$rose =="East",
                                          ifelse(spread_data$rose == "West",
                                                 1, 0))
 
-spread_data$cell_mtbs <- cellFromRowCol(template, rowcol_new[, 1], rowcol_new[, 2])
+spread_data$cell_mtbs <- cellFromRowCol(sierra_template, rowcol_new[, 1], rowcol_new[, 2])
 
 # assign a potential fire cell a value based on the severity of its upwind cell
 # loop over years with fire spread data

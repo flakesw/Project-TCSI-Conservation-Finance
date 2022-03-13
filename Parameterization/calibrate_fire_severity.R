@@ -1,7 +1,5 @@
 #download data needed to predict site-level severity from climate and fuels
 
-#TODO change to previous-year PET and CWD
-#TODO change to RDBNR
 
 library("geoknife")
 library("sf")
@@ -82,7 +80,8 @@ aspect_full <- read_stars("./Parameterization/calibration data/topography/sierra
 mtbs_folder <- "D:/Data/mtbs_all_fires"
 
 #these rasters are squares which extend past the fire boundary
-mtbs_dnbr <- list.files(path = mtbs_folder, pattern = "*_rdnbr.tif", 
+# only using rdnbr rasters -- excludes some fires based on nbr
+mtbs_dnbr <- list.files(path = mtbs_folder, pattern = "*_dnbr.tif", 
                         full.names = TRUE, recursive = TRUE)
 
 mtbs_sev <- list.files(path = mtbs_folder, pattern = "*_dnbr6.tif", 
@@ -443,8 +442,6 @@ row_tracker <- 1
 
 start_time <- Sys.time()
 
-#restart with i = 332
-
 for(i in 1:length(mtbs_shape)){
   
   error_flag <- FALSE
@@ -483,11 +480,11 @@ for(i in 1:length(mtbs_shape)){
     
   
   dnbr_raster <-  tryCatch(
-    { raster(mtbs_dnbr[i]) %>%
+    {raster(mtbs_dnbr[i]) %>%
     crop(boundary) %>%
     mask(boundary) %>% 
     raster::projectRaster(crs = "EPSG:5070")
-    
+      
     },
     error=function(cond) {
       
@@ -500,11 +497,13 @@ for(i in 1:length(mtbs_shape)){
   )
   
 
+  
   if(error_flag){
     message("Moving to next fire record")
     next()
   } 
   
+
   if(ncell(dnbr_raster) > data_length){
     message("Fire too large")
     message(ncell(dnbr_raster))
@@ -512,6 +511,15 @@ for(i in 1:length(mtbs_shape)){
   }
   
   #plot(dnbr_raster)
+  
+  # subtract the dNBR offset -- based on what vegetation outside the burn perimeter
+  # did in the mean time, as a control for phenology/weather/etc.
+  if(length(boundary$dNBR_offst > 0)){
+    raster::values(dnbr_raster) <- raster::values(dnbr_raster) - as.numeric(boundary$dNBR_offst)
+    print(paste("dNBR offset is", boundary$dNBR_offst))
+  }else{
+    print("No dNBR offset")
+  }
   
   #severity goes 0 = masked out; 1 = low intensity or unburned; 2 = low; 3 = moderate severity; 4 = high
   #; 5 = increased greenness, 6 = non-processing mask
@@ -686,92 +694,92 @@ end_time - start_time
 #*******************************************************************************
 #* Analyze the data
 #*******************************************************************************
-library("tidyverse")
-library("lme4")
-library("effects")
-#import data
-fire_severity_data <- list.files("./Parameterization/calibration data/fire severity/",
-                                 full.names = TRUE)
-
-col_types <- list(
-  fire_name = col_character(),
-  dnbr = col_double(),
-  clay = col_double(),
-  pet = col_double(),
-  cwd = col_double(),
-  ews = col_double(),
-  fine_fuel = col_double(),
-  ladder_fuel = col_double()
-)
-
-#readr is incredible
-data_all <- fire_severity_data %>% 
-  purrr::map_df(~read_csv(., col_types = col_types)) %>%
-  dplyr::filter(dnbr > 0) %>%
-  dplyr::mutate(fine_fuel = ifelse(fine_fuel > 1000, 1, fine_fuel/1000)) %>%
-  dplyr::mutate(dnbr = ifelse(dnbr < 100, 100, dnbr)) %>%
-  dplyr::mutate(dnbr = ifelse(dnbr > 1000, 1000, dnbr))
-
-data_with_fuel <- data_all %>%
-  dplyr::filter(!is.na(fine_fuel))
-
-# plot(dnbr ~ ladder_fuel, data = data_with_fuel)
-
-with(gamma("inverse"), {
-  print(valideta)
-  print(validmu)
-})
-
-test <- lm(dnbr ~ clay + cwd + fine_fuel + ews + 0, data = data_all)
-summary(test)
-
-test_gamma <- glm(I(1/dnbr) ~ clay + cwd + pet + fine_fuel + ews + 0, data = data_all, family = Gamma(link = "inverse"))
-summary(test_gamma)
-
-plot(allEffects(test_gamma, partial.residuals = FALSE))
-
-
+# library("tidyverse")
+# library("lme4")
+# library("effects")
+# #import data
+# fire_severity_data <- list.files("./Parameterization/calibration data/fire severity/",
+#                                  full.names = TRUE)
+# 
+# col_types <- list(
+#   fire_name = col_character(),
+#   dnbr = col_double(),
+#   clay = col_double(),
+#   pet = col_double(),
+#   cwd = col_double(),
+#   ews = col_double(),
+#   fine_fuel = col_double(),
+#   ladder_fuel = col_double()
+# )
+# 
+# #readr is incredible
+# data_all <- fire_severity_data %>% 
+#   purrr::map_df(~read_csv(., col_types = col_types)) %>%
+#   dplyr::filter(dnbr > 0) %>%
+#   dplyr::mutate(fine_fuel = ifelse(fine_fuel > 1000, 1, fine_fuel/1000)) %>%
+#   dplyr::mutate(dnbr = ifelse(dnbr < 100, 100, dnbr)) %>%
+#   dplyr::mutate(dnbr = ifelse(dnbr > 1000, 1000, dnbr))
+# 
+# data_with_fuel <- data_all %>%
+#   dplyr::filter(!is.na(fine_fuel))
+# 
+# # plot(dnbr ~ ladder_fuel, data = data_with_fuel)
+# 
+# with(gamma("inverse"), {
+#   print(valideta)
+#   print(validmu)
+# })
+# 
+# test <- lm(dnbr ~ clay + cwd + fine_fuel + ews + 0, data = data_all)
+# summary(test)
+# 
+# test_gamma <- glm(I(1/dnbr) ~ clay + cwd + pet + fine_fuel + ews + 0, data = data_all, family = Gamma(link = "inverse"))
+# summary(test_gamma)
+# 
+# # plot(allEffects(test_gamma, partial.residuals = FALSE))
+# 
+# 
+# 
+# # 
+# # test_lmm <- lmer(dnbr ~ scale(clay) + scale(pet) + scale(cwd) + scale(ews) + scale(fine_fuel) + scale(ladder_fuel) + 0 + (1|fire_name), data = data_all)
+# # summary(test_lmm)
+# # 
+# # table(data_all$fire_name)
+# 
+# #visualize raw data
+# plot(data_all$dnbr ~ data_all$cwd)
+# abline(lm(data_all$dnbr ~ data_all$cwd))
+# 
+# plot(data_all$dnbr ~ data_all$pet)
+# abline(lm(data_all$dnbr ~ data_all$pet))
+# 
+# plot(data_all$dnbr ~ data_all$ews)
+# abline(lm(data_all$dnbr ~ data_all$ews))
+# 
+# plot(data_all$dnbr ~ data_all$clay)
+# abline(lm(data_all$dnbr ~ data_all$clay))
+# 
+# plot(data_all$dnbr ~ data_all$ladder_fuel)
+# abline(lm(data_all$dnbr ~ data_all$ladder_fuel))
+# 
+# plot(data_all$dnbr ~ data_all$fine_fuel)
+# abline(lm(data_all$dnbr ~ data_all$fine_fuel))
+# 
+# plot(data$pet ~ data$ews)
+# abline(lm(data$pet ~ data$ews))
 
 # 
-# test_lmm <- lmer(dnbr ~ scale(clay) + scale(pet) + scale(cwd) + scale(ews) + scale(fine_fuel) + scale(ladder_fuel) + 0 + (1|fire_name), data = data_all)
-# summary(test_lmm)
 # 
-# table(data_all$fire_name)
-
-#visualize raw data
-plot(data_all$dnbr ~ data_all$cwd)
-abline(lm(data_all$dnbr ~ data_all$cwd))
-
-plot(data_all$dnbr ~ data_all$pet)
-abline(lm(data_all$dnbr ~ data_all$pet))
-
-plot(data_all$dnbr ~ data_all$ews)
-abline(lm(data_all$dnbr ~ data_all$ews))
-
-plot(data_all$dnbr ~ data_all$clay)
-abline(lm(data_all$dnbr ~ data_all$clay))
-
-plot(data_all$dnbr ~ data_all$ladder_fuel)
-abline(lm(data_all$dnbr ~ data_all$ladder_fuel))
-
-plot(data_all$dnbr ~ data_all$fine_fuel)
-abline(lm(data_all$dnbr ~ data_all$fine_fuel))
-
-plot(data$pet ~ data$ews)
-abline(lm(data$pet ~ data$ews))
-
-
-
-install.packages("ggExtra")
-library("ggExtra")
-
-#
-p1 <- ggplot(data = data,
-             mapping = aes(x = ews, y = dnbr)) +
-  geom_point() +
-  geom_smooth(method = "loess") +
-  labs(x = "Weekly Learning Time", y = "Science Scores") +
-  theme_bw()
-
-# Replace "histogram" with "boxplot" or "density" for other types
-ggMarginal(p1, type = "histogram")
+# install.packages("ggExtra")
+# library("ggExtra")
+# 
+# #
+# p1 <- ggplot(data = data,
+#              mapping = aes(x = ews, y = dnbr)) +
+#   geom_point() +
+#   geom_smooth(method = "loess") +
+#   labs(x = "Weekly Learning Time", y = "Science Scores") +
+#   theme_bw()
+# 
+# # Replace "histogram" with "boxplot" or "density" for other types
+# ggMarginal(p1, type = "histogram")

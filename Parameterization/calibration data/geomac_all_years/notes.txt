@@ -1,0 +1,1 @@
+This shapefile has all of the daily fire perimeters from GeoMAC/NIFC for fires within the Sierra Nevada, combined in "process_geomac_files.R"

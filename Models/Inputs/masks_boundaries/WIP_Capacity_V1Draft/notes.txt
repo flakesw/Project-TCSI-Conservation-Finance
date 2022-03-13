@@ -1,0 +1,1 @@
+This is a shapefile of the Watershed Improvement Projects from the Sierra Nevada Conservancy, https://www.arcgis.com/sharing/rest/content/items/6843fd5e35cf42e4a5c0c4fa548b1df8/info/metadata/metadata.xml?format=default&output=html
