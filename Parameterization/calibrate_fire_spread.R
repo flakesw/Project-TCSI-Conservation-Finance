@@ -2,6 +2,10 @@ library("sf")
 library("tidyverse")
 library("raster")
 library("stars")
+library("sp")
+library("geoknife")
+
+sf::sf_use_s2(FALSE)
 
 setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance/")
 
@@ -14,6 +18,8 @@ tcsi_poly <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_area_shapefile/T
   sf::st_zm() %>%
   sf::st_transform(crs(template))
 
+sierra_poly_wgs <- sierra_poly %>% sf::st_transform(crs = "+proj=longlat +datum=WGS84 +no_defs")
+
 sierra_template <- template
 extent(sierra_template) <- extent(sierra_poly)
 sierra_template <- raster::mask(sierra_template, sierra_poly, update.value = 1)
@@ -21,18 +27,21 @@ sierra_template <- raster::mask(sierra_template, sierra_poly, update.value = 1)
 daily_perims_all <- sf::st_read("./Parameterization/calibration data/geomac_all_years/perims_2000_2021.shp") %>%
   sf::st_transform(crs = sf::st_crs(sierra_poly)) %>%
   sf::st_intersection(sierra_poly) %>%
-  dplyr::filter(fireyear >= 2000)
+  dplyr::filter(fireyear >= 2000) %>%
+  mutate(incidentna = paste0(incidentna, fireyear))
 
 #recalculate area -- the gisacres column is a crazy mess, no idea what happened there
-test<- map(sf::st_geometry(daily_perims_all), ~ sf::st_area(.)) %>%
+area <- map(sf::st_geometry(daily_perims_all), ~ sf::st_area(.)) %>%
   unlist() %>%
   `/`(4046.86) #convert to acres
 
-plot(test ~ daily_perims_all$gisacres,
+plot(area ~ daily_perims_all$gisacres,
      xlim = c(0, 4e+05))
 
+daily_perims_all$gisacres <- area
+
 #fix dates
-library(lubridate)
+library("lubridate")
 daily_perims_all$perimeterd
 normal_format <- which((substr(daily_perims_all$perimeterd, 1, 4) %in% c(2000:2022)))
 different_format <- which(!(substr(daily_perims_all$perimeterd, 1, 4) %in% c(2000:2022)))
@@ -45,6 +54,14 @@ dates_fixed <- ifelse(!is.na(dates_with_time),
                       as.character(dates_mdy, format = "%Y-%m-%d"))
 
 daily_perims_all[different_format, ]$perimeterd <- dates_fixed
+
+
+daily_perims <- daily_perims_all %>%
+  group_by(incidentna) %>%
+  group_by(perimeterd) %>%
+  slice_max(gisacres) %>%
+  distinct(gisacres, .keep_all= TRUE)
+
 
 #explore data
 #396 fires with more than 10 daily perimeters!
@@ -79,27 +96,29 @@ plot(test$area_burned ~ test$fireyear)
 # Instead, I'll project the fire boundary to match, and then crop and reproject.
 # It's actually really  fast to do it this way.
 
-slope_full <- read_stars("./Parameterization/calibration data/topography/sierra_slope.tif")
+slope_full <- read_stars("./Parameterization/calibration data/topography/sierra_slope.tif") %>%
+  stars::st_warp(dest = stars::st_as_stars(sierra_template))
 
-aspect_full <- read_stars("./Parameterization/calibration data/topography/sierra_aspect.tif")
+aspect_full <- read_stars("./Parameterization/calibration data/topography/sierra_aspect.tif") %>%
+  stars::st_warp(dest = stars::st_as_stars(sierra_template))
 
 #-------------------------------------------------------------------------------
 #LANDFIRE layers
 #-------------------------------------------------------------------------------
 # layers of fine fuels and ladder fuels, see create_fine_and_ladder_fuels_from_landfire_whole_sierra.R
-landfire_2001_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2001.tif")
-landfire_2001_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2001.tif")
-landfire_2012_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2012.tif")
-landfire_2012_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2012.tif")
-landfire_2014_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2014.tif")
-landfire_2014_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2014.tif")
-landfire_2019_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2019.tif")
-landfire_2019_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2019.tif")
-landfire_2020_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2020.tif")
-landfire_2020_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2020.tif")
-landfire_2021_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2021.tif")
-landfire_2021_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2021.tif")
-
+# fuels include fires that happened that year, so, e.g., 2001 fires cannot use 2001 fuels
+landfire_2001_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2001.tif") %>%
+  stars::st_warp(dest = stars::st_as_stars(sierra_template))
+landfire_2012_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2012.tif")%>%
+  stars::st_warp(dest = stars::st_as_stars(sierra_template))
+landfire_2014_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2014.tif")%>%
+  stars::st_warp(dest = stars::st_as_stars(sierra_template))
+landfire_2019_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2019.tif")%>%
+  stars::st_warp(dest = stars::st_as_stars(sierra_template))
+landfire_2020_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2020.tif")%>%
+  stars::st_warp(dest = stars::st_as_stars(sierra_template))
+landfire_2021_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2021.tif")%>%
+  stars::st_warp(dest = stars::st_as_stars(sierra_template))
 
 #-----------------------------------------------------------------------------------
 # MTBS severity mosaics
@@ -108,6 +127,87 @@ landfire_2021_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladde
 mtbs_folder <- "C:/Users/Sam/Documents/Research/TCSI conservation finance/Parameterization/calibration data/mtbs/severity_mosaic/composite_data/MTBS_BSmosaics"
 mtbs_list <- list.files(mtbs_folder, pattern = "*.tif", recursive = TRUE, full.names = TRUE)
 
+
+#-------------------------------------------------------------------------------
+# Function to download windspeed data
+#-------------------------------------------------------------------------------
+download_windspeed <- function(boundary){  
+  # 
+  # boundary <- daily_perims_all %>% 
+  #   filter(incidentna == fire_name &
+  #            perimeterd == perimeterd_input)
+  # 
+  #shapefile for fire
+  
+  if(nrow(boundary) > 1) boundary <- boundary[1, ]
+  
+  fire_boundary <- boundary %>%
+    sf::st_transform(crs = "+proj=longlat +datum=WGS84") #reproject to CRS that geoknife needs
+  
+  year <- fire_boundary$fireyear
+  fire_date <- fire_boundary$perimeterd
+  
+  print(year)
+  print(fire_date)
+  
+  #"stencil" is what geoknife uses for the extent of the data
+  #
+  stencil <- fire_boundary %>%
+    sf::st_bbox() %>%
+    sf::st_as_sfc() %>%
+    as("Spatial") %>%
+    simplegeom()
+  
+  vars_url <- c("vs", "th")
+  
+  urls <- paste0("http://thredds.northwestknowledge.net:8080/thredds/dodsC/MET/",vars_url,"/", vars_url, "_", year, ".nc")
+  
+  
+  vars_long <- c("wind_speed", 
+                 "wind_from_direction")
+  
+  
+  knife <- webprocess(wait = TRUE)
+  # query(knife, 'algorithms')
+  
+  # area grid statistics are the default, but we can change it if we  (we don't)
+  algorithm(knife) <- list('OPeNDAP Subset' = 
+                             "gov.usgs.cida.gdp.wps.algorithm.FeatureCoverageOPeNDAPIntersectionAlgorithm")
+  
+  
+  layers <- list()
+  
+  for(i in 1:2){
+    
+    #set the fabric for a new variable, but keep everything else the same (i.e. the stencil and knife)
+    fabric <- webdata(url = urls[i], times = c(boundary$perimeterd, boundary$perimeterd))
+    variables(fabric) <- vars_long[i]
+    print(vars_long[i])
+    
+    job <- geoknife(stencil, fabric, knife, wait = TRUE, OUTPUT_TYPE = "geotiff")
+    
+    file <- geoknife::download(job, destination = paste0("./Parameterization/calibration data/climate/downloaded/", vars_url[i],'/temp.zip'), overwrite=TRUE)
+    
+    newdir <- paste0("./Parameterization/calibration data/climate/downloaded/",vars_url[i], "/",
+                               boundary$incidentna, boundary$perimeterd)
+    
+    if(!dir.exists(newdir)){
+      dir.create(newdir)
+    }
+    
+    #there's something wrong with the zip files, so unzip() doesn't work. Archive does it though!
+    archive_extract(file, dir = newdir)
+    
+    #this is a weird file; stars doesn't like it. The metadata is all messed up. raster still works okay though!
+    layers[i] <- raster(list.files(newdir, full.names = TRUE)[1])
+    print(boundary$incidentna)
+    print(boundary$perimeterd)
+    print(newdir)
+  }
+  
+  
+  return(c(layers))
+}
 
 #*******************************************************************************
 # Extract fire spread information
@@ -138,7 +238,7 @@ error_flag <- FALSE
 # The loop extracts the identity of potential fire cells and whether or not 
 # fire spread successfully to those cells
 
-for(k in 19:22){
+for(k in 1:length(years)){
   year <- years[k]
 
   daily_perims <- daily_perims_all %>%
@@ -184,9 +284,9 @@ for(k in 19:22){
     if(error_flag) next()
     
     print(fire)
-    plot(st_geometry(current_fire))
-    plot(current_fire$gisacres ~ as.Date(current_fire$perimeterd))
-    plot(current_fire$spread ~ as.Date(current_fire$perimeterd)) #all spread is > 0
+    # plot(st_geometry(current_fire))
+    # plot(current_fire$gisacres ~ as.Date(current_fire$perimeterd))
+    # plot(current_fire$spread ~ as.Date(current_fire$perimeterd)) #all spread is > 0
     
     if(sum(current_fire$days_between == 1, na.rm = TRUE) < 1){
       message("Skipping fire due to lack of successive daily perimeters")
@@ -231,7 +331,7 @@ for(k in 19:22){
       
       previous_burned <- burned #update for next timestep
       
-      plot(burned, ext = st_bbox(current_fire))
+      # plot(burned, ext = st_bbox(current_fire))
       
       n_potential <- length(potential_burn)
       if(n_potential == 0) next()
@@ -257,35 +357,140 @@ for(k in 19:22){
  
 } 
 
+spread_data  <- spread_data %>% 
+  dplyr::filter(!is.na(fire_name)) %>%
+  dplyr::filter(fire_name != "")
+
+
 #*******************************************************************************
-# extract climate variables for each cell
+# extract climate and fuel variables for each cell
 #*******************************************************************************
 
-spread_data <- spread_data[1:last_row, ]
-
+backup <- spread_data
 spread_data$day <- as.integer(spread_data$day)
 spread_data$year <- as.integer(spread_data$year)
 
-spread_data$slope <- slope[spread_data$cell]
-spread_data$aspect <- uphill[spread_data$cell]
+#holy cow stars is so fast
+spread_data$slope <- slope_full[[1]][spread_data$cell]
+spread_data$aspect <- aspect_full[[1]][spread_data$cell]
 
 #extract fuels for each cell, from the proper fuel layer
 spread_data$fuel <- NA
 
-for(i in 1:19){
-  year <- c(2001:2019)[i]
-  #fuels go from 2001 to 2021, different from mtbs. TODO fix this; check on data sources
-  spread_data[spread_data$year == year, "fuel"] <- fuels[[i]][spread_data[spread_data$year == year, "cell"]]
+for(i in 1:20){
+  #TODO clean this up; this is horrible style
+  year <- c(2002:2021)[i]
+  if(year %in% c(2002:2012)){
+    #no LANDFIRE data for 2000
+    spread_data[spread_data$year == year, "fuel"] <- landfire_2001_fine[[1]][spread_data[spread_data$year == year, "cell"]]
+  } else if(year %in% c(2013:2014)){
+    spread_data[spread_data$year == year, "fuel"] <- landfire_2012_fine[[1]][spread_data[spread_data$year == year, "cell"]]
+  } else if(year %in% c(2015:2019)){
+    spread_data[spread_data$year == year, "fuel"] <- landfire_2014_fine[[1]][spread_data[spread_data$year == year, "cell"]]
+  }else if(year %in% c(2020)){
+    spread_data[spread_data$year == year, "fuel"] <- landfire_2019_fine[[1]][spread_data[spread_data$year == year, "cell"]]
+  }else if(year %in% c(2021)){
+    spread_data[spread_data$year == year, "fuel"] <- landfire_2020_fine[[1]][spread_data[spread_data$year == year, "cell"]]
+  }
 }
 
-#extract ecoregion for each cell, to match to climate
-spread_data$ecoregion <- ecoregions[spread_data$cell]
 
-spread_data <- left_join(spread_data, 
-                                   select(climate, Year, Timestep, EcoregionIndex, FWI, winddirection, windspeed),
-                                   by = c("year" = "Year", 
-                                          "day" = "Timestep", 
-                                          "ecoregion" = "EcoregionIndex"))
+#loop through fires to extract FWI, wind speed, wind direction
+
+#download FWI
+spread_data$year_days <- paste0(spread_data$year, spread_data$day)
+unique_year_data <- unique(spread_data$year_days)
+
+for(yearday in unique_year_days){
+  
+  fwi_date <- format(as.Date(paste(yearday), format = "%Y%j"),
+                 format = "%Y%m%d")
+  fwi_year <- as.numeric(substr(yearday, 1, 4))
+  fwi_day <- as.numeric(substr(yearday, 5, 7))
+  tail <- paste0(fwi_date, ".nc")
+  file <- paste0("FWI.MERRA2.CORRECTED.Daily.Default.", tail)
+  
+  print(paste("Year = ", fwi_year))
+  print(paste("Day = ", fwi_day))
+  
+  day_data <- spread_data %>% dplyr::filter(year_days == yearday)
+  
+  #create a directory if needed
+  if(!(paste0("./parameterization/calibration data/fwi/", fwi_year) %in% 
+       list.dirs("./parameterization/calibration data/fwi"))){
+    dir.create(paste0("./parameterization/calibration data/fwi/", fwi_year))
+  }
+  
+  #download FWI raster, ~16 mb
+  tryCatch(
+    {
+      download.file(url = paste0("https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.MERRA2/Default/MERRA2.CORRECTED/",fwi_year,"/",file), 
+                destfile = paste0("./parameterization/calibration data/fwi/", fwi_year,"/", tail), method = "curl", quiet = FALSE,
+                cacheOK = TRUE)
+     },
+     error=function(cond) {
+       
+       message(paste("Error downloading climate data for ", fwi_date))
+       message("Here's the original error message:")
+       message(cond)
+       error_flag <<- TRUE
+       
+     }
+   )
+   if(error_flag) next()
+           
+  
+  # TODO figure out how to suppress messages on loading
+  fwi <- stars::read_stars(paste0("./parameterization/calibration data/fwi/", fwi_year,"/", tail)) %>%
+    dplyr::select("MERRA2.CORRECTED_FWI") %>%
+    sf::st_set_crs(st_crs(sierra_poly_wgs)) %>%
+    `[`(sierra_poly_wgs) %>%
+    stars::st_warp(crs = st_crs(sierra_poly)) %>%
+    stars::st_warp(dest = stars::st_as_stars(sierra_template))
+  
+  fwi_vals <- fwi[[1]][day_data$cell]
+  
+  spread_data[spread_data$year_days == yearday, "fwi"] <- fwi_vals
+  
+}
+
+#-------------------------------------------------------------------------------
+# Get wind speed and wind direction
+#-------------------------------------------------------------------------------
+
+for(fire_name_ws in unique(spread_data$fire_name)){
+  current_fire <- spread_data %>%
+    dplyr::filter(fire_name == fire_name_ws)
+  
+  yearday <- current_fire$year_days[1]
+  
+  for(yearday in unique(current_fire$year_days)){
+    boundary <- daily_perims_all %>%
+      dplyr::filter(incidentna == fire_name_ws,
+                    perimeterd == as.Date(yearday, format = "%Y%j"))
+    print(as.Date(yearday, format = "%Y%j"))
+    print(boundary$perimeterd)
+    
+    wind_data <- download_windspeed(boundary)
+    
+    windspeed <- wind_data[[1]] %>%
+      raster::projectRaster(. , sierra_template)
+    winddirection <- wind_data[[2]] %>%
+      raster::projectRaster(., sierra_template, method = "ngb")
+
+    spread_data[spread_data$fire_name == fire_name_ws & spread_data$year_days == yearday, "windspeed"] <- 
+      windspeed[current_fire_day$cell]
+    spread_data[spread_data$fire_name == fire_name_ws & spread_data$year_days == yearday, "winddirection"] <- 
+      winddirection[current_fire_day$cell]
+  }
+  
+}
+
+
+
+#-------------------------------------------------------------------------------
+# Calculate relative windspeed
+#------------------------------------------------------------------------------
 
 #find what cell is upwind of the potential fire cell
 rose_breaks <- c(0, 45, 135, 225, 315, 360)

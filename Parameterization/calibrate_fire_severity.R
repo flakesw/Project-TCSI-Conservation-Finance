@@ -296,8 +296,6 @@ download_windspeed <- function(boundary){
   #"stencil" is what geoknife uses for the extent of the data
   stencil <- simplegeom(as(fire_boundary, Class = "Spatial"))
   
-  #download PET and AET to calculate CWD
-  vars_url <- c("pet", "aet")
   year <- substr(fire_date, 1, 4)
   first_day <- fire_date
   last_day <- ifelse(boundary$Event_ID %in% short_all$MTBS_ID, 
