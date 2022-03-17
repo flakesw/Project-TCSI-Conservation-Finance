@@ -67,11 +67,9 @@ LightEstablishmentTable
 	4	0.0	0.01	0.6	1.0	0.5	0.02
 	5	0.0	0.0	0.01	0.5	1.0	1.0
 		
-SpeciesParameters
-Species_CSV_File 	"../../Inputs/necn/NECN_Spp_Table.csv"
+SpeciesParameters "../../Inputs/necn/NECN_Spp_Table.csv"
 
-FunctionalGroupParameters 
-Functional_CSV_File 	"../../Inputs/necn/NECN_Functional_Table.csv"
+FunctionalGroupParameters "../../Inputs/necn/NECN_Functional_Table.csv"
 									
 FireReductionParameters
 >> Based on Stacy Drury's lit review/analysis. See 'Fuel consumption based on fire severity class.docx'
