@@ -20,9 +20,11 @@ tcsi_poly <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_area_shapefile/T
 
 sierra_poly_wgs <- sierra_poly %>% sf::st_transform(crs = "+proj=longlat +datum=WGS84 +no_defs")
 
+#make a template for the whole sierra
 sierra_template <- template
 extent(sierra_template) <- extent(sierra_poly)
-sierra_template <- raster::mask(sierra_template, sierra_poly, update.value = 1)
+res(sierra_template) <- res(template)
+sierra_template <- rasterize(sierra_poly, sierra_template)
 
 daily_perims_all <- sf::st_read("./Parameterization/calibration data/geomac_all_years/perims_2000_2021.shp") %>%
   sf::st_transform(crs = sf::st_crs(sierra_poly)) %>%
