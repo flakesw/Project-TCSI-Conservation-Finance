@@ -7,17 +7,17 @@ Timestep                            1
 
 Species_CSV_File	"../../Inputs/scrpple/SCRPPLE_spp_sierra.csv"
 
-AccidentalIgnitionsMap     	"../input_rasters_reproject/accidental_tcsi.tif"
-LightningIgnitionsMap  		"../input_rasters_reproject/lightning_tcsi.tif"
-RxIgnitionsMap  		"../input_rasters_reproject/rx_equal1.tif"
+AccidentalIgnitionsMap     	"../../Inputs/input_rasters_reproject/accidental_tcsi.tif"
+LightningIgnitionsMap  		"../../Inputs/input_rasters_reproject/lightning_tcsi.tif"
+RxIgnitionsMap  		"../../Inputs/input_rasters_reproject/rx_equal1.tif"
 
-AccidentalSuppressionMap	"../input_rasters_reproject/suppression_accidental.tif"
-LightningSuppressionMap		"../input_rasters_reproject/suppression_lightning.tif"
-RxSuppressionMap		"../input_rasters_reproject/full_suppression.tif" <<NEED
+AccidentalSuppressionMap	"../../Inputs/input_rasters_reproject/suppression_accidental.tif"
+LightningSuppressionMap		"../../Inputs/input_rasters_reproject/suppression_lightning.tif"
+RxSuppressionMap		"../../Inputs/input_rasters_reproject/full_suppression.tif" <<NEED
 
-GroundSlopeMap "../input_rasters_reproject/Slope2.tif"		
-UphillSlopeAzimuthMap  "../input_rasters_reproject/upslope.tif"	
-ClayMap "../input_rasters_reproject/PercClay.tif"
+GroundSlopeMap "../../Inputs/input_rasters_reproject/Slope2.tif"		
+UphillSlopeAzimuthMap  "../../Inputs/input_rasters_reproject/upslope.tif"	
+ClayMap "../../Inputs/input_rasters_reproject/PercClay.tif"
 
 >>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
 LightningIgnitionsB0 -2.729175

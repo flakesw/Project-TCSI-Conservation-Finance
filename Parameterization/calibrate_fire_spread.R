@@ -4,7 +4,7 @@ library("raster")
 library("stars")
 library("sp")
 library("geoknife")
-
+library("archive")
 sf::sf_use_s2(FALSE)
 
 setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance/")
@@ -465,19 +465,26 @@ for(fire_name_ws in unique(spread_data$fire_name)){
   yearday <- current_fire$year_days[1]
   
   for(yearday in unique(current_fire$year_days)){
+    current_fire_day <- current_fire %>%
+      filter(year_days == yearday)
     boundary <- daily_perims_all %>%
       dplyr::filter(incidentna == fire_name_ws,
                     perimeterd == as.Date(yearday, format = "%Y%j"))
     print(as.Date(yearday, format = "%Y%j"))
     print(boundary$perimeterd)
     
+    
+    #download and process the wind data
     wind_data <- download_windspeed(boundary)
     
+    
+    #project and wrangle data
     windspeed <- wind_data[[1]] %>%
       raster::projectRaster(. , sierra_template)
     winddirection <- wind_data[[2]] %>%
       raster::projectRaster(., sierra_template, method = "ngb")
-
+    
+    #extract wind data for the cells we're interested in
     spread_data[spread_data$fire_name == fire_name_ws & spread_data$year_days == yearday, "windspeed"] <- 
       windspeed[current_fire_day$cell]
     spread_data[spread_data$fire_name == fire_name_ws & spread_data$year_days == yearday, "winddirection"] <- 
@@ -489,8 +496,8 @@ for(fire_name_ws in unique(spread_data$fire_name)){
 
 
 #-------------------------------------------------------------------------------
-# Calculate relative windspeed
-#------------------------------------------------------------------------------
+# Extract upwind fire severity
+#-------------------------------------------------------------------------------
 
 #find what cell is upwind of the potential fire cell
 rose_breaks <- c(0, 45, 135, 225, 315, 360)
@@ -524,14 +531,37 @@ rowcol_new[, 2] <- rowcols[, 2] + ifelse(spread_data$rose =="East",
 
 spread_data$cell_mtbs <- cellFromRowCol(sierra_template, rowcol_new[, 1], rowcol_new[, 2])
 
+mtbs_mosaics <- list.files("./Parameterization/calibration data/mtbs/severity_mosaic/composite_data",
+                           patter = ".tif", full.names = TRUE, recursive = TRUE)[17:37]
+
+sierra_poly_mtbs <- sierra_poly %>% 
+  sf::st_transform(crs = "ESRI:102039")
+
+#make a big stars list of mtbs rasters as stars proxies
+#mtbs rasters are in ESRI:102039 or EPSG:42303
+# mtbs_stack <- mtbs_mosaics %>%
+#   map(~stars::read_stars(.x = .)) %>%
+#   map(~sf::st_set_crs(x = ., value = "ESRI:102039")) %>%
+#   map(~sf::st_crop(x = ., y = sierra_poly_mtbs)) %>%
+#   map(~stars::st_warp())
+
 # assign a potential fire cell a value based on the severity of its upwind cell
 # loop over years with fire spread data
 for(year in unique(spread_data$year)){
-  spread_data[spread_data$year == year, "mtbs"] <- mtbs[[year - 1999]][spread_data[spread_data$year == year, "cell_mtbs"]]
+  mtbs_year <- raster(mtbs_mosaics[year - 1999]) %>%
+    raster::crop(x = ., y = sierra_poly_mtbs) %>%
+    raster::projectRaster(from = ., to = sierra_template, method = "ngb")
+  
+  plot(mtbs_year)
+  
+    spread_data[spread_data$year == year, "mtbs"] <- mtbs_year[spread_data[spread_data$year == year, "cell_mtbs"]]
 }
 
+
+#-------------------------------------------------------------------------------
+# Calculate effective windspeed
+#-------------------------------------------------------------------------------
 # This changes based on fire severity. Combustion buoyancy.
-# TODO Check on MTBS severity and converting to LANDIS severity
 spread_data$U_b <- ifelse(is.nan(spread_data$mtbs) | is.na(spread_data$mtbs), 5,
                                ifelse(spread_data$mtbs > 3, 50,
                                       ifelse(spread_data$mtbs > 2, 25,
@@ -539,8 +569,11 @@ spread_data$U_b <- ifelse(is.nan(spread_data$mtbs) | is.na(spread_data$mtbs), 5,
 
 ### Caculating windspeed in direction of spread 
 spread_data$relative_wd <- spread_data$winddirection - spread_data$aspect
+#Calculate Ua_Ub, incorporating the combusion buoyancy
 spread_data$Ua_Ub <- spread_data$windspeed / spread_data$U_b
+
 ### Calculating effective wind speed. 
+# gotta convert everything from degrees to radians also
 spread_data<- spread_data %>%
   mutate(eff_wspd = 
            U_b * ((Ua_Ub^2) + 2*(Ua_Ub) * sin(slope * (pi/180)) * cos(relative_wd * (pi/180)) + sin(slope * (pi/180))^2)^0.5
