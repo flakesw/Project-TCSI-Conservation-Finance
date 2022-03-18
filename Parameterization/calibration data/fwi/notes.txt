@@ -1,1 +1,0 @@
-This is where extracted FWI from the global FWI raster product lives, temporarily. See the script "extract_fwi_global_fwi.R" in the  main folder

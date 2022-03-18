@@ -24,7 +24,9 @@ sierra_poly_wgs <- sierra_poly %>% sf::st_transform(crs = "+proj=longlat +datum=
 sierra_template <- template
 extent(sierra_template) <- extent(sierra_poly)
 res(sierra_template) <- res(template)
-sierra_template <- rasterize(sierra_poly, sierra_template)
+sierra_template2 <- raster::rasterize(sierra_poly, sierra_template, field = 1)
+sierra_template <- sierra_template2
+rm(sierra_template2)
 
 daily_perims_all <- sf::st_read("./Parameterization/calibration data/geomac_all_years/perims_2000_2021.shp") %>%
   sf::st_transform(crs = sf::st_crs(sierra_poly)) %>%
@@ -37,10 +39,10 @@ area <- map(sf::st_geometry(daily_perims_all), ~ sf::st_area(.)) %>%
   unlist() %>%
   `/`(4046.86) #convert to acres
 
-plot(area ~ daily_perims_all$gisacres,
-     xlim = c(0, 4e+05))
-
 daily_perims_all$gisacres <- area
+
+# plot(area ~ daily_perims_all$gisacres,
+#      xlim = c(0, 4e+05))
 
 #fix dates
 library("lubridate")
@@ -57,12 +59,13 @@ dates_fixed <- ifelse(!is.na(dates_with_time),
 
 daily_perims_all[different_format, ]$perimeterd <- dates_fixed
 
-
-daily_perims <- daily_perims_all %>%
+#remove duplicates (polygons with same size on same day for same fire)
+daily_perims_all <- daily_perims_all %>%
   group_by(incidentna) %>%
   group_by(perimeterd) %>%
   slice_max(gisacres) %>%
-  distinct(gisacres, .keep_all= TRUE)
+  distinct(gisacres, .keep_all= TRUE) %>%
+  filter(fireyear %in% c(2000:2021))
 
 
 #explore data
@@ -76,20 +79,6 @@ test <- daily_perims_all %>%
   summarise(area_burned = sum(gisacres), .groups = "keep")
 
 plot(test$area_burned ~ test$fireyear)
-
-#-------------------------------------------------------------------------------
-# get FWI data
-# download data
-# check NCAR or FWI grid data
-
-# http://thredds.northwestknowledge.net:8080/thredds/reacch_climate_MET_catalog.html
-
-# for now, use landis output -- prevents us from extrapolating outside of the study area, though
-# in future, find a gridded product (e.g. daymet) that covers whole sierra
-
-# climate <- read.csv("./calibration data/climate/Climate_10_regions_historical.csv")
-# ecoregions <- raster("./calibration data/climate/TCSI_ecoregions_10.tif")
-
 
 #-------------------------------------------------------------------------------
 # Import slope and aspect from DEM
@@ -286,9 +275,9 @@ for(k in 1:length(years)){
     if(error_flag) next()
     
     print(fire)
-    # plot(st_geometry(current_fire))
-    # plot(current_fire$gisacres ~ as.Date(current_fire$perimeterd))
-    # plot(current_fire$spread ~ as.Date(current_fire$perimeterd)) #all spread is > 0
+    plot(st_geometry(current_fire))
+    plot(current_fire$gisacres ~ as.Date(current_fire$perimeterd))
+    plot(current_fire$spread ~ as.Date(current_fire$perimeterd)) #all spread is > 0
     
     if(sum(current_fire$days_between == 1, na.rm = TRUE) < 1){
       message("Skipping fire due to lack of successive daily perimeters")
@@ -320,20 +309,20 @@ for(k in 1:length(years)){
         
         #for the potential cells added last timestep, which ones ended up burning this timestep?
         # previous-year's first_row and last_row
-        spread_data$success[first_row:last_row] <- ifelse(spread_data$cell[first_row:last_row] %in% which(values(burning) == 1),
+        spread_data$success[first_row:last_row] <- ifelse(spread_data$cell[first_row:last_row] %in% which(raster::values(burning) == 1),
                                                                TRUE,
                                                                FALSE)
       }
       
       #calculate potential burn based on currently burning cells
-      potential_burn <- adjacent(burning, cells = which(values(burning) == 1),
+      potential_burn <- adjacent(burning, cells = which(raster::values(burning) == 1),
                                  directions = 4, pairs = FALSE, include = FALSE) %>%
-        `[`(!(. %in% which(values(burned) == 1))) #remove cells that already burned
+        `[`(!(. %in% which(raster::values(burned) == 1))) #remove cells that already burned
       
       
       previous_burned <- burned #update for next timestep
       
-      # plot(burned, ext = st_bbox(current_fire))
+      plot(burned, ext = st_bbox(current_fire))
       
       n_potential <- length(potential_burn)
       if(n_potential == 0) next()
