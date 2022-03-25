@@ -689,6 +689,8 @@ write.csv(data_catcher, paste0("./Parameterization/calibration data/fire severit
 end_time <- Sys.time()
 end_time - start_time
 
+
+
 #*******************************************************************************
 #* Analyze the data
 #*******************************************************************************
@@ -711,7 +713,7 @@ end_time - start_time
 # )
 # 
 # #readr is incredible
-# data_all <- fire_severity_data %>% 
+# data_all <- fire_severity_data %>%
 #   purrr::map_df(~read_csv(., col_types = col_types)) %>%
 #   dplyr::filter(dnbr > 0) %>%
 #   dplyr::mutate(fine_fuel = ifelse(fine_fuel > 1000, 1, fine_fuel/1000)) %>%
@@ -733,10 +735,10 @@ end_time - start_time
 # 
 # test_gamma <- glm(I(1/dnbr) ~ clay + cwd + pet + fine_fuel + ews + 0, data = data_all, family = Gamma(link = "inverse"))
 # summary(test_gamma)
-# 
-# # plot(allEffects(test_gamma, partial.residuals = FALSE))
-# 
-# 
+
+# plot(allEffects(test_gamma, partial.residuals = FALSE))
+
+
 # 
 # # 
 # # test_lmm <- lmer(dnbr ~ scale(clay) + scale(pet) + scale(cwd) + scale(ews) + scale(fine_fuel) + scale(ladder_fuel) + 0 + (1|fire_name), data = data_all)

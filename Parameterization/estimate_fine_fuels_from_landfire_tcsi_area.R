@@ -7,6 +7,7 @@ library("tidyverse")
 
 # step 1:
 # LANDIS fine fuels for 2019
+# Use LANDIS vs Landfire to adjust LANDFIRE fuels to Landis
 # from an NECN model run
 landis_fuels <- raster("./Parameterization/calibration data/landfire/fine-fuels-6.tif")
 
@@ -41,19 +42,6 @@ mod <- lm(raster::values(landis_fuels)~ raster::values(fuel_2019)  + 0)
 summary(mod)
 abline(a = 0, b = coef(mod))
 
-# mod <- mblm(values(landis_fuels) ~ values(fuel_2019))
-# 
-# plot(values(fuel_2019) ~ log(values(landis_fuels)))
-# mod <- lm(values(fuel_2019) ~ log(values(landis_fuels)))
-# summary(mod)
-# 
-# plot(log(values(fuel_2019)) ~ log(values(landis_fuels)))
-# mod <- lm(log(values(fuel_2019)) ~ log(values(landis_fuels)))
-# summary(mod)
-
-# library(quantreg)
-# mod2 <- rq(values(landis_fuels) ~ values(fuel_2019) + 0, tau = 0.8)
-# summary(mod2)
 
 #-------------------------------------------------------------------------------
 # step 2:

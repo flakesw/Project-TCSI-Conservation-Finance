@@ -39,10 +39,12 @@ area <- map(sf::st_geometry(daily_perims_all), ~ sf::st_area(.)) %>%
   unlist() %>%
   `/`(4046.86) #convert to acres
 
+# plot(area ~ daily_perims_all$gisacres,
+#   xlim = c(0, 4e+05))
+
 daily_perims_all$gisacres <- area
 
-# plot(area ~ daily_perims_all$gisacres,
-#      xlim = c(0, 4e+05))
+
 
 #fix dates
 library("lubridate")
@@ -70,6 +72,7 @@ daily_perims_all <- daily_perims_all %>%
 
 #explore data
 #396 fires with more than 10 daily perimeters!
+# reduced to only 33 after removing duplicates :(
 length(table(daily_perims_all$incidentna)[table(daily_perims_all$incidentna) > 10])
 
 test <- daily_perims_all %>% 
@@ -79,6 +82,8 @@ test <- daily_perims_all %>%
   summarise(area_burned = sum(gisacres), .groups = "keep")
 
 plot(test$area_burned ~ test$fireyear)
+
+
 
 #-------------------------------------------------------------------------------
 # Import slope and aspect from DEM
@@ -229,6 +234,8 @@ error_flag <- FALSE
 # The loop extracts the identity of potential fire cells and whether or not 
 # fire spread successfully to those cells
 
+#START HERE load fire_spread_initial_data_loaded.RData
+
 for(k in 1:length(years)){
   year <- years[k]
 
@@ -353,14 +360,16 @@ spread_data  <- spread_data %>%
   dplyr::filter(fire_name != "")
 
 
+
 #*******************************************************************************
-# extract climate and fuel variables for each cell
+# extract climate, topography, and fuel variables for each cell
 #*******************************************************************************
 
 backup <- spread_data
 spread_data$day <- as.integer(spread_data$day)
 spread_data$year <- as.integer(spread_data$year)
 
+#extract topography
 #holy cow stars is so fast
 spread_data$slope <- slope_full[[1]][spread_data$cell]
 spread_data$aspect <- aspect_full[[1]][spread_data$cell]
@@ -369,7 +378,7 @@ spread_data$aspect <- aspect_full[[1]][spread_data$cell]
 spread_data$fuel <- NA
 
 for(i in 1:20){
-  #TODO clean this up; this is horrible style
+  #TODO clean this up; this is horrible style. Still fast though somehow!
   year <- c(2002:2021)[i]
   if(year %in% c(2002:2012)){
     #no LANDFIRE data for 2000
@@ -390,9 +399,11 @@ for(i in 1:20){
 
 #download FWI
 spread_data$year_days <- paste0(spread_data$year, spread_data$day)
-unique_year_data <- unique(spread_data$year_days)
+unique_year_days <- unique(spread_data$year_days)
 
 for(yearday in unique_year_days){
+  
+  error_flag <- FALSE
   
   fwi_date <- format(as.Date(paste(yearday), format = "%Y%j"),
                  format = "%Y%m%d")
@@ -432,12 +443,24 @@ for(yearday in unique_year_days){
            
   
   # TODO figure out how to suppress messages on loading
-  fwi <- stars::read_stars(paste0("./parameterization/calibration data/fwi/", fwi_year,"/", tail)) %>%
+  fwi <- tryCatch(
+    {stars::read_stars(paste0("./parameterization/calibration data/fwi/", fwi_year,"/", tail)) %>%
     dplyr::select("MERRA2.CORRECTED_FWI") %>%
     sf::st_set_crs(st_crs(sierra_poly_wgs)) %>%
     `[`(sierra_poly_wgs) %>%
     stars::st_warp(crs = st_crs(sierra_poly)) %>%
     stars::st_warp(dest = stars::st_as_stars(sierra_template))
+    }, 
+    error=function(cond) {
+      
+      message(paste("Error downloading process FWI data for ", fwi_date))
+      message("Here's the original error message:")
+      message(cond)
+      error_flag <<- TRUE
+      
+    }
+  )
+  if(error_flag) next() 
   
   fwi_vals <- fwi[[1]][day_data$cell]
   
@@ -450,6 +473,8 @@ for(yearday in unique_year_days){
 #-------------------------------------------------------------------------------
 
 for(fire_name_ws in unique(spread_data$fire_name)){
+  error_flag <- FALSE
+  
   current_fire <- spread_data %>%
     dplyr::filter(fire_name == fire_name_ws)
   
@@ -466,7 +491,18 @@ for(fire_name_ws in unique(spread_data$fire_name)){
     
     
     #download and process the wind data
-    wind_data <- download_windspeed(boundary)
+    wind_data <- tryCatch(
+      {
+      download_windspeed(boundary)
+    }, 
+    error = function(cond) {
+      message(paste("Error downloading wind data data for ", fwi_date))
+      message("Here's the original error message:")
+      message(cond)
+      error_flag <<- TRUE
+      }
+    )
+    if(error_flag) next() 
     
     
     #project and wrangle data
@@ -545,39 +581,60 @@ for(year in unique(spread_data$year)){
   
   plot(mtbs_year)
   
-    spread_data[spread_data$year == year, "mtbs"] <- mtbs_year[spread_data[spread_data$year == year, "cell_mtbs"]]
+    spread_data[spread_data$year == year, "fire_severity"] <- tryCatch( {
+      
+      mtbs_year[spread_data[spread_data$year == year, "cell_mtbs"]]
+      
+    }, error = function(cond){
+      
+      message(paste("Error extractng MTBS for ", year))
+      message("Here's the original error message:")
+      message(cond)
+      error_flag <<- TRUE
+      
+    }
+    )
 }
 
 
 #-------------------------------------------------------------------------------
 # Calculate effective windspeed
 #-------------------------------------------------------------------------------
-# This changes based on fire severity. Combustion buoyancy.
-spread_data$U_b <- ifelse(is.nan(spread_data$mtbs) | is.na(spread_data$mtbs), 5,
-                               ifelse(spread_data$mtbs > 3, 50,
-                                      ifelse(spread_data$mtbs > 2, 25,
-                                            10)))
 
-### Caculating windspeed in direction of spread 
+#MTBS severity goes 0 = masked out; 1 = low intensity or unburned; 2 = low; 3 = moderate severity; 4 = high
+#; 5 = increased greenness, 6 = non-processing mask
+
+# This changes based on fire severity. Combustion buoyancy.
+#severity of 4 = 50; severity of 3 = 25; severity of 2 = 10; severity of 1 = 5; unburned or increased greenness =5
+
+U_b_lookup <- data.frame(code = c(0:6),
+                         U_b = c(5, 5, 10, 25, 50, 5, 5))
+
+
+spread_data$U_b <- ifelse(is.na(spread_data$fire_severity), 5,
+              U_b_lookup[match(spread_data$fire_severity, U_b_lookup$code), "U_b"])
+
+### Calculating windspeed in direction of spread 
 spread_data$relative_wd <- spread_data$winddirection - spread_data$aspect
-#Calculate Ua_Ub, incorporating the combusion buoyancy
+
+#Calculate Ua_Ub, incorporating the combustion buoyancy
 spread_data$Ua_Ub <- spread_data$windspeed / spread_data$U_b
 
 ### Calculating effective wind speed. 
 # gotta convert everything from degrees to radians also
-spread_data<- spread_data %>%
+spread_data <- spread_data %>%
   mutate(eff_wspd = 
            U_b * ((Ua_Ub^2) + 2*(Ua_Ub) * sin(slope * (pi/180)) * cos(relative_wd * (pi/180)) + sin(slope * (pi/180))^2)^0.5
   )
                   
 library("vioplot")
-boxplot(spread_data$FWI ~ spread_data$success)
-vioplot(spread_data$FWI ~ spread_data$success)
-t.test(spread_data$FWI ~ spread_data$success)
+boxplot(spread_data$fwi ~ spread_data$success)
+vioplot(spread_data$fwi ~ spread_data$success)
+t.test(spread_data$fwi ~ spread_data$success)
 boxplot(spread_data$fuel ~ spread_data$success)
 t.test(spread_data$fuel ~ spread_data$success)
-boxplot(spread_data$mtbs ~ spread_data$success)
-t.test(spread_data$mtbs ~ spread_data$success)
+boxplot(spread_data$fire_severity ~ spread_data$success)
+t.test(spread_data$fire_severity ~ spread_data$success)
 boxplot(spread_data$eff_wspd ~ spread_data$success)
 t.test(spread_data$eff_wspd ~ spread_data$success)
 
@@ -592,11 +649,43 @@ spread_data$fuel <- ifelse(spread_data$fuel < max_fuel,
 #-------------------------------------------------------------------------------
 # fit model to fire spread
 library("lme4")
-model <- glm(success ~ FWI + fuel + eff_wspd,
+model <- glm(success ~ scale(fwi) + scale(fuel) + scale(eff_wspd),
              data = spread_data,
              family = "binomial")
 summary(model)
-plot(effects::allEffects(model))
+MuMIn::r.squaredGLMM(model)
+# plot(effects::allEffects(model))
+
+model2 <- glm(success ~ scale(fwi)*scale(fuel)*scale(eff_wspd),
+              data = spread_data,
+              family = "binomial")
+summary(model2)
+MuMIn::r.squaredGLMM(model2)
+# plot(effects::allEffects(model2))
+
+model3 <- glmer(success ~ scale(fwi) + scale(fuel) + scale(eff_wspd) + (1|fire_name),
+             data = spread_data,
+             family = "binomial")
+summary(model3)
+MuMIn::r.squaredGLMM(model3)
+# plot(effects::allEffects(model3))
+
+model4 <- glmer(success ~ scale(fwi)*scale(fuel)*scale(eff_wspd) + (1|fire_name),
+              data = spread_data,
+              family = "binomial")
+summary(model4)
+MuMIn::r.squaredGLMM(model4)
+plot(effects::allEffects(model4))
+
+
+#-------------------------------------------------------------------------------
+# nonlinear models
+
+#boosted regression tree
+
+library("gbm")
+
+
 
 #-------------------------------------------------------------------------------
 # recycling can
