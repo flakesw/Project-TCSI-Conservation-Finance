@@ -72,19 +72,26 @@ SpeciesParameters "../../Inputs/necn/NECN_Spp_Table.csv"
 FunctionalGroupParameters "../../Inputs/necn/NECN_Functional_Table.csv"
 									
 FireReductionParameters
->> Based on Stacy Drury's lit review/analysis. See 'Fuel consumption based on fire severity class.docx'
+>> Updated 3/10/2022 by Sam Flake.
+>> Based on parameters from Susan Prichard et al., in LF-FCCS Final Report
+>> Looking at several fires in the area, low seems to start around a DNBR threshold of 120-200,
+>> medium around 200-400, and high around 400-600
+>> For this purpose, I'll assign severity 1 to correspond to LF-FCCS "low" severity,
+>> 3  to "medium", and "high" to 5 and greater. The steps in between are filled in linearly.
+>> A little fiddly translating between definitions, but it's the best info we have.
+>> I left Cohort Wood reduction and Cohort Litter Reduction the same
 >>	Severity	WoodLitter	Litter	  Cohort Wood 	Cohort Litter 		SOM
 >>	Fire		Reduct		Reduct	  Reduction	Reduction		Reduction
-	1		0.20		0.75 	  	0	0.1			0.5 
-	2		0.25		0.80 	  	0.1	0.1			0.55 
-	3		0.30		0.85		0.15	0.5			0.65
-	4		0.50		1.0		0.2	0.65			0.75 
-	5		0.55		1.0		0.2	0.75			0.85
-	6		0.60		1.0		0.2	1.0			1.0
-	7		0.65		1.0		0.2	1.0			1.0
-	8		0.65		1.0		0.2	1.0			1.0
-	9		0.75		1.0		0.3	1.0			1.0
-	10		0.85		1.0		0.3	1.0			1.0
+	1		0.50		0.25	  	0	0.1			0.25 
+	2		0.62		0.5 	  	0.1	0.1			0.5
+	3		0.75		0.75		0.15	0.5			0.75
+	4		0.85		0.85		0.2	0.65			0.85 
+	5		0.95		0.95		0.2	0.75			0.95
+	6		0.99		0.99		0.2	1.0			0.99
+	7		1.0		1.0		0.2	1.0			1.0
+	8		1.0		1.0		0.2	1.0			1.0
+	9		1.0		1.0		0.3	1.0			1.0
+	10		1.0		1.0		0.3	1.0			1.0
 
 HarvestReductionParameters
 >>	Name			WoodLitter	Litter	SOM		CohortWood	CohortLeaf
@@ -105,46 +112,46 @@ FED_SGH_6	0.8	0.14	0.1	0.85	0.25
 FED_SGH_6_2	0.8	0.14	0.1	0.85	0.25
 FED_SGH_8	0.8	0.14	0.1	0.85	0.25
 FED_SGH_8_2	0.8	0.14	0.1	0.85	0.25
-HAND_1	0.6	0.16	0.1	0.85	0.25
+HAND_1		0.6	0.16	0.1	0.85	0.25
 HAND_1_2	0.6	0.16	0.1	0.85	0.25
-HAND_17	0.6	0.16	0.1	0.85	0.25
-HAND_19	0.6	0.16	0.1	0.85	0.25
+HAND_17		0.6	0.16	0.1	0.85	0.25
+HAND_19		0.6	0.16	0.1	0.85	0.25
 HAND_19_2	0.6	0.16	0.1	0.85	0.25
-HAND_21	0.6	0.16	0.1	0.85	0.25
+HAND_21		0.6	0.16	0.1	0.85	0.25
 HAND_21_2	0.6	0.16	0.1	0.85	0.25
-HAND_23	0.6	0.16	0.1	0.85	0.25
+HAND_23		0.6	0.16	0.1	0.85	0.25
 HAND_23_2	0.6	0.16	0.1	0.85	0.25
-HAND_25	0.6	0.16	0.1	0.85	0.25
+HAND_25		0.6	0.16	0.1	0.85	0.25
 HAND_25_2	0.6	0.16	0.1	0.85	0.25
-HAND_27	0.6	0.16	0.1	0.85	0.25
+HAND_27		0.6	0.16	0.1	0.85	0.25
 HAND_27_2	0.6	0.16	0.1	0.85	0.25
-HAND_3	0.6	0.16	0.1	0.85	0.25
+HAND_3		0.6	0.16	0.1	0.85	0.25
 HAND_3_2	0.6	0.16	0.1	0.85	0.25
-HAND_48	0.6	0.16	0.1	0.85	0.25
+HAND_48		0.6	0.16	0.1	0.85	0.25
 HAND_48_2	0.6	0.16	0.1	0.85	0.25
-HAND_49	0.6	0.16	0.1	0.85	0.25
+HAND_49		0.6	0.16	0.1	0.85	0.25
 HAND_49_2	0.6	0.16	0.1	0.85	0.25
-HAND_5	0.6	0.16	0.1	0.85	0.25
+HAND_5		0.6	0.16	0.1	0.85	0.25
 HAND_5_2	0.6	0.16	0.1	0.85	0.25
-HAND_50	0.6	0.16	0.1	0.85	0.25
+HAND_50		0.6	0.16	0.1	0.85	0.25
 HAND_50_2	0.6	0.16	0.1	0.85	0.25
-HAND_51	0.6	0.16	0.1	0.85	0.25
+HAND_51		0.6	0.16	0.1	0.85	0.25
 HAND_51_2	0.6	0.16	0.1	0.85	0.25
-HAND_52	0.6	0.16	0.1	0.85	0.25
+HAND_52		0.6	0.16	0.1	0.85	0.25
 HAND_52_2	0.6	0.16	0.1	0.85	0.25
-HAND_53	0.6	0.16	0.1	0.85	0.25
+HAND_53		0.6	0.16	0.1	0.85	0.25
 HAND_53_2	0.6	0.16	0.1	0.85	0.25
-HAND_54	0.6	0.16	0.1	0.85	0.25
+HAND_54		0.6	0.16	0.1	0.85	0.25
 HAND_54_2	0.6	0.16	0.1	0.85	0.25
-HAND_55	0.6	0.16	0.1	0.85	0.25
+HAND_55		0.6	0.16	0.1	0.85	0.25
 HAND_55_2	0.6	0.16	0.1	0.85	0.25
-HAND_56	0.6	0.16	0.1	0.85	0.25
+HAND_56		0.6	0.16	0.1	0.85	0.25
 HAND_56_2	0.6	0.16	0.1	0.85	0.25
-HAND_57	0.6	0.16	0.1	0.85	0.25
+HAND_57		0.6	0.16	0.1	0.85	0.25
 HAND_57_2	0.6	0.16	0.1	0.85	0.25
-HAND_7	0.6	0.16	0.1	0.85	0.25
+HAND_7		0.6	0.16	0.1	0.85	0.25
 HAND_7_2	0.6	0.16	0.1	0.85	0.25
-HAND_9	0.6	0.16	0.1	0.85	0.25
+HAND_9		0.6	0.16	0.1	0.85	0.25
 HAND_9_2	0.6	0.16	0.1	0.85	0.25
 PIF_CC_28	0.8	0.14	0.1	0.85	0.25
 PIF_CC_28_2	0.8	0.14	0.1	0.85	0.25

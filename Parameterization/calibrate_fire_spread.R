@@ -61,6 +61,8 @@ dates_fixed <- ifelse(!is.na(dates_with_time),
 
 daily_perims_all[different_format, ]$perimeterd <- dates_fixed
 
+daily_perims_all$perimeterd <- as.Date(daily_perims_all$perimeterd, format = "%Y-%m-%d")
+
 #remove duplicates (polygons with same size on same day for same fire)
 daily_perims_all <- daily_perims_all %>%
   group_by(incidentna) %>%
@@ -73,7 +75,7 @@ daily_perims_all <- daily_perims_all %>%
 #explore data
 #396 fires with more than 10 daily perimeters!
 # reduced to only 33 after removing duplicates :(
-length(table(daily_perims_all$incidentna)[table(daily_perims_all$incidentna) > 10])
+length(table(daily_perims_all$incidentna)[table(daily_perims_all$incidentna) > 4])
 
 test <- daily_perims_all %>% 
   group_by(incidentna) %>%
@@ -83,8 +85,15 @@ test <- daily_perims_all %>%
 
 plot(test$area_burned ~ test$fireyear)
 
-
-
+##write example data for figure
+# 
+# test2 <- daily_perims_all %>%
+#   group_by(incidentna) %>%
+#   slice_max(gisacres)
+# 
+# plot(st_geometry(test2))
+# test2 <- st_cast(test2, to = "MULTIPOLYGON")
+# write_sf(test2, "fires for daily perimeters.shp")
 #-------------------------------------------------------------------------------
 # Import slope and aspect from DEM
 #-------------------------------------------------------------------------------
@@ -135,7 +144,7 @@ download_windspeed <- function(boundary){
   # 
   #shapefile for fire
   
-  if(nrow(boundary) > 1) boundary <- boundary[1, ]
+  if(nrow(boundary) > 1) boundary <- boundary[1, ] #take the first entry if there are duplicates
   
   fire_boundary <- boundary %>%
     sf::st_transform(crs = "+proj=longlat +datum=WGS84") #reproject to CRS that geoknife needs
@@ -176,7 +185,7 @@ download_windspeed <- function(boundary){
   for(i in 1:2){
     
     #set the fabric for a new variable, but keep everything else the same (i.e. the stencil and knife)
-    fabric <- webdata(url = urls[i], times = c(boundary$perimeterd, boundary$perimeterd))
+    fabric <- webdata(url = urls[i], times = c(as.POSIXct(boundary$perimeterd), as.POSIXct(boundary$perimeterd)))
     variables(fabric) <- vars_long[i]
     print(vars_long[i])
     
@@ -236,6 +245,7 @@ error_flag <- FALSE
 
 #START HERE load fire_spread_initial_data_loaded.RData
 
+
 for(k in 1:length(years)){
   year <- years[k]
 
@@ -249,7 +259,7 @@ for(k in 1:length(years)){
     dplyr::summarise(incidentna = dplyr::first(incidentna),
                      n_days = n_distinct(perimeterd),
                      max_size = max(gisacres)) %>%
-    filter(n_days >= 3) #TODO add other criteria?
+    filter(n_days >= 2)
   
   if(nrow(fires_current_year) == 0){
     message(paste0("No fires that lasted 2 or more days in year ", year))
@@ -267,7 +277,7 @@ for(k in 1:length(years)){
         distinct(gisacres, .keep_all = TRUE) %>% #in case there's duplicate polygons with the same gisacres and date
         ungroup() %>%
         mutate(spread = gisacres - dplyr::lag(gisacres, default = NA),
-               days_between = as.Date(perimeterd) - dplyr::lag(as.Date(perimeterd), default = NA)) %>%
+               days_between = dplyr::lead(perimeterd, default = NA) - perimeterd) %>% #TODO fix how "days_between" is calculated?
         sf::st_cast("MULTIPOLYGON")
       },
       error=function(cond) {
@@ -348,7 +358,9 @@ for(k in 1:length(years)){
       spread_data$success[first_row:last_row] <- F
       spread_data$days_between[first_row:last_row] <- current_fire$days_between[i]
       
-      #the loop ends on the last day of the fire, so spread success is left as FALSE
+      #the loop ends on the last day of the fire, so spread success is left as FALSE,
+      # and days_between should be NA for the last fire polygon (as it's only used
+      # to evaluate the previous fire, not generate its own potential fire spread)
     }
       
   }
@@ -478,16 +490,18 @@ for(fire_name_ws in unique(spread_data$fire_name)){
   current_fire <- spread_data %>%
     dplyr::filter(fire_name == fire_name_ws)
   
-  yearday <- current_fire$year_days[1]
+  # yearday <- as.character(current_fire$year_days[1])
   
   for(yearday in unique(current_fire$year_days)){
+    yearday <- as.character(yearday)
+    
     current_fire_day <- current_fire %>%
       filter(year_days == yearday)
     boundary <- daily_perims_all %>%
       dplyr::filter(incidentna == fire_name_ws,
                     perimeterd == as.Date(yearday, format = "%Y%j"))
     print(as.Date(yearday, format = "%Y%j"))
-    print(boundary$perimeterd)
+    boundary$perimeterd <- as.Date(boundary$perimeterd) #needed for geoknife
     
     
     #download and process the wind data
@@ -521,7 +535,7 @@ for(fire_name_ws in unique(spread_data$fire_name)){
 }
 
 
-
+backup <- spread_data
 #-------------------------------------------------------------------------------
 # Extract upwind fire severity
 #-------------------------------------------------------------------------------
@@ -646,8 +660,13 @@ spread_data$fuel <- ifelse(spread_data$fuel < max_fuel,
                            1)
 
 
+write.csv(spread_data, "./Parameterization/calibration data/processed_fire_spread_data_new_days_between.csv")
+
 #-------------------------------------------------------------------------------
 # fit model to fire spread
+
+spread_data <- read.csv("./Parameterization/calibration data/processed_fire_spread_data_new_days_between.csv")
+
 library("lme4")
 model <- glm(success ~ scale(fwi) + scale(fuel) + scale(eff_wspd),
              data = spread_data,
@@ -655,6 +674,17 @@ model <- glm(success ~ scale(fwi) + scale(fuel) + scale(eff_wspd),
 summary(model)
 MuMIn::r.squaredGLMM(model)
 # plot(effects::allEffects(model))
+
+model_reduced <- glm(success ~ scale(fwi) + scale(fuel) + scale(eff_wspd),
+             data = spread_data[spread_data$days_between == 1, ],
+             family = "binomial")
+summary(model_reduced)
+MuMIn::r.squaredGLMM(model)
+# plot(effects::allEffects(model))
+
+model_reduced <- glm(success ~ fwi + fuel + eff_wspd,
+                     data = spread_data[spread_data$days_between == 1, ],
+                     family = "binomial")
 
 model2 <- glm(success ~ scale(fwi)*scale(fuel)*scale(eff_wspd),
               data = spread_data,
@@ -670,6 +700,18 @@ summary(model3)
 MuMIn::r.squaredGLMM(model3)
 # plot(effects::allEffects(model3))
 
+model3_reduced <- lme4::glmer(success ~ scale(fwi) + scale(fuel) + scale(eff_wspd) + (1|fire_name),
+                data = spread_data[spread_data$days_between == 1, ],
+                family = "binomial")
+model3_reduced <- lme4::glmer(success ~ fwi + fuel + eff_wspd + (1|fire_name),
+                              data = spread_data[spread_data$days_between == 1, ],
+                              family = "binomial")
+summary(model3_reduced)
+MuMIn::r.squaredGLMM(model3_reduced)
+plot(effects::allEffects(model3_reduced))
+hist(ranef(model3_reduced)$fire_name[[1]])
+
+
 model4 <- glmer(success ~ scale(fwi)*scale(fuel)*scale(eff_wspd) + (1|fire_name),
               data = spread_data,
               family = "binomial")
@@ -678,14 +720,119 @@ MuMIn::r.squaredGLMM(model4)
 plot(effects::allEffects(model4))
 
 
+#-----------------------------------------------------------------------------
+# Effects plot
+#-----------------------------------------------------------------------------
+
+newdata <- expand.grid(fwi = seq(0, 100, length.out = 200), 
+                       fuel = 0.5,
+                       eff_wspd = 5)
+
+preds1 <- predict(model3_reduced, newdata = newdata, re.form=NA, type = "response")%>%
+  cbind(newdata)
+
+newdata <- expand.grid(fwi = seq(0, 100, length.out = 200), 
+                       fuel = 0.5,
+                       eff_wspd = 20)
+
+preds2 <- predict(model3_reduced, newdata = newdata, re.form=NA, type = "response")%>%
+  cbind(newdata)
+
+newdata <- expand.grid(fwi = seq(0, 100, length.out = 200), 
+                       fuel = 0.5,
+                       eff_wspd = 40)
+preds3 <- predict(model3_reduced, newdata = newdata, re.form=NA, type = "response") %>%
+  cbind(newdata)
+
+ggplot() + geom_line(data=preds1, aes(x=fwi, y = .), color = "black") + 
+  geom_line(data=preds2, aes(x=fwi, y = .), color = "black") +
+  geom_line(data=preds3, aes(x=fwi, y = .), color = "black") + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+  ylab("P(Spread)") + 
+  xlab("Fire Weather Index")
+
+
+
+#Fuels plot
+
+
+
+newdata <- expand.grid(fwi = 30, 
+                       fuel = seq(0, 1, length.out = 400),
+                       eff_wspd = 5)
+
+preds1 <- predict(model3_reduced, newdata = newdata, re.form=NA, type = "response") %>%
+  cbind(newdata) %>%
+  mutate(fuel = fuel*1000)
+
+newdata <- expand.grid(fwi = 30, 
+                       fuel = seq(0, 1, length.out = 400),
+                       eff_wspd = 20)
+
+preds2 <- predict(model3_reduced, newdata = newdata, re.form=NA, type = "response") %>%
+  cbind(newdata)%>%
+  mutate(fuel = fuel*1000)
+
+newdata <- expand.grid(fwi = 30, 
+                       fuel = seq(0, 1, length.out = 400),
+                       eff_wspd = 40)
+preds3 <- predict(model3_reduced, newdata = newdata, re.form=NA, type = "response") %>%
+  cbind(newdata)%>%
+  mutate(fuel = fuel*1000)
+
+ggplot() + geom_line(data=preds1, aes(x=fuel, y = .), color = "black") + 
+  geom_line(data=preds2, aes(x=fuel, y = .), color = "black") +
+  geom_line(data=preds3, aes(x=fuel, y = .), color = "black") + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+  ylab("P(Spread)") + 
+  xlab(expression(Fine~fuels~(g~m^{"-2"})))
+
+
+#-------------------------------------------------------------------------------
+#Spaghetti plot
+#-------------------------------------------------------------------------------
+
+newdata <- expand.grid(fwi = seq(0, 100, length.out = 200), 
+                      fuel = 0.5,
+                      eff_wspd = 10,
+                      fire_name = rownames(ranef(model3_reduced)$fire_name))
+
+preds <- predict(model3_reduced, newdata = newdata[1:200, ], re.form=NA)
+preds_re <- predict(model3_reduced, newdata = newdata)
+
+plot(boot::inv.logit(preds) ~ newdata$fwi[1:200], type = "l", lwd = 3,
+     ylim = c(0.3, 0.8), 
+     col = "blue")
+for(i in 1:length(unique(newdata$fire_name))){
+  lines(boot::inv.logit(preds_re)[newdata$fire_name == unique(newdata$fire_name)[i]] ~ newdata$fwi[newdata$fire_name == unique(newdata$fire_name)[i]])
+}
+
+
+
+
 #-------------------------------------------------------------------------------
 # nonlinear models
 
 #boosted regression tree
 
-library("gbm")
-
-
+# gbm_data <- spread_data %>%
+#   mutate(success = as.numeric(success)) %>%
+#   filter(days_between == 1 | is.na(days_between))
+# 
+# library("dismo")
+# 
+# test <- gbm.step(data = gbm_data,
+#                  gbm.y = "success",
+#                  gbm.x = c("fwi", "fuel", "eff_wspd"),
+#             distribution = "bernoulli",
+#             n.trees = 1000)
+# summary(test)
+# 
+# gbm.plot(test, smooth = TRUE)
+# interaction.plot(test)
+# gbm.interactions(test)
 
 #-------------------------------------------------------------------------------
 # recycling can

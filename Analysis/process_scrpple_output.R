@@ -68,16 +68,25 @@ short_ca_by_year <- short_ca %>%
 #-------------------------------------------------------------------------------
 # Import SCRPPLE data
 #-------------------------------------------------------------------------------
-#what folder do all the runs to be analyze live in?
-scenario_folder <- "./Models/Finished model runs"
-scenarios <- list.dirs(scenario_folder, recursive = FALSE)
-scenarios <- scenarios[c(5:8)]
+# This chunk of code is designed to run directly on the folder of LANDIS model runs
+# and requires additional files like the scenario.txt file to grab some information.
+# It depends on the naming convention of the files used to extract management and climate
+# information.
 
+#what folder do all the runs to be analyze live in?
+scenario_folder <- "./Models/Model runs"
+scenarios <- list.dirs(scenario_folder, recursive = FALSE)
+# scenarios <- scenarios[-1]
+
+
+flnm <- "./Models/Model runs/Scenario1_subset_fixed_spread/scrapple-summary-log.csv"
 
 #some helper functions
 read_plus <- function(flnm) {
   read_csv(flnm) %>% 
-    mutate(filename = flnm)
+    mutate(filename = as.character(flnm),
+           run_name = basename(substr(flnm, 0, regexpr("/[^/]*$", flnm)))) 
+  
 }
 
 get_mgmt <- function(scenario){
@@ -101,32 +110,49 @@ scenario_type <- data.frame(run_name = character(length(scenarios)),
                             climate = character(length(scenarios)))
 
 scenario_type <- scenario_type %>%
-  mutate(run_name = map(strsplit(scenarios, split = "/"), pluck(4))) %>%
-  mutate(mgmt = map(scenarios, get_mgmt)) %>%
-  mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", "Historical"))
+  mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(4, 1)))) %>%
+  mutate(mgmt = unlist(map(scenarios, get_mgmt))) %>%
+  mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", "Historical")) 
 
-
-
+scenario_type$fire_model <- rep(c("fixed", "mixed"), each = 3)
 
 fire_summaries <- paste0(scenarios, "/scrapple-summary-log.csv")  %>%
-    purrr::map_df(~read_plus(.)) # %>%
-    # dplyr::filter(dnbr > 0) %>%
-  #   dplyr::mutate(fine_fuel = ifelse(fine_fuel > 1000, 1, fine_fuel/1000)) %>%
-  #   dplyr::mutate(dnbr = ifelse(dnbr < 100, 100, dnbr)) %>%
-  #   dplyr::mutate(dnbr = ifelse(dnbr > 1000, 1000, dnbr))
+    purrr::map_df(~read_plus(.)) %>%
+    left_join(scenario_type, c("run_name" = "run_name"))
 
-# 
-# 
-# fire_summary <- read.csv("./scrapple-summary-log.csv")
-# events <- read.csv("./scrapple-events-log.csv")
-# 
-# 
-# test <- raster("social-climate-fire/fine-fuels-1.img")
-# plot(test)
+#---------------------
+#do it manually if needed
+scenarios <- c("./Analysis/Test/scen1/scrapple-summary-log.csv",
+               "./Analysis/Test/scen1/scrapple-summary-log (1).csv",
+               "./Analysis/Test/scen1/scrapple-summary-log (2).csv",
+               "./Analysis/Test/scen1/scrapple-summary-log (3).csv",
+               "./Analysis/Test/scen1/scrapple-summary-log (4).csv",
+               "./Analysis/Test/scen6/scrapple-summary-log.csv",
+               "./Analysis/Test/scen6/scrapple-summary-log (1).csv",
+               "./Analysis/Test/scen6/scrapple-summary-log (2).csv",
+               "./Analysis/Test/scen6/scrapple-summary-log (3).csv",
+               "./Analysis/Test/scen6/scrapple-summary-log (4).csv",
+               "./Analysis/Test/scen1miroc/scrapple-summary-log.csv",
+               "./Analysis/Test/scen1miroc/scrapple-summary-log (1).csv",
+               "./Analysis/Test/scen1miroc/scrapple-summary-log (2).csv",
+               "./Analysis/Test/scen1miroc/scrapple-summary-log (3).csv",
+               "./Analysis/Test/scen1miroc/scrapple-summary-log.csv",
+               "./Analysis/Test/scen6miroc/scrapple-summary-log.csv",
+               "./Analysis/Test/scen6miroc/scrapple-summary-log (1).csv",
+               "./Analysis/Test/scen6miroc/scrapple-summary-log (2).csv",
+               "./Analysis/Test/scen6miroc/scrapple-summary-log (3).csv",
+               "./Analysis/Test/scen6miroc/scrapple-summary-log (4).csv")
 
+fire_summaries <- scenarios %>%
+  purrr::map_df(~read_plus(.))
 
-#number of cells that burned -- matches summary file more or less
-# cellStats(test, function(i, ...) sum(i >= 2)) # larger than summary by 2 for some timesteps?
+scenario_type <- data.frame(filename = scenarios,
+                            mgmt = rep(c(1,1,1,1,1,6,6,6,6,6), times = 2),
+                            climate = rep(c("historical", "miroc"), each = 10))
+fire_summaries <- fire_summaries %>%
+  left_join(scenario_type, by = "filename")
+
+#----------------------
 
 fire_summaries$TotalBurnedSites <- fire_summaries$TotalBurnedSitesAccidental + 
   fire_summaries$TotalBurnedSitesLightning + 
@@ -137,8 +163,15 @@ fire_summaries$TotalFires <- fire_summaries$NumberFiresAccidental +
 (fire_summaries$TotalBurnedSites / fire_summaries$TotalFires) #average area burned per fire by year
 
 
+#------------------------------------
+#SCRPPLE events
+fire_events <- paste0(scenarios, "/scrapple-events-log.csv")  %>%
+  purrr::map_df(~read_plus(.)) %>%
+  left_join(scenario_type, c("run_name" = "run_name"))
 
 
+#-------------------------------------------------------------------------------
+#Compare ignitions
 #scenario1: ignitions are pretty good for sierra; too  many for TCSI
 #subset_scenario2: ignitions between tcsi and sierra; long right tail
 #subset_scenario4: too many fires!
@@ -183,12 +216,7 @@ area_burned_short_ca_by_year_type <- short_ca %>%
 
 #-------------------------------------------------------------------------------
 #fire occurrence, accidental
-# scenario1, number of fires between TCSI and sierra
-# subset_scenario, waaaay too many fires!
-# subset_scenario2: somewhat too few fires
-# subset_secnario3: way too few fires
-# subset_scenario4: dead on for accidental fires
-# subset_scenario5: too few fires
+# means are too high -- close match for overall Sierra though?
 hist(fire_summaries$NumberFiresAccidental)
 mean(fire_summaries$NumberFiresAccidental)
 var(fire_summaries$NumberFiresAccidental)
@@ -202,13 +230,20 @@ var(n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Human"
 vioplot(fire_summaries$NumberFiresAccidental, n_fires_short_tcsi_by_year_type[n_fires_short_tcsi_by_year_type$cause == "Human", ]$n * subset_proportion_tcsi,
         n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Human", ]$n * subset_proportion_ca)
 
+
+fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(NumberFiresAccidental))
+
+log(1.757576/0.7306379)
+  
+# TO CALIBRATE:
+# Mean number of fires (lambda) is too low -- to increase in the count model 
+# in SCRPPLE, find the ratio between observed and desired # of fires, take the log,
+# and add that to the intercept. 
+
+
+
 # fire occurrence, lightning
-# scenario1: far too many lightning fires
-# subset scenario: waaay too many lightning fires
-# subset_scenario2: somewhat more lightning fires than sierra and tcsi
-# subset_scenario3: low median, long tail. Mean in between tcsi and sierra, high variance
-# subset_scenario4: way too many fires
-# subset_scenario5: too few fires, but long right tail
+#mean is too high
 hist(fire_summaries$NumberFiresLightning)
 mean(fire_summaries$NumberFiresLightning)
 var(fire_summaries$NumberFiresLightning)
@@ -222,15 +257,25 @@ var(n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Natura
 vioplot(fire_summaries$NumberFiresLightning, n_fires_short_tcsi_by_year_type[n_fires_short_tcsi_by_year_type$cause == "Natural", ]$n * subset_proportion_tcsi,
         n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Natural", ]$n * subset_proportion_ca)
 
+fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(NumberFiresLightning))
+
+log(0.6942149/0.2211845)
+
+vioplot(NumberFiresLightning ~ run_name, data = fire_summaries)
+vioplot(NumberFiresAccidental ~ run_name, data = fire_summaries)
+vioplot(NumberFiresRx ~ run_name, data = fire_summaries) 
+
+
+
+#-------------------------------------------------------------------------------
 #area burned per year?
-#scenario1: about half as many hectares as TCSI; far less than sierra
-#subset_scenario: somewhat too much fire not crazy though
-#subset_scenario2: low mean, but long right tail
-#subset_scenario3: low mean, long right tail
-#subset_scenario4: mean is too high, median too low -- long right tail
-# subset_scneario5: same as above
+#waaaaay too  much area burned
+
+#run 5 is pretty close!
+
 hist(fire_summaries$TotalBurnedSitesAccidental*3.24) #convert to ha
 mean(fire_summaries$TotalBurnedSitesAccidental*3.24)
+fire_summaries %>% group_by(fire_model) %>% summarise(mean = mean(TotalBurnedSitesAccidental))
 var(fire_summaries$TotalBurnedSitesAccidental*3.24)
 hist(area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$cause == "Human", ]$area_burned / 2.47 * subset_proportion_tcsi) #convert to ha
 mean(area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$cause == "Human", ]$area_burned / 2.47) * subset_proportion_tcsi
@@ -241,14 +286,17 @@ var(area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause ==
 vioplot(fire_summaries$TotalBurnedSitesAccidental*3.24, area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$cause == "Human", ]$area_burned / 2.47  * subset_proportion_tcsi,
         area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Human", ]$area_burned / 2.47 * subset_proportion_ca)
 
-#scenario1: about twice as much fire for tcsi; 1/3 of sierra
-# subset_scenario: way too much fire!
-# subset_scenario2: looks pretty good
-# subset_scenario3: no fires?
-# subset_scenario4: mean is pretty good, a few crazy fire years but they don't look too bad really
-# subset_scenario5: same as above
+
+fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(TotalBurnedSitesAccidental)*3.24)
+
+
+
+#lightning fires
+#waaay too much area burned!!
+#too much fire in all scenarios -- by a lot!
 hist(fire_summaries$TotalBurnedSitesLightning*3.24) #convert to ha
 mean(fire_summaries$TotalBurnedSitesLightning*3.24)
+fire_summaries %>% group_by(fire_model) %>% summarise(mean = mean(TotalBurnedSitesLightning))
 var(fire_summaries$TotalBurnedSitesLightning*3.24)
 hist(area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$cause == "Natural", ]$area_burned / 2.47 * subset_proportion_tcsi) #convert to ha
 mean(area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$cause == "Natural", ]$area_burned / 2.47) * subset_proportion_tcsi
@@ -259,27 +307,88 @@ var(area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause ==
 vioplot(fire_summaries$TotalBurnedSitesLightning*3.24, area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$cause == "Natural", ]$area_burned / 2.47  * subset_proportion_tcsi,
         area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Natural", ]$area_burned / 2.47 * subset_proportion_ca)
 
+fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(TotalBurnedSitesLightning)*3.24) 
+
+
+#compare among treatments
+vioplot(TotalBurnedSitesLightning ~ run_name, data = fire_summaries)
+vioplot(TotalBurnedSitesAccidental ~ run_name, data = fire_summaries)
+vioplot(TotalBurnedSitesRx ~ run_name, data = fire_summaries) 
+
+vioplot(TotalBiomassMortalityLightning ~ run_name, data = fire_summaries)
+vioplot(TotalBiomassMortalityAccidental ~ run_name, data = fire_summaries)
+
+boxplot(TotalBurnedSitesLightning ~ run_name, data = fire_summaries)
+boxplot(TotalBurnedSitesAccidental ~ run_name, data = fire_summaries)
+boxplot(TotalBurnedSitesRx ~ run_name, data = fire_summaries)
+
+
 #-----------------------------------------------------------------------------
 #area burned per fire
-#scenario1: fires are too small on average
-#subset_scenario2: too small
-#subset_scenario3: too small
-#subset_scenario4: too small
-#subset_scenario5: too small
-hist(log(events$TotalSitesBurned * 3.24)) #convert to ha
-mean(log(events$TotalSitesBurned * 3.24))
-hist(log(short_tcsi$FIRE_SIZE / 2.47))
-mean(log(short_tcsi$FIRE_SIZE / 2.47))
-hist(log(short_ca$FIRE_SIZE / 2.47))
-mean(log(short_ca$FIRE_SIZE / 2.47))
-vioplot(log(events$TotalSitesBurned*3.24), log(short_tcsi$FIRE_SIZE / 2.47),
-        log(short_ca$FIRE_SIZE / 2.47))
+
+fire_events_accidental <-fire_events %>%
+  filter(IgnitionType == "Accidental")
+fire_events_lightning <-fire_events %>%
+  filter(IgnitionType == "Lightning")
+
+#wrong shape for fire size distribution, not enough small fires
+hist(log(fire_events_accidental$TotalSitesBurned[fire_events_accidental$run_name == "Scenario1 - test spread - run 1 - Copy (3)"] * 3.24)) #convert to ha
+mean(log(fire_events_accidental$TotalSitesBurned * 3.24))
+hist(log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
+mean(log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
+hist(log(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
+mean(log(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
+vioplot(log(fire_events_accidental$TotalSitesBurned[fire_events_accidental$run_name == "Scenario1 - test spread - run 1 - Copy (3)"] *3.24), 
+        log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47),
+        log(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
+
+fire_events_accidental %>% group_by(run_name) %>% summarise(mean = mean(log(TotalSitesBurned)))
+#scenario 5 is pretty close in mean, but not enough small fires still!
+#scenario 4 matches the mean fire size, but is still heavy-tailed
+
+
+
+hist(log(fire_events_lightning$TotalSitesBurned * 3.24)) #convert to ha
+mean(log(fire_events_lightning$TotalSitesBurned * 3.24))
+hist(log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$FIRE_SIZE / 2.47))
+mean(log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$FIRE_SIZE / 2.47))
+hist(log(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$FIRE_SIZE / 2.47))
+mean(log(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$FIRE_SIZE / 2.47))
+vioplot(log(fire_events_lightning$TotalSitesBurned*3.24), 
+        log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$FIRE_SIZE / 2.47),
+        log(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$FIRE_SIZE / 2.47))
+
+#model 5 is still the best
+fire_events_lightning %>% group_by(run_name) %>% summarise(mean = mean(log(TotalSitesBurned)))
 
 #time of year of fires
-#scenario1: timing is good!
-#subset_scenario2: a little too late in year
-#subset_scenario5: a little too late
-hist(events$InitialDayOfYear)
-hist(short_tcsi$DISCOVERY_DOY)
-hist(short_ca$DISCOVERY_DOY)
-vioplot(events$InitialDayOfYear, short_tcsi$DISCOVERY_DOY, short_ca$DISCOVERY_DOY)
+#accidental fires have good timing
+hist(fire_events_accidental$InitialDayOfYear)
+hist(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$DISCOVERY_DOY)
+hist(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Human", ]$DISCOVERY_DOY)
+vioplot(fire_events_accidental$InitialDayOfYear, short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$DISCOVERY_DOY, 
+        short_ca[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$DISCOVERY_DOY)
+
+#lightning igntions are a little late in the year, but not too bad
+#not sensitive enough to FWI?
+hist(fire_events_lightning$InitialDayOfYear)
+hist(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$DISCOVERY_DOY)
+hist(short_ca[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$DISCOVERY_DOY)
+vioplot(fire_events_lightning$InitialDayOfYear, short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$DISCOVERY_DOY, 
+        short_ca[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$DISCOVERY_DOY)
+
+
+#-------------------------------------------------------------------------------
+# Fire over time
+
+plot(fire_summaries$TotalBurnedSitesAccidental ~ fire_summaries$SimulationYear)
+
+fire_summaries$Year <- fire_summaries$SimulationYear + 2020
+
+ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedSitesAccidental)) + 
+  geom_point(color="steelblue") + 
+  labs(title = "Burned area",
+       subtitle = "by management scenario and climate scenario",
+       y = "Area burned (ha yr-1)", x = "Timestep") + 
+  geom_smooth( color = "black") + 
+  facet_wrap(~ mgmt + climate)

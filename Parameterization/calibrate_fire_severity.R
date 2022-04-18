@@ -700,7 +700,7 @@ end_time - start_time
 # #import data
 # fire_severity_data <- list.files("./Parameterization/calibration data/fire severity/",
 #                                  full.names = TRUE)
-# 
+
 # col_types <- list(
 #   fire_name = col_character(),
 #   dnbr = col_double(),
