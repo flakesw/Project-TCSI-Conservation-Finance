@@ -74,12 +74,9 @@ short_ca_by_year <- short_ca %>%
 # information.
 
 #what folder do all the runs to be analyze live in?
-scenario_folder <- "./Models/Model runs"
-scenarios <- list.dirs(scenario_folder, recursive = FALSE)
+scenario_folder <- "E:/tcsi_for_nick"
+scenarios <- list.dirs(scenario_folder, recursive = FALSE)[-1]
 # scenarios <- scenarios[-1]
-
-
-flnm <- "./Models/Model runs/Scenario1_subset_fixed_spread/scrapple-summary-log.csv"
 
 #some helper functions
 read_plus <- function(flnm) {
@@ -110,47 +107,47 @@ scenario_type <- data.frame(run_name = character(length(scenarios)),
                             climate = character(length(scenarios)))
 
 scenario_type <- scenario_type %>%
-  mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(4, 1)))) %>%
+  mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(3, 1)))) %>%
   mutate(mgmt = unlist(map(scenarios, get_mgmt))) %>%
   mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", "Historical")) 
 
-scenario_type$fire_model <- rep(c("fixed", "mixed"), each = 3)
+# scenario_type$fire_model <- rep(c("fixed", "mixed"), each = 3)
 
 fire_summaries <- paste0(scenarios, "/scrapple-summary-log.csv")  %>%
     purrr::map_df(~read_plus(.)) %>%
     left_join(scenario_type, c("run_name" = "run_name"))
 
 #---------------------
-#do it manually if needed
-scenarios <- c("./Analysis/Test/scen1/scrapple-summary-log.csv",
-               "./Analysis/Test/scen1/scrapple-summary-log (1).csv",
-               "./Analysis/Test/scen1/scrapple-summary-log (2).csv",
-               "./Analysis/Test/scen1/scrapple-summary-log (3).csv",
-               "./Analysis/Test/scen1/scrapple-summary-log (4).csv",
-               "./Analysis/Test/scen6/scrapple-summary-log.csv",
-               "./Analysis/Test/scen6/scrapple-summary-log (1).csv",
-               "./Analysis/Test/scen6/scrapple-summary-log (2).csv",
-               "./Analysis/Test/scen6/scrapple-summary-log (3).csv",
-               "./Analysis/Test/scen6/scrapple-summary-log (4).csv",
-               "./Analysis/Test/scen1miroc/scrapple-summary-log.csv",
-               "./Analysis/Test/scen1miroc/scrapple-summary-log (1).csv",
-               "./Analysis/Test/scen1miroc/scrapple-summary-log (2).csv",
-               "./Analysis/Test/scen1miroc/scrapple-summary-log (3).csv",
-               "./Analysis/Test/scen1miroc/scrapple-summary-log.csv",
-               "./Analysis/Test/scen6miroc/scrapple-summary-log.csv",
-               "./Analysis/Test/scen6miroc/scrapple-summary-log (1).csv",
-               "./Analysis/Test/scen6miroc/scrapple-summary-log (2).csv",
-               "./Analysis/Test/scen6miroc/scrapple-summary-log (3).csv",
-               "./Analysis/Test/scen6miroc/scrapple-summary-log (4).csv")
+# #do it manually if needed
+# scenarios <- c("./Analysis/Test/scen1/scrapple-summary-log.csv",
+#                "./Analysis/Test/scen1/scrapple-summary-log (1).csv",
+#                "./Analysis/Test/scen1/scrapple-summary-log (2).csv",
+#                "./Analysis/Test/scen1/scrapple-summary-log (3).csv",
+#                "./Analysis/Test/scen1/scrapple-summary-log (4).csv",
+#                "./Analysis/Test/scen6/scrapple-summary-log.csv",
+#                "./Analysis/Test/scen6/scrapple-summary-log (1).csv",
+#                "./Analysis/Test/scen6/scrapple-summary-log (2).csv",
+#                "./Analysis/Test/scen6/scrapple-summary-log (3).csv",
+#                "./Analysis/Test/scen6/scrapple-summary-log (4).csv",
+#                "./Analysis/Test/scen1miroc/scrapple-summary-log.csv",
+#                "./Analysis/Test/scen1miroc/scrapple-summary-log (1).csv",
+#                "./Analysis/Test/scen1miroc/scrapple-summary-log (2).csv",
+#                "./Analysis/Test/scen1miroc/scrapple-summary-log (3).csv",
+#                "./Analysis/Test/scen1miroc/scrapple-summary-log.csv",
+#                "./Analysis/Test/scen6miroc/scrapple-summary-log.csv",
+#                "./Analysis/Test/scen6miroc/scrapple-summary-log (1).csv",
+#                "./Analysis/Test/scen6miroc/scrapple-summary-log (2).csv",
+#                "./Analysis/Test/scen6miroc/scrapple-summary-log (3).csv",
+#                "./Analysis/Test/scen6miroc/scrapple-summary-log (4).csv")
 
-fire_summaries <- scenarios %>%
-  purrr::map_df(~read_plus(.))
-
-scenario_type <- data.frame(filename = scenarios,
-                            mgmt = rep(c(1,1,1,1,1,6,6,6,6,6), times = 2),
-                            climate = rep(c("historical", "miroc"), each = 10))
-fire_summaries <- fire_summaries %>%
-  left_join(scenario_type, by = "filename")
+# fire_summaries <- scenarios %>%
+#   purrr::map_df(~read_plus(.))
+# 
+# scenario_type <- data.frame(filename = scenarios,
+#                             mgmt = rep(c(1,1,1,1,1,6,6,6,6,6), times = 2),
+#                             climate = rep(c("historical", "miroc"), each = 10))
+# fire_summaries <- fire_summaries %>%
+#   left_join(scenario_type, by = "filename")
 
 #----------------------
 
@@ -385,10 +382,56 @@ plot(fire_summaries$TotalBurnedSitesAccidental ~ fire_summaries$SimulationYear)
 
 fire_summaries$Year <- fire_summaries$SimulationYear + 2020
 
+fire_summaries$TotalBurnedAcresRx <- fire_summaries$TotalBurnedSitesRx * 8
+
+ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedAcresRx)) + 
+  geom_point(color="steelblue") + 
+  labs(title = "Prescribed burn area",
+       subtitle = "by management scenario and climate scenario",
+       y = "Area burned (acres)", x = "Year") + 
+  geom_smooth( color = "black") + 
+  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 2)
+
 ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedSitesAccidental)) + 
   geom_point(color="steelblue") + 
-  labs(title = "Burned area",
+  labs(title = "Prescribed burn area",
        subtitle = "by management scenario and climate scenario",
-       y = "Area burned (ha yr-1)", x = "Timestep") + 
+       y = "Area burned (acres)", x = "Year") + 
   geom_smooth( color = "black") + 
-  facet_wrap(~ mgmt + climate)
+  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 2)
+
+ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedSitesLightning)) + 
+  geom_point(color="steelblue") + 
+  labs(title = "Prescribed burn area",
+       subtitle = "by management scenario and climate scenario",
+       y = "Area burned (acres)", x = "Year") + 
+  geom_smooth( color = "black") + 
+  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 2)
+
+
+
+
+### compare fire and beetles
+
+combined <- fire_summaries %>%
+  left_join(dplyr::select(bda_summaries2, !c("mgmt", "climate")),  by = c("run_name", "Year")) %>%
+  mutate((across(c("TotalBiomassKilled", "TotalSitesAffected"), ~replace(., is.na(.), 0)))) %>%
+  mutate(TotalBiomassWildfire = TotalBiomassMortalityAccidental + TotalBiomassMortalityLightning,
+         TotalBurnedSites = TotalBurnedSitesAccidental + TotalBurnedSitesLightning)
+
+ggplot() + 
+  labs(title = "Area affected by fire and beetles",
+       subtitle = "by management scenario and climate scenario",
+       y = "Area burned (acres)", x = "Year") + 
+  geom_smooth(color="steelblue", data = combined, mapping = aes(x = Year, y = TotalBurnedSites)) + 
+  geom_smooth(color="green", data = combined, mapping = aes(x = Year, y = TotalSitesAffected)) +
+  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 2)
+
+ggplot() + 
+  labs(title = "Biomass killed by fire and beetles",
+       subtitle = "by management scenario and climate scenario",
+       y = "Area burned (acres)", x = "Year") + 
+  geom_smooth(color="steelblue", data = combined, mapping = aes(x = Year, y = TotalBiomassWildfire)) + 
+  geom_smooth(color="green", data = combined, mapping = aes(x = Year, y = TotalBiomassKilled)) +
+  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 2)
+
