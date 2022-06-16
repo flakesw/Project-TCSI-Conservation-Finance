@@ -12,10 +12,11 @@ library("progress")
 
 setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance")
 
+# short dataset: https://www.fs.usda.gov/rds/archive/Catalog/RDS-2013-0009.5
 # import the full dataset -- only if you haven't subset it already
-# short_full <- sf::st_read("./calibration data/short/Data/FPA_FOD_20210617.gdb",
-#                           layer = "Fires") %>%
-#               sf::st_transform(crs = "EPSG:2163")
+short_full <- sf::st_read("./calibration data/short/Data/FPA_FOD_20210617.gdb",
+                          layer = "Fires") %>%
+              sf::st_transform(crs = "EPSG:2163")
 
 ecoregions <- raster("./Models/Inputs/input_rasters_tcsi/categorical/TCSI_ecoregions.tif")
 ecoregion_size <- table(values(ecoregions))[-1]

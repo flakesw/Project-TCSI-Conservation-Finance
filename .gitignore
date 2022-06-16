@@ -36,9 +36,6 @@ vignettes/*.pdf
 rsconnect/
 
 #Large input files
-*.tiff
-*.tif
-*.img
 *.zip
 */climate_IC/*
 TCSI_IC6.csv
@@ -89,3 +86,10 @@ Parameterization/calibration data/geomac_all_years/perims_2000_2021.shp
 Parameterization/calibration data/geomac_all_years/perims_2000_2021.prj
 Parameterization/calibration data/geomac_all_years/perims_2000_2021.dbf
 *.nc
+Models/Inputs/masks_boundaries/stelprdb5334748/*
+Parameterization/calibration data/short_ignitions/Data/FPA_FOD_20210617.gdb/*
+old/*
+Parameterization/calibration data/short_ignitions/short_drop_geometry.csv
+Parameterization/calibration data/topography/sierra_aspect.tif
+Parameterization/calibration data/topography/sierra_dem.tif
+Parameterization/calibration data/topography/sierra_slope.tif

@@ -1,14 +1,16 @@
 #download data needed to predict site-level severity from climate and fuels
 
+#TODO add: FWI, NDVI anomaly, NDVI normals, CWD normals, PDSI
 
 library("geoknife")
 library("sf")
 library("raster")
 library("tidyverse")
-library("FedData")
-library("stars")
-# using stars is so much faster, since the whole files aren't loaded into RAM, just the subsets
+library("FedData") #for downloading SSURGO data
+library("stars")# using stars is so much faster, since the whole files aren't loaded into RAM, just the subsets
 # it's really an amazing upgrade from raster
+library("MODIStsp") # for downloading MODIS data
+
 
 setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance")
 
@@ -35,10 +37,9 @@ sierra_shape <- sf::st_read("./Models/Inputs/masks_boundaries/WIP_Capacity_V1Dra
   sf::st_transform("EPSG:5070") %>%
   sf::st_union()
 
-# short_all <- sf::st_read("./Parameterization/calibration data/short/Data/FPA_FOD_20210617.gdb")%>%
-#   sf::st_transform("EPSG:5070")
-short_all <- read.csv("./Parameterization/calibration data/short/short_drop_geometry.csv")
-short <- readRDS("./Parameterization/calibration data/short_tcsi/short_ca.RDS") %>%
+
+short_all <- read.csv("./Parameterization/calibration data/short_ignitions/short_drop_geometry.csv")
+short <- readRDS("./Parameterization/calibration data/short_ignitions/short_sierra.RDS") %>%
   sf::st_transform("EPSG:5070")
 
 #-------------------------------------------------------------------------------
@@ -118,6 +119,7 @@ mtbs_shape <- subset(mtbs_shape, shape_firenumbers %in% raster_firenumbers)
 # DEFINE FUNCTIONS TO ACCESS DATA
 #*******************************************************************************
 
+
 #-------------------------------------------------------------------------------
 # Trim LANDFIRE fuels
 #-------------------------------------------------------------------------------
@@ -178,6 +180,7 @@ get_slope_or_aspect <- function(boundary, dnbr_raster, raster){
 #-------------------------------------------------------------------------------
 # get %clay from SSURGO
 #-------------------------------------------------------------------------------
+
 download_clay <- function(dnbr_raster, label){
   
   # This is pretty slow when first being run, because it downloads all the SSURGO data
@@ -199,8 +202,9 @@ download_clay <- function(dnbr_raster, label){
     dplyr::mutate(across(everything(), .fns = ~replace_na(.x, 1))) %>% #replace NAs where any are left -- just on rocky outcrops and beaches. Replace with 1 instead of 0 so that the sites can still be active
     dplyr::mutate(across(claytotal.r, .fns = ~ `*`(.x, 0.01))) %>% #multiply some columns by 0.01 to convert from percent to proportion
     dplyr::right_join(ssurgo_test$tabular$component, by = "cokey") %>%
-    dplyr::mutate(across(everything(), ~replace_na(.x, 0.001))) %>%
     dplyr::select(cokey, claytotal.r, comppct.r, mukey) %>%
+    dplyr::mutate(across(c("claytotal.r", "comppct.r"), as.double)) %>%
+    dplyr::mutate(across(c("claytotal.r", "comppct.r"), ~replace_na(.x, 0.001))) %>%
     dplyr::mutate(MUKEY = as.character(mukey))
   
   #aggregate to mapunits by component
@@ -209,10 +213,10 @@ download_clay <- function(dnbr_raster, label){
     dplyr::summarise(across(c(claytotal.r), 
                             ~stats::weighted.mean(., w = comppct.r, na.rm = TRUE))) 
   
-  mapunits_spatial <- left_join(ssurgo_test$spatial, mapunits_data, by = c("MUKEY")) %>%
+  mapunits_spatial <- left_join(sf::st_as_sf(ssurgo_test$spatial), mapunits_data, by = c("MUKEY")) %>%
     sf::st_transform(crs(dnbr_raster))
   
-  clay_map <- raster::rasterize(mapunits_spatial, dnbr_raster, field = "claytotal.r", fun="mean")
+  clay_map <- terra::rasterize(mapunits_spatial, dnbr_raster, field = "claytotal.r", fun="mean")
   
   return(clay_map)
 }  
@@ -268,7 +272,7 @@ download_pet_cwd <- function(boundary){
     job_results[[i]] <- result(job)
   }
   
-  results <- result(job)
+  # results <- result(job)
   
   month <- as.Date(fire_date, format = "%Y-%m-%d") %>%
     format("%m")
@@ -277,7 +281,9 @@ download_pet_cwd <- function(boundary){
   aet <- job_results[[2]][as.numeric(month), 2]
   cwd <- pet - aet
   
-  return(c(pet, aet, cwd))
+  if(anyNA(c(pet,aet,cwd))){
+    return(NA)
+  } else return(c(pet, aet, cwd))
 }
 
 
@@ -414,6 +420,67 @@ get_effective_windspeed <- function(dnbr_raster, severity_raster, wind_speed, wi
 }
 
 
+
+#-------------------------------------------------------------------------------
+# Import MODIS NDVI data
+#-------------------------------------------------------------------------------
+
+modis_list <- list.files("D:/Data/modis/downloaded_appEARS", full.names = TRUE)
+modis_rasters <- data.frame(file = modis_list[grep("NDVI", modis_list)])
+
+modis_rasters$date <- str_match(modis_rasters$file, "(?:_doy)(\\d+)")[, 2] %>%
+  as.Date("%Y%j")
+
+get_ndvi_before <- function(boundary, dnbr_raster){
+  
+  first_date <- boundary$Ig_Date
+  
+  modis_rasters$distance_ig <- (first_date - modis_rasters$date) 
+  modis_file <- modis_rasters[which.min(modis_rasters[modis_rasters$distance_ig>0, "distance_ig"]), "file"]
+  
+  modis_before <- stars::read_stars(modis_file) * 0.0001
+  
+  boundary_reproj <- boundary %>%
+    sf::st_transform(crs = st_crs(modis_before))
+  
+  modis_before <- st_crop(modis_before, boundary_reproj) %>%
+    stars::st_warp(dest = stars::st_as_stars(dnbr_raster), method = "near")
+  
+  return(modis_before)
+}
+
+
+get_ndvi_anomaly <- function(boundary, dnbr_raster, modis_before){
+  
+  first_date <- boundary$Ig_Date
+  hist_date <- lubridate::ymd(first_date) - lubridate::years(10)
+  
+  modis_rasters$distance_ig <- (first_date - modis_rasters$date)
+  modis_rasters$year <- year(ymd(modis_rasters$date))
+  modis_rasters$jday <- yday(ymd(modis_rasters$date))
+  
+  jday_range <- c((yday(first_date) - 30) : (yday(first_date) + 30))
+  year_range <- c((year(first_date) - 11) : (year(first_date) - 1))
+  
+  rasters_hist <- modis_rasters[modis_rasters$jday %in% jday_range & modis_rasters$year %in% year_range, ]
+  
+  modis_stack <- stars::read_stars(rasters_hist$file) * 0.0001
+  
+  boundary_reproj <- boundary %>%
+    sf::st_transform(crs = st_crs(modis_stack))
+  
+  modis_stack <- st_crop(modis_stack, boundary_reproj) %>%
+    stars::st_warp(dest = stars::st_as_stars(dnbr_raster), method = "near")
+  
+  historical_median <- st_apply(modis_stack, 1:2, median, na.rm = TRUE, FUTURE = TRUE)
+  
+  anomaly <- historical_median - modis_before
+  
+  return(anomaly)
+}
+
+
+
 #*******************************************************************************
 # Download and process data for all fires
 #*******************************************************************************
@@ -431,7 +498,9 @@ create_data_catcher <- function(data_length){
                     cwd = numeric(data_length),
                     ews = numeric(data_length),
                     fine_fuel = numeric(data_length),
-                    ladder_fuel = numeric(data_length)))
+                    ladder_fuel = numeric(data_length),
+                    ndvi = numeric(data_length),
+                    ndvi_anomaly = numeric(data_length)))
 }
 
 data_catcher <- create_data_catcher(data_length)
@@ -440,7 +509,7 @@ row_tracker <- 1
 
 start_time <- Sys.time()
 
-for(i in 1:length(mtbs_shape)){
+for(i in 400:length(mtbs_shape)){
   
   error_flag <- FALSE
   try_again <- FALSE
@@ -478,11 +547,12 @@ for(i in 1:length(mtbs_shape)){
     
   
   dnbr_raster <-  tryCatch(
-    {raster(mtbs_dnbr[i]) %>%
+    {
+    raster(mtbs_dnbr[i]) %>%
+    raster::projectRaster(crs = "EPSG:5070") %>%
     crop(boundary) %>%
-    mask(boundary) %>% 
-    raster::projectRaster(crs = "EPSG:5070")
-      
+    mask(boundary) 
+    
     },
     error=function(cond) {
       
@@ -525,9 +595,10 @@ for(i in 1:length(mtbs_shape)){
   #make sure errors aren't introduced by the projection process!
   sev_raster <- tryCatch(
     { raster(mtbs_sev[i]) %>%
+        raster::projectRaster(crs = "EPSG:5070") %>%
         crop(boundary) %>%
-        mask(boundary) %>% 
-        raster::projectRaster(crs = "EPSG:5070")
+        mask(boundary)
+        
     },
     error=function(cond) {
       
@@ -547,8 +618,6 @@ for(i in 1:length(mtbs_shape)){
 
  # plot(sev_raster)
   
-
-  
   #if there's too much data loaded, write it to disk and make a new data catcher
   if(I(row_tracker + ncell(dnbr_raster)) > data_length){
     message("Writing data to disk")
@@ -558,6 +627,8 @@ for(i in 1:length(mtbs_shape)){
     #row to start on when adding data
     row_tracker <- 1
   }
+  
+ 
   
   cells_burned <- !is.na(raster::values(dnbr_raster)) & 
     raster::values(sev_raster) > 1 & 
@@ -588,6 +659,8 @@ for(i in 1:length(mtbs_shape)){
     )
 
     if(try_again){
+      try_again <<- FALSE
+      Sys.sleep(5)
       clay_map <- tryCatch(
         {
           download_clay(dnbr_raster, label)
@@ -605,22 +678,44 @@ for(i in 1:length(mtbs_shape)){
       )
     }
 
-
-  clim <- tryCatch(
-    {
-      download_pet_cwd(boundary)
-    },
-    error=function(cond) {
-      message(paste("Error downloading climate data data for:", label))
-      message("Here's the original error message:")
-      message(cond)
-
-
-      return(NA)
-    }
-  )
-
-
+  clim <- NA
+  clim <- download_pet_cwd(boundary)
+    
+  #   tryCatch(
+  #   {
+  #     download_pet_cwd(boundary)
+  #     message("Successfully downloaded climate data")
+  #   },
+  #   error=function(cond) {
+  #     message(paste("Error downloading climate data for:", label))
+  #     message("Here's the original error message:")
+  #     message(cond)
+  # 
+  #     message("Trying again")
+  #     
+  #     # try_again <<- TRUE
+  #   }
+  # )
+  # 
+    # if(try_again){
+    #   try_again <<- FALSE
+    #   Sys.sleep(5)
+    #   clim <- tryCatch(
+    #     {
+    #       download_pet_cwd(boundary)
+    #       message("Successfully downloaded climate data")
+    #     },
+    #     error=function(cond) {
+    #       message(paste("Error downloading climate data for:", label))
+    #       message("Here's the original error message:")
+    #       message(cond)
+    # 
+    #       message("Aborting climate data download")
+    #     }
+    #   )
+    # }
+    
+  wind <- NA
   wind <- tryCatch(
     {
       download_windspeed(boundary)
@@ -634,18 +729,26 @@ for(i in 1:length(mtbs_shape)){
     }
   )
 
-  eff_ws <- tryCatch(
-    {
-      get_effective_windspeed(dnbr_raster, sev_raster, wind[1], wind[3])
-    },
-    error=function(cond) {
-      message(paste("Error downloading SSURGO data for:", label))
-      message("Here's the original error message:")
-      message(cond)
-
-      return(NA)
-    }
-  )
+  if(!anyNA(wind)){
+    message("Processing effective windspeed")
+    
+    eff_ws <- tryCatch(
+      {
+        get_effective_windspeed(dnbr_raster, sev_raster, wind[1], wind[3])
+      },
+      error=function(cond) {
+        message(paste("Error downloading SSURGO data for:", label))
+        message("Here's the original error message:")
+        message(cond)
+        
+        return(NA)
+      }
+    )
+  } else{
+    message("No wind data; setting effective windspeed to NA")
+    eff_ws <- NA
+  }
+  
   
   fuel <- tryCatch(
     {
@@ -662,6 +765,36 @@ for(i in 1:length(mtbs_shape)){
     }
   ) 
   
+  ndvi <- tryCatch(
+    {
+      if(as.numeric(format(fire_date, "%Y")) > 2002){
+        get_ndvi_before(boundary, dnbr_raster)
+      } else(NA)
+    },
+    error=function(cond) {
+      message(paste("Error extracting ndvi for:", label))
+      message("Here's the original error message:")
+      message(cond)
+      
+      return(NA)
+    }
+  ) 
+  
+  ndvi_anomaly <- tryCatch(
+    {
+      if(as.numeric(format(fire_date, "%Y")) > 2002){
+        get_ndvi_anomaly(boundary, dnbr_raster, ndvi)
+      } else(NA)
+    },
+    error=function(cond) {
+      message(paste("Error extracting ndvi anomaly for:", label))
+      message("Here's the original error message:")
+      message(cond)
+      
+      return(NA)
+    }
+  ) 
+  
   ncells <- sum(cells_burned)
   
   data <- data.frame(fire_name = rep(label, sum(cells_burned)),
@@ -671,8 +804,11 @@ for(i in 1:length(mtbs_shape)){
                      cwd = rep(clim[3], ncells)[cells_burned],
                      ews = eff_ws[cells_burned],
                      fine_fuel = ifelse(is.null(nrow(fuel)), NA, fuel$fine_fuel[cells_burned]),
-                     ladder_fuel = ifelse(is.null(nrow(fuel)), NA, fuel$ladder_fuel[cells_burned])
-  )
+                     ladder_fuel = ifelse(is.null(nrow(fuel)), NA, fuel$ladder_fuel[cells_burned]),
+                     ndvi = ifelse(is.null(nrow(ndvi)), NA, ndvi[[1]][cells_burned]),
+                     ndvi_anomaly = ifelse(is.null(nrow(ndvi_anomaly)), NA, 
+                                           ndvi_anomaly[[1]][cells_burned])
+                     )
   
  
   
@@ -689,54 +825,102 @@ write.csv(data_catcher, paste0("./Parameterization/calibration data/fire severit
 end_time <- Sys.time()
 end_time - start_time
 
-
+#TODO: get year and location for each fire
+#TODO: parallelize the data processing
+#TODO: get day that cell burned, from 
 
 #*******************************************************************************
 #* Analyze the data
 #*******************************************************************************
-# library("tidyverse")
-# library("lme4")
-# library("effects")
-# #import data
-# fire_severity_data <- list.files("./Parameterization/calibration data/fire severity/",
-#                                  full.names = TRUE)
+library("tidyverse")
+library("lme4")
+library("effects")
+#import data
+fire_severity_data <- list.files("./Parameterization/calibration data/fire severity/",
+                                 pattern = "catcher",
+                                 full.names = TRUE)
 
-# col_types <- list(
-#   fire_name = col_character(),
-#   dnbr = col_double(),
-#   clay = col_double(),
-#   pet = col_double(),
-#   cwd = col_double(),
-#   ews = col_double(),
-#   fine_fuel = col_double(),
-#   ladder_fuel = col_double()
-# )
-# 
-# #readr is incredible
-# data_all <- fire_severity_data %>%
-#   purrr::map_df(~read_csv(., col_types = col_types)) %>%
-#   dplyr::filter(dnbr > 0) %>%
-#   dplyr::mutate(fine_fuel = ifelse(fine_fuel > 1000, 1, fine_fuel/1000)) %>%
-#   dplyr::mutate(dnbr = ifelse(dnbr < 100, 100, dnbr)) %>%
-#   dplyr::mutate(dnbr = ifelse(dnbr > 1000, 1000, dnbr))
-# 
-# data_with_fuel <- data_all %>%
-#   dplyr::filter(!is.na(fine_fuel))
-# 
-# # plot(dnbr ~ ladder_fuel, data = data_with_fuel)
-# 
-# with(gamma("inverse"), {
-#   print(valideta)
-#   print(validmu)
-# })
-# 
-# test <- lm(dnbr ~ clay + cwd + fine_fuel + ews + 0, data = data_all)
-# summary(test)
-# 
-# test_gamma <- glm(I(1/dnbr) ~ clay + cwd + pet + fine_fuel + ews + 0, data = data_all, family = Gamma(link = "inverse"))
-# summary(test_gamma)
+col_types <- list(
+  fire_name = col_character(),
+  dnbr = col_double(),
+  clay = col_double(),
+  pet = col_double(),
+  cwd = col_double(),
+  ews = col_double(),
+  fine_fuel = col_double(),
+  ladder_fuel = col_double(),
+  ndvi = col_double(),
+  ndvi_anomaly = col_double()
+)
 
-# plot(allEffects(test_gamma, partial.residuals = FALSE))
+#readr is incredible
+data_all <- fire_severity_data %>%
+  purrr::map_df(~read_csv(., col_types = col_types)) %>%
+  dplyr::filter(dnbr > 0) %>%
+  dplyr::mutate(fine_fuel = ifelse(fine_fuel > 1000, 1, fine_fuel/1000)) %>%
+  dplyr::mutate(dnbr = ifelse(dnbr < 100, 100, dnbr)) %>%
+  dplyr::mutate(dnbr = ifelse(dnbr > 1000, 1000, dnbr))
+
+data_all$ndvi_normal <- data_all$ndvi + data_all$ndvi_anomaly
+
+data_with_fuel <- data_all %>%
+  dplyr::filter(!is.na(fine_fuel))
+
+# plot(dnbr ~ ladder_fuel, data = data_with_fuel)
+
+
+test <- lm(dnbr ~ scale(cwd) + scale(ews) + scale(ladder_fuel) + 
+               scale(ndvi_anomaly) + scale(ndvi), data = data_all)
+
+test_lmer <- lmer(dnbr ~  scale(cwd) + scale(ews) + scale(ladder_fuel) + 
+               scale(ndvi_anomaly) + scale(ndvi) + (1|fire_name), data = data_all)
+summary(test)
+summary(test_lmer)
+
+nrow(data_all)
+
+length(unique(data_all$fire_name))
+
+plot(data_all$ladder_fuel ~ data_all$ndvi)
+
+
+
+#make effects plots
+newdata <- expand.grid(clay = mean(data_all$clay, na.rm = TRUE), 
+                       cwd =  mean(data_all$cwd, na.rm = TRUE),
+                       ews =  seq(min(data_all$ews, na.rm = TRUE), max(data_all$ews, na.rm = TRUE), length.out = 1000),
+                       ladder_fuel =  mean(data_all$ladder_fuel, na.rm = TRUE),
+                       ndvi_anomaly =  mean(data_all$ndvi_anomaly, na.rm = TRUE),
+                       ndvi =  mean(data_all$ndvi, na.rm = TRUE)
+                       )
+
+preds1 <- predict(test, newdata = newdata, type = "response")
+
+plot(preds1 ~ newdata$cwd, type = "l",
+     xlab = "CWD",
+     ylab = "DNBR")
+
+plot(preds1 ~ newdata$ndvi_anomaly, type = "l",
+     xlab = "NDVI Anomaly",
+     ylab = "DNBR")
+
+plot(preds1 ~ newdata$ews, type = "l",
+     xlab = "Effective Windspeed",
+     ylab = "DNBR")
+
+
+
+#TODO: combine all shapefiles into one file for plotting, getting centroids
+
+
+
+
+
+# 
+test_gamma <- glm(I(1/dnbr) ~ clay + cwd + pet + fine_fuel + ews + 0, data = data_all, family = Gamma(link = "inverse"))
+summary(test_gamma)
+
+plot(allEffects(test_gamma, partial.residuals = FALSE))
 
 
 # 
@@ -783,3 +967,31 @@ end_time - start_time
 # 
 # # Replace "histogram" with "boxplot" or "density" for other types
 # ggMarginal(p1, type = "histogram")
+
+
+
+
+#download MODIS thorugh R
+
+# MODIStsp_get_prodlayers("M*D13Q1")$bandnames
+# 
+# MODIStsp(gui             = FALSE,
+#          out_folder      = 'D:/Data/modis',
+#          out_folder_mod  = 'D:/Data/modis',
+#          selprod         = 'Vegetation Indexes_16Days_250m (M*D13Q1)',
+#          bandsel         = 'NDVI', 
+#          sensor          = 'Terra',
+#          user            = 'swflake', # your username for NASA http server
+#          password        = '4!k7GrKO9iOnBnp#2k',  # your password for NASA http server
+#          start_date      = '2002.01.01', 
+#          end_date        = '2002.02.01', 
+#          verbose         = TRUE,
+#          spatmeth        = 'file',
+#          out_format      = 'GTiff',
+#          compress        = 'LZW',
+#          out_projsel     = 'User Defined',
+#          spafile         = mtbs_shape[i],
+#          delete_hdf      = FALSE,
+#          parallel        = FALSE,
+#          test = "01a"
+# )

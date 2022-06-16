@@ -11,15 +11,15 @@ setwd("C:/Users/Sam/Documents/Research/California forest economics")
 
 # raster to get bounding box from
 mask <- raster("./masks_boundaries/mask.tif")
-crs(mask) <- "EPSG:2163"
+crs(mask) <- "EPSG:9311" #replaces deprecated epsg:2163; US National Atlas Equal Area
 #-------------------------------------------------------------------------------
 #import Short data
 
-sf::st_layers("./calibration data/short/Data/FPA_FOD_20210617.gdb")
-short <- sf::st_read("./calibration data/short/Data/FPA_FOD_20210617.gdb", layer = "Fires")
+sf::st_layers("./Parameterization/calibration data/short_ignitions/Data/FPA_FOD_20210617.gdb")
+short <- sf::st_read("./Parameterization/calibration data/short_ignitions/Data/FPA_FOD_20210617.gdb", layer = "Fires")
 st_geometry_type(short)
 st_crs(short)
-short <- st_transform(short, 2163)
+short_full <- st_transform(short, 9311)
 
 #make a bounding box for Short data
 bound <- extent(mask)
@@ -28,7 +28,7 @@ bound[c(2,4)] <- bound[c(2,4)] + 30000
 
 bound <- as(bound, 'SpatialPolygons') %>% 
   st_as_sf() %>%
-  st_set_crs(2163) 
+  st_set_crs(9311) 
 
 
 short_subset <- sf::st_intersection(short, bound)

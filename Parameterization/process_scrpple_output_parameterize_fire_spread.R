@@ -5,7 +5,7 @@ library("tidyverse")
 library("sf")
 library("vioplot")
 
-subset_landscape <- TRUE
+subset_landscape <- FALSE
 
 
 ## SCRPPLE outputs
@@ -74,12 +74,12 @@ short_ca_by_year <- short_ca %>%
 # information.
 
 #what folder do all the runs to be analyze live in?
-scenario_folder <- "./Models/Model runs"
+scenario_folder <- "C:/Users/Sam/Downloads/adjusted-20220429T151459Z-001/adjusted"
 scenarios <- list.dirs(scenario_folder, recursive = FALSE)
 # scenarios <- scenarios[-1]
 
 
-flnm <- "./Models/Model runs/Scenario1_subset_fixed_spread/scrapple-summary-log.csv"
+# flnm <- "./Models/Model runs/Scenario1_subset_fixed_spread/scrapple-summary-log.csv"
 
 #some helper functions
 read_plus <- function(flnm) {
@@ -233,7 +233,7 @@ vioplot(fire_summaries$NumberFiresAccidental, n_fires_short_tcsi_by_year_type[n_
 
 fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(NumberFiresAccidental))
 
-log(0.57/0.7306379)
+log(6.4/3.91)
   
 # TO CALIBRATE:
 # Mean number of fires (lambda) is too low -- to increase in the count model 
@@ -271,7 +271,7 @@ vioplot(NumberFiresRx ~ run_name, data = fire_summaries)
 #area burned per year?
 #waaaaay too  much area burned
 
-#run 5 is pretty close!
+#regression model is better than adjusted for accidental fire for mean, but adjusted is better for median
 
 hist(fire_summaries$TotalBurnedSitesAccidental*3.24) #convert to ha
 mean(fire_summaries$TotalBurnedSitesAccidental*3.24)
@@ -283,17 +283,17 @@ var(area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$caus
 hist(area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Human", ]$area_burned * subset_proportion_ca) #convert to ha
 mean(area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Human", ]$area_burned / 2.47)* subset_proportion_ca
 var(area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Human", ]$area_burned / 2.47* subset_proportion_ca) #convert to ha
-vioplot(fire_summaries$TotalBurnedSitesAccidental*3.24, area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$cause == "Human", ]$area_burned / 2.47  * subset_proportion_tcsi,
+vioplot(fire_summaries$TotalBurnedSitesAccidental[1:241]*3.24, area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$cause == "Human", ]$area_burned / 2.47  * subset_proportion_tcsi,
         area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Human", ]$area_burned / 2.47 * subset_proportion_ca)
 
-
-fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(TotalBurnedSitesAccidental)*3.24)
+fire_summaries %>% group_by(run_name) %>% summarise(median = median(TotalBurnedSitesAccidental)*3.24,
+                                                    mean = mean(TotalBurnedSitesAccidental)*3.24)
 
 
 
 #lightning fires
-#waaay too much area burned!!
-#too much fire in all scenarios -- by a lot!
+
+#adjusted is better for lightning fires
 hist(fire_summaries$TotalBurnedSitesLightning*3.24) #convert to ha
 mean(fire_summaries$TotalBurnedSitesLightning*3.24)
 fire_summaries %>% group_by(fire_model) %>% summarise(mean = mean(TotalBurnedSitesLightning))
@@ -332,13 +332,13 @@ fire_events_lightning <-fire_events %>%
   filter(IgnitionType == "Lightning")
 
 #wrong shape for fire size distribution, not enough small fires
-hist(log(fire_events_accidental$TotalSitesBurned[fire_events_accidental$run_name == "Scenario1 - test spread - run 1 - Copy (3)"] * 3.24)) #convert to ha
+hist(log(fire_events_accidental$TotalSitesBurned * 3.24)) #convert to ha
 mean(log(fire_events_accidental$TotalSitesBurned * 3.24))
 hist(log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
 mean(log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
 hist(log(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
 mean(log(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
-vioplot(log(fire_events_accidental$TotalSitesBurned[fire_events_accidental$run_name == "Scenario1 - test spread - run 1 - Copy (3)"] *3.24), 
+vioplot(log(fire_events_accidental$TotalSitesBurned *3.24), 
         log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47),
         log(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
 
