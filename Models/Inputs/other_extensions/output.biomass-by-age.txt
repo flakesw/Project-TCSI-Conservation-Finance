@@ -1,6 +1,6 @@
 LandisData  "Output Biomass-by-Age"
 
-Timestep   1
+Timestep   5
 
 MapNames   spp-bio-age/{species}-{ageclass}-{timestep}.img
 

@@ -20,12 +20,12 @@ GroundSlopeMap "../../Inputs/input_rasters_subset/Slope2.tif"
 UphillSlopeAzimuthMap  "../../Inputs/input_rasters_subset/upslope.tif"	
 ClayMap "../../Inputs/input_rasters_subset/PercClay.tif"
 
->>>>>>>> Count model<<<<<<<< << sf updated 2022-4-1 with new params to try to match observed ignitions
+>>>>>>>> Count model<<<<<<<< << sf updated 2022-4-22 with new params to try to match observed ignitions, calibrated using subset landscape
 >> make sure to fix for full landscape!!!
-LightningIgnitionsB0 -9.329565 <<-8.451792 adjusted for subset <<-6.787985 for whole TCSI region, direct from regression. Adjustment = -0.8777729
+LightningIgnitionsB0 -7.665758 <<-8.451792 adjusted for subset <<-6.787985 for whole TCSI region, direct from regression. Adjustment = -0.8777729
 LightningIgnitionsB1  0.0826
 
-AccidentalIgnitionsB0  -7.769684 <<-6.874282  adjusted for subset <<-5.210475 for whole TCSI region, direct from regression. Adjustment = -1.143784 + 0.2483816 = -0.8954024
+AccidentalIgnitionsB0  -6.105877 <<-6.874282  adjusted for subset <<-5.210475 for whole TCSI region, direct from regression. Adjustment = -1.143784 + 0.2483816 = -0.8954024
 AccidentalIgnitionsB1   0.0644
 
 IgnitionDistribution Poisson << Poisson or ZeroInflatedPoisson
@@ -40,7 +40,7 @@ MinimumRxFireWeatherIndex 6.0
 MaximumRxTemperature 32.0	<< Optional
 MinimumRxRelativeHumidity 22.0	<< Optional
 MaximumRxFireIntensity 1
-NumberRxAnnualFires 8
+NumberRxAnnualFires 80
 NumberRxDailyFires 1
 FirstDayRxFires 10
 LastDayRxFires 350
@@ -50,7 +50,7 @@ MaximumSpreadAreaB0	-71
 MaximumSpreadAreaB1	17.5 <<-3 <<FWI
 MaximumSpreadAreaB2	10.6 <<-2.5  <<effective wind speed
 
->>spread parameters from mixed effects model, updated 2022-4-14 with reduced sample set, new model run
+>>updated 2022-4-22 from mixed-effects regression
 >>model intercept is -2.5446786
 SpreadProbabilityB0 -2.4 <<more negative means lower spread
 SpreadProbabilityB1 0.0137766 <<FWI

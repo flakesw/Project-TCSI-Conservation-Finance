@@ -6,10 +6,10 @@ SeedingAlgorithm  WardSeedDispersal
 
 InitialCommunities      	"../../Inputs/necn/IC_TM_CSV.txt"
 InitialCommunitiesMap   	"../../Inputs/input_rasters_reproject/ic_mapcode5.tif"
-ClimateConfigFile			"../../Inputs/necn/climate-generator_historical.txt"  
+ClimateConfigFile		"../../Inputs/necn/climate-generator_cnrm.txt"  
 
-SoilDepthMapName					"../../Inputs/input_rasters_reproject/SoilDepth.tif" 
-SoilDrainMapName					"../../Inputs/input_rasters_reproject/SoilDrain.tif"
+SoilDepthMapName				"../../Inputs/input_rasters_reproject/SoilDepth.tif" 
+SoilDrainMapName				"../../Inputs/input_rasters_reproject/SoilDrain.tif"
 SoilBaseFlowMapName				"../../Inputs/input_rasters_reproject/BaseFFrac.tif"  
 SoilStormFlowMapName				"../../Inputs/input_rasters_reproject/StormFFrac.tif" 
 SoilFieldCapacityMapName			"../../Inputs/input_rasters_reproject/FieldCap2.tif"
@@ -67,7 +67,7 @@ LightEstablishmentTable
 	4	0.0	0.01	0.6	1.0	0.5	0.02
 	5	0.0	0.0	0.01	0.5	1.0	1.0
 		
-SpeciesParameters "../../Inputs/necn/NECN_Spp_Table.csv"
+SpeciesParameters	"../../Inputs/necn/NECN_Spp_Table.csv"
 
 FunctionalGroupParameters "../../Inputs/necn/NECN_Functional_Table.csv"
 									

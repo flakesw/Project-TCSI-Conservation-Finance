@@ -1,6 +1,6 @@
 LandisData  "Output Biomass"
 
-Timestep  1
+Timestep  5
 
 MakeTable yes  << Optional parameter
 
