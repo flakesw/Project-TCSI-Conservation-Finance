@@ -5,11 +5,11 @@ library("tidyverse")
 library("sf")
 library("vioplot")
 
-subset_landscape <- TRUE
+subset_landscape <- FALSE
 
 
 ## SCRPPLE outputs
-setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance/")
+# setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance/")
 
 # setwd("./subset_scenario/social-climate-fire")
 
@@ -74,8 +74,10 @@ short_ca_by_year <- short_ca %>%
 # information.
 
 #what folder do all the runs to be analyze live in?
-scenario_folder <- "E:/tcsi_for_nick"
-scenarios <- list.dirs(scenario_folder, recursive = FALSE)[-1]
+scenario_folder <- "E:/TCSI LANDIS/"
+# scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model runs"
+scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
+  `[`(grep("Scenario", .))
 # scenarios <- scenarios[-1]
 
 #some helper functions
@@ -107,9 +109,10 @@ scenario_type <- data.frame(run_name = character(length(scenarios)),
                             climate = character(length(scenarios)))
 
 scenario_type <- scenario_type %>%
-  mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(3, 1)))) %>%
+  mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(4, 1)))) %>%
   mutate(mgmt = unlist(map(scenarios, get_mgmt))) %>%
-  mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", "Historical")) 
+  mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", 
+                          ifelse(grepl(pattern = "cnrm", run_name), "CNRM", "Historical"))) 
 
 # scenario_type$fire_model <- rep(c("fixed", "mixed"), each = 3)
 
@@ -254,7 +257,7 @@ var(n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Natura
 vioplot(fire_summaries$NumberFiresLightning, n_fires_short_tcsi_by_year_type[n_fires_short_tcsi_by_year_type$cause == "Natural", ]$n * subset_proportion_tcsi,
         n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Natural", ]$n * subset_proportion_ca)
 
-fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(NumberFiresLightning))
+test <- fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(NumberFiresLightning))
 
 log(0.6942149/0.2211845)
 
@@ -284,7 +287,7 @@ vioplot(fire_summaries$TotalBurnedSitesAccidental*3.24, area_burned_short_tcsi_b
         area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Human", ]$area_burned / 2.47 * subset_proportion_ca)
 
 
-fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(TotalBurnedSitesAccidental)*3.24)
+test <- fire_summaries %>% group_by(run_name) %>% summarise(mean = max(TotalBurnedSitesAccidental)*3.24)
 
 
 
@@ -308,7 +311,7 @@ fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(TotalBurnedSites
 
 
 #compare among treatments
-vioplot(TotalBurnedSitesLightning ~ run_name, data = fire_summaries)
+vioplot(log(TotalBurnedSitesLightning + 1) ~ run_name, data = fire_summaries)
 vioplot(TotalBurnedSitesAccidental ~ run_name, data = fire_summaries)
 vioplot(TotalBurnedSitesRx ~ run_name, data = fire_summaries) 
 
@@ -318,6 +321,16 @@ vioplot(TotalBiomassMortalityAccidental ~ run_name, data = fire_summaries)
 boxplot(TotalBurnedSitesLightning ~ run_name, data = fire_summaries)
 boxplot(TotalBurnedSitesAccidental ~ run_name, data = fire_summaries)
 boxplot(TotalBurnedSitesRx ~ run_name, data = fire_summaries)
+
+fire_summaries %>%
+  group_by(climate, mgmt) %>%
+  summarise(fire = mean(TotalBurnedSitesLightning) / 3.24) 
+
+fire_summaries %>%
+  group_by(climate, mgmt) %>%
+  summarise(fire = mean(TotalBurnedSitesLightning) / 3.24) 
+
+
 
 
 #-----------------------------------------------------------------------------

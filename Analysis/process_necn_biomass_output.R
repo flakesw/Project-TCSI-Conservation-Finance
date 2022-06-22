@@ -6,9 +6,10 @@
 # information.
 
 #what folder do all the runs to be analyzed live in?
-scenario_folder <- "E:/tcsi_for_nick"
-scenarios <- list.dirs(scenario_folder, recursive = FALSE)
-# scenarios <- scenarios[-1]
+scenario_folder <- "E:/TCSI LANDIS/"
+# scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model runs"
+scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
+  `[`(grep("Scenario", .))
 
 #some helper functions
 read_plus <- function(flnm) {
@@ -40,8 +41,9 @@ scenario_type <- data.frame(run_name = character(length(scenarios)),
 
 scenario_type <- scenario_type %>%
   mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(3, 1)))) %>%
-  mutate(mgmt = unlist(map(scenarios, get_mgmt))) %>%
-  mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", "Historical")) 
+  mutate(mgmt = unlist(map(scenarios, get_mgmt)))%>%
+  mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", 
+                          ifelse(grepl(pattern = "cnrm", run_name), "CNRM", "Historical"))) 
 
 # scenario_type$fire_model <- rep(c("fixed", "mixed"), each = 3)
 

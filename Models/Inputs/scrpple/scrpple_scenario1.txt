@@ -42,7 +42,7 @@ MinimumRxFireWeatherIndex 6.0
 MaximumRxTemperature 32.0	<< Optional
 MinimumRxRelativeHumidity 22.0	<< Optional
 MaximumRxFireIntensity 1
-NumberRxAnnualFires 80
+NumberRxAnnualFires 0
 NumberRxDailyFires 1
 FirstDayRxFires 10
 LastDayRxFires 350
