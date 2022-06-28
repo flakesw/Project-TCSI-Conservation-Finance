@@ -8,29 +8,29 @@ Timestep                            1
 
 Species_CSV_File	"../../Inputs/scrpple/SCRPPLE_spp_sierra.csv"
 
-AccidentalIgnitionsMap     	"../../Inputs/input_rasters_subset/accidental_tcsi.tif"
-LightningIgnitionsMap  		"../../Inputs/input_rasters_subset/lightning_tcsi.tif"
-RxIgnitionsMap  		"../../Inputs/input_rasters_subset/rx_equal1.tif"
+AccidentalIgnitionsMap     	"../../Inputs/input_rasters_reproject/accidental_tcsi.tif"
+LightningIgnitionsMap  		"../../Inputs/input_rasters_reproject/lightning_tcsi.tif"
+RxIgnitionsMap  		"../../Inputs/input_rasters_reproject/rx_equal1.tif"
 
-AccidentalSuppressionMap	"../../Inputs/input_rasters_subset/suppression_accidental.tif"
-LightningSuppressionMap		"../../Inputs/input_rasters_subset/suppression_lightning.tif"
-RxSuppressionMap		"../../Inputs/input_rasters_subset/full_suppression.tif" <<NEED
+AccidentalSuppressionMap	"../../Inputs/input_rasters_reproject/suppression_accidental.tif" <<updated sf 2022-3-7
+LightningSuppressionMap		"../../Inputs/input_rasters_reproject/suppression_lightning.tif" <<updated sf 2022-3-7
+RxSuppressionMap		"../../Inputs/input_rasters_reproject/full_suppression.tif" <<NEED
 
-GroundSlopeMap "../../Inputs/input_rasters_subset/Slope2.tif"		
-UphillSlopeAzimuthMap  "../../Inputs/input_rasters_subset/upslope.tif"	
-ClayMap "../../Inputs/input_rasters_subset/PercClay.tif"
+GroundSlopeMap "../../Inputs/input_rasters_reproject/Slope2.tif"		
+UphillSlopeAzimuthMap  "../../Inputs/input_rasters_reproject/upslope.tif"	
+ClayMap "../../Inputs/input_rasters_reproject/PercClay.tif"
 
->>>>>>>> Count model<<<<<<<< << sf updated 2022-4-22 with new params to try to match observed ignitions, calibrated using subset landscape
->> make sure to fix for full landscape!!!
-LightningIgnitionsB0 -7.665758 <<-8.451792 adjusted for subset <<-6.787985 for whole TCSI region, direct from regression. Adjustment = -0.8777729
+>>>>>>>> Count model<<<<<<<< << sf updated 2022-4-29 with new params to match ignitions from Karen Short database for entire SN
+
+LightningIgnitionsB0 -7.665758 
 LightningIgnitionsB1  0.0826
 
-AccidentalIgnitionsB0  -6.105877 <<-6.874282  adjusted for subset <<-5.210475 for whole TCSI region, direct from regression. Adjustment = -1.143784 + 0.2483816 = -0.8954024
+AccidentalIgnitionsB0  -5.6131164
 AccidentalIgnitionsB1   0.0644
 
 IgnitionDistribution Poisson << Poisson or ZeroInflatedPoisson
 
-MaximumFineFuels 1000 <<Set to 1000, sf 2021-11-11; Originally 5400, Derived from Fuel Loadings with Jonathan Long
+MaximumFineFuels 1000 <<Set to 1000 to match typical maximum fine fuels from LANDIS model, sf 2021-11-11; Originally 5400, Derived from Fuel Loadings with Jonathan Long
 
 >> Prescribed Fire Parameters
 >> make sure to fix for full landscape!!!
@@ -40,7 +40,7 @@ MinimumRxFireWeatherIndex 6.0
 MaximumRxTemperature 32.0	<< Optional
 MinimumRxRelativeHumidity 22.0	<< Optional
 MaximumRxFireIntensity 1
-NumberRxAnnualFires 80
+NumberRxAnnualFires 0
 NumberRxDailyFires 1
 FirstDayRxFires 10
 LastDayRxFires 350
@@ -50,8 +50,8 @@ MaximumSpreadAreaB0	-71
 MaximumSpreadAreaB1	17.5 <<-3 <<FWI
 MaximumSpreadAreaB2	10.6 <<-2.5  <<effective wind speed
 
->>updated 2022-4-22 from mixed-effects regression
->>model intercept is -2.5446786
+>>updated sf 2022-4-29 from mixed-effects regression
+
 SpreadProbabilityB0 -2.4 <<more negative means lower spread
 SpreadProbabilityB1 0.0137766 <<FWI
 SpreadProbabilityB2  0.5442314 << relativized fine fuels. Was .915
@@ -75,7 +75,7 @@ LadderFuelSpeciesList
 AbieConc CaloDecu PinuCont PinuJeff PinuLamb PinuPond PinuMono PinuSabi PinuWash PseuMenz FX_R_SEED NOFX_R_SEED NOFX_NOR_SEED
 
 SuppressionMaxWindSpeed 12
-Suppression_CSV_File "../../Inputs/scrpple/Suppression_Input_Gannon.csv"
+Suppression_CSV_File "../../Inputs/scrpple/Suppression_Input_Gannon.csv" <<updated sf 2022-3-7
 
 DeadWoodTable
 PinuJeff	22

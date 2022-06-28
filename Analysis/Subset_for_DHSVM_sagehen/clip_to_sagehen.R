@@ -5,7 +5,7 @@ output_folder <- "clipped_rasters"
 
 sagehen_shape <- sf::st_read("C:/Users/swflake/Documents/TCSI-conservation-finance/Models/Inputs/masks_boundaries/sagehen/sagehen.shp")
 
-raster_names <- list.files("projected_rasters")
+raster_names <- tools::file_path_sans_ext(list.files("projected_rasters"))
 
 rasters_to_clip <- terra::rast(list.files("projected_rasters", full.names = TRUE))
 

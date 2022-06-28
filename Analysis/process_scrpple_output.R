@@ -405,13 +405,13 @@ ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedAcresRx)) +
   geom_smooth( color = "black") + 
   facet_wrap(~ mgmt + climate, nrow = 3, ncol = 2)
 
-ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedSitesAccidental)) + 
+ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedSitesAccidental * 8)) + 
   geom_point(color="steelblue") + 
-  labs(title = "Prescribed burn area",
+  labs(title = "Accidental burn area",
        subtitle = "by management scenario and climate scenario",
        y = "Area burned (acres)", x = "Year") + 
   geom_smooth( color = "black") + 
-  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 2)
+  facet_wrap(~ climate + mgmt, nrow = 3, ncol = 3)
 
 ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedSitesLightning)) + 
   geom_point(color="steelblue") + 

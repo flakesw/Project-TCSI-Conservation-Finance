@@ -41,7 +41,7 @@ scenario_type <- data.frame(run_name = character(length(scenarios)),
 
 scenario_type <- scenario_type %>%
   mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(3, 1)))) %>%
-  mutate(mgmt = unlist(map(scenarios, get_mgmt)))%>%
+  mutate(mgmt = unlist(map(scenarios, get_mgmt))) %>%
   mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", 
                           ifelse(grepl(pattern = "cnrm", run_name), "CNRM", "Historical"))) 
 
