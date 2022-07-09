@@ -25,12 +25,12 @@ subset_landscape <- FALSE
 # #write as RDS; shapefile generates errors and cannot write as a .gdb file
 # saveRDS(short_tcsi, "../calibration data/short_tcsi/short_tcsi.RDS")
 
-short_tcsi <- readRDS("./Parameterization/calibration data/short_tcsi/short_tcsi.RDS") %>%
+short_tcsi <- readRDS("./Parameterization/calibration data/short_ignitions/short_tcsi.RDS") %>%
   # st_transform(crs(subset_poly)) %>%
   # st_intersection(subset_poly) %>%
   dplyr::filter(FIRE_SIZE >= 8) #filter to size of a cell, in acres %>%
 
-short_ca <- readRDS("./Parameterization/calibration data/short_tcsi/short_ca.RDS") %>%
+short_ca <- readRDS("./Parameterization/calibration data/short_ignitions/short_sierra.RDS") %>%
   dplyr::filter(FIRE_SIZE >= 8)
 
 area_tcsi <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_area_shapefile/TCSI_v2.shp") %>%
@@ -227,7 +227,8 @@ hist(n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Human
 mean(n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Human", ]$n) * subset_proportion_ca
 var(n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Human", ]$n * subset_proportion_ca)
 
-vioplot(fire_summaries$NumberFiresAccidental, n_fires_short_tcsi_by_year_type[n_fires_short_tcsi_by_year_type$cause == "Human", ]$n * subset_proportion_tcsi,
+vioplot(fire_summaries[fire_summaries$climate == "Historical", ]$NumberFiresAccidental, 
+        n_fires_short_tcsi_by_year_type[n_fires_short_tcsi_by_year_type$cause == "Human", ]$n * subset_proportion_tcsi,
         n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Human", ]$n * subset_proportion_ca)
 
 
@@ -254,7 +255,8 @@ hist(n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Natur
 mean(n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Natural", ]$n) * subset_proportion_ca
 var(n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Natural", ]$n * subset_proportion_ca)
 
-vioplot(fire_summaries$NumberFiresLightning, n_fires_short_tcsi_by_year_type[n_fires_short_tcsi_by_year_type$cause == "Natural", ]$n * subset_proportion_tcsi,
+vioplot(fire_summaries[fire_summaries$climate == "Historical", ]$NumberFiresLightning,
+        n_fires_short_tcsi_by_year_type[n_fires_short_tcsi_by_year_type$cause == "Natural", ]$n * subset_proportion_tcsi,
         n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Natural", ]$n * subset_proportion_ca)
 
 test <- fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(NumberFiresLightning))
@@ -283,7 +285,8 @@ var(area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$caus
 hist(area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Human", ]$area_burned * subset_proportion_ca) #convert to ha
 mean(area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Human", ]$area_burned / 2.47)* subset_proportion_ca
 var(area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Human", ]$area_burned / 2.47* subset_proportion_ca) #convert to ha
-vioplot(fire_summaries$TotalBurnedSitesAccidental*3.24, area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$cause == "Human", ]$area_burned / 2.47  * subset_proportion_tcsi,
+vioplot(fire_summaries[fire_summaries$climate == "Historical", ]$TotalBurnedSitesAccidental*3.24, 
+        area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$cause == "Human", ]$area_burned / 2.47  * subset_proportion_tcsi,
         area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Human", ]$area_burned / 2.47 * subset_proportion_ca)
 
 
@@ -304,14 +307,17 @@ var(area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$caus
 hist(area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Natural", ]$area_burned * subset_proportion_ca) #convert to ha
 mean(area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Natural", ]$area_burned / 2.47)* subset_proportion_ca
 var(area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Natural", ]$area_burned / 2.47* subset_proportion_ca) #convert to ha
-vioplot(fire_summaries$TotalBurnedSitesLightning*3.24, area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$cause == "Natural", ]$area_burned / 2.47  * subset_proportion_tcsi,
+vioplot(fire_summaries[fire_summaries$climate == "Historical", ]$TotalBurnedSitesLightning*3.24, 
+        area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$cause == "Natural", ]$area_burned / 2.47  * subset_proportion_tcsi,
         area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Natural", ]$area_burned / 2.47 * subset_proportion_ca)
 
-fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(TotalBurnedSitesLightning)*3.24) 
+test <- fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(TotalBurnedSitesLightning)*3.24) 
+
+test <- fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(TotalBurnedSitesRx)*3.24) 
 
 
 #compare among treatments
-vioplot(log(TotalBurnedSitesLightning + 1) ~ run_name, data = fire_summaries)
+vioplot(TotalBurnedSitesLightning ~ run_name, data = fire_summaries)
 vioplot(TotalBurnedSitesAccidental ~ run_name, data = fire_summaries)
 vioplot(TotalBurnedSitesRx ~ run_name, data = fire_summaries) 
 
@@ -328,7 +334,7 @@ fire_summaries %>%
 
 fire_summaries %>%
   group_by(climate, mgmt) %>%
-  summarise(fire = mean(TotalBurnedSitesLightning) / 3.24) 
+  summarise(fire = mean(TotalBurnedSitesAccidental) / 3.24) 
 
 
 
@@ -348,14 +354,11 @@ hist(log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE
 mean(log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
 hist(log(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
 mean(log(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
-vioplot(log(fire_events_accidental$TotalSitesBurned[fire_events_accidental$run_name == "Scenario1 - test spread - run 1 - Copy (3)"] *3.24), 
+vioplot(log(fire_events_accidental$TotalSitesBurned *3.24), 
         log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47),
         log(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
 
 fire_events_accidental %>% group_by(run_name) %>% summarise(mean = mean(log(TotalSitesBurned)))
-#scenario 5 is pretty close in mean, but not enough small fires still!
-#scenario 4 matches the mean fire size, but is still heavy-tailed
-
 
 
 hist(log(fire_events_lightning$TotalSitesBurned * 3.24)) #convert to ha
@@ -368,19 +371,18 @@ vioplot(log(fire_events_lightning$TotalSitesBurned*3.24),
         log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$FIRE_SIZE / 2.47),
         log(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$FIRE_SIZE / 2.47))
 
-#model 5 is still the best
+
 fire_events_lightning %>% group_by(run_name) %>% summarise(mean = mean(log(TotalSitesBurned)))
 
 #time of year of fires
-#accidental fires have good timing
+#accidental ignitions
 hist(fire_events_accidental$InitialDayOfYear)
 hist(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$DISCOVERY_DOY)
 hist(short_ca[short_ca$NWCG_CAUSE_CLASSIFICATION == "Human", ]$DISCOVERY_DOY)
 vioplot(fire_events_accidental$InitialDayOfYear, short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$DISCOVERY_DOY, 
         short_ca[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$DISCOVERY_DOY)
 
-#lightning igntions are a little late in the year, but not too bad
-#not sensitive enough to FWI?
+#lightning igntions
 hist(fire_events_lightning$InitialDayOfYear)
 hist(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$DISCOVERY_DOY)
 hist(short_ca[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Natural", ]$DISCOVERY_DOY)
@@ -403,7 +405,7 @@ ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedAcresRx)) +
        subtitle = "by management scenario and climate scenario",
        y = "Area burned (acres)", x = "Year") + 
   geom_smooth( color = "black") + 
-  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 2)
+  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 3)
 
 ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedSitesAccidental * 8)) + 
   geom_point(color="steelblue") + 
@@ -419,12 +421,11 @@ ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedSitesLightn
        subtitle = "by management scenario and climate scenario",
        y = "Area burned (acres)", x = "Year") + 
   geom_smooth( color = "black") + 
-  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 2)
-
-
+  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 3)
 
 
 ### compare fire and beetles
+#TODO where did the bda summary come from?
 
 combined <- fire_summaries %>%
   left_join(dplyr::select(bda_summaries2, !c("mgmt", "climate")),  by = c("run_name", "Year")) %>%

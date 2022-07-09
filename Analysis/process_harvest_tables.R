@@ -8,8 +8,8 @@ dirs <- paste0("E:/tcsi_for_nick/Scenario6 - historical - Run ", c(1:5),"/")
 # information.
 
 #what folder do all the runs to be analyze live in?
-scenario_folder <- "E:/tcsi_for_nick"
-scenarios <- list.dirs(scenario_folder, recursive = FALSE)
+scenario_folder <- "E:/TCSI Landis"
+scenarios <- list.dirs(scenario_folder, recursive = FALSE)[-c(1:4)]
 # scenarios <- scenarios[-1]
 
 flnm <- paste0(scenarios, "/harvest/summary-log.csv")[1]
@@ -18,7 +18,7 @@ flnm <- paste0(scenarios, "/harvest/summary-log.csv")[1]
 read_plus <- function(flnm) {
   read_csv(flnm) %>% 
     mutate(filename = as.character(flnm),
-           run_name = strsplit(flnm, "/")[[1]][4]) #changed this haphazardly; TODO make more flexible
+           run_name = strsplit(flnm, "/")[[1]][3]) #changed this haphazardly; TODO make more flexible
   
 }
 
@@ -45,9 +45,10 @@ scenario_type <- data.frame(run_name = character(length(scenarios)),
                             climate = character(length(scenarios)))
 
 scenario_type <- scenario_type %>%
-  mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(4, 1)))) %>%
+  mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(3, 1)))) %>%
   mutate(mgmt = unlist(map(scenarios, get_mgmt))) %>%
-  mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", "Historical")) 
+  mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", 
+                          ifelse(grepl(pattern = "cnrm", run_name), "CNRM", "Historical"))) 
 
 # scenario_type$fire_model <- rep(c("fixed", "mixed"), each = 3)
 
@@ -57,6 +58,13 @@ harvest_summaries <- paste0(scenarios, "/harvest/summary-log.csv")  %>%
 
 harvest_summaries2 <- harvest_summaries %>%
   group_by(run_name, Time) %>%
+  summarise(TotalBiomassHarvested_sum = sum(TotalBiomassHarvested),
+            TotalSitesHarvested_sum = sum(HarvestedSites),
+            mgmt = mgmt[1],
+            climate = climate[1])
+
+harvest_summaries3 <- harvest_summaries %>%
+  group_by(run_name) %>%
   summarise(TotalBiomassHarvested_sum = sum(TotalBiomassHarvested),
             TotalSitesHarvested_sum = sum(HarvestedSites),
             mgmt = mgmt[1],

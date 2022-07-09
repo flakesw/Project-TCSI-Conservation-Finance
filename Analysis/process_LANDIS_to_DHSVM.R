@@ -1,4 +1,23 @@
 # create some outputs for DHSVM
+library(tidyverse)
+library(terra)
+
+mask <- terra::rast("./Models/Inputs/masks_boundaries/mask.tif")
+
+project_to_template <- function(input_raster, template){
+  #function to project landis input rasters with no CRS to an input file
+  
+    out_raster <- template
+    values(out_raster) <- values(input_raster)
+  
+  # plot(out_raster)
+  
+  return(out_raster)
+}
+
+test_raster <- terra::rast("E:/TCSI LANDIS/Scenario1 - historical - Run 1/NECN/LAI-5.img")
+test <- project_to_template(test_raster, mask)
+
 
 #we need:
 # maps of CC

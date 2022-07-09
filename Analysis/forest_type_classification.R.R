@@ -13,7 +13,7 @@ plot(TCSI_template)
 
 ####sierraN###################################
 
-tcsi_dir <- "E:/TCSI LANDIS/Scenario1 - historical - Run 1/biomass/"
+tcsi_dir <- "E:/TCSI LANDIS/Scenario1 - miroc - Run 1/biomass/"
 TCSI_template <- raster("./Models/Inputs/masks_boundaries/mask.tif")
 
 rac <- raster(paste0(tcsi_dir, "AbieConc-",i,".img"))
@@ -144,3 +144,4 @@ tar[["cwhr_class"]] <- c("inactive", "Mixed hardwood conifer",	"Mixed hardwood",
 levels(CA_cwhr2) <- tar
 
 levelplot(CA_cwhr2, col.regions=mycolors)
+

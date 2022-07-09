@@ -16,7 +16,7 @@ library("tidyverse")
 library("sf")
 library("vioplot")
 
-subset_landscape <- TRUE
+subset_landscape <- FALSE
 
 get_raster_stack <- function(direct, pattern){
   raster_list <- list.files(direct, pattern = pattern)
@@ -47,7 +47,7 @@ select_severe_fire <- function(raster){
 }
 
 #-------------------------------------------------------------------------------
-mgmt_dirs <- paste0("E:/tcsi_for_nick/Scenario1 - historical - Run ", c(1:5),"/harvest/")
+mgmt_dirs <- paste0("E:/TCSI LANDIS/Scenario1 - historical - Run ", c(1:5),"/harvest/")
 
 biomass_runs_list <- mgmt_dirs %>%
   purrr::map(~get_raster_stack(.x, "biomass"))
@@ -61,7 +61,7 @@ total_biomass1 <- collapse_list_to_layers(biomass_sums1) %>%
 
 
 ####
-mgmt_dirs <- paste0("E:/tcsi_for_nick/Scenario6 - historical - Run ", c(1:5),"/harvest/")
+mgmt_dirs <- paste0("E:/TCSI LANDIS/Scenario6 - historical - Run ", c(2:6),"/harvest/")
 
 biomass_runs_list <- mgmt_dirs %>%
   purrr::map(~get_raster_stack(.x, "biomass"))
@@ -91,7 +91,7 @@ total_biomass6 <- collapse_list_to_layers(biomass_sums6) %>%
 # Scenario 1 -- reference
 #-------------------------------------------------------------------------------
 
-fire_dirs <- paste0("E:/tcsi_for_nick/Scenario1 - historical - Run ", c(1:5),"/social-climate-fire/")
+fire_dirs <- paste0("E:/TCSI LANDIS/Scenario1 - historical - Run ", c(1:5),"/social-climate-fire/")
 
 dnbr_runs_list <- fire_dirs %>% 
   purrr::map(.f = ~get_raster_stack(.x, "dnbr"))
@@ -173,7 +173,7 @@ plot(biomass_with_rx_sums1[[1]])
 # Scenario 6 -- comparison
 #-------------------------------------------------------------------------------
 
-fire_dirs <- paste0("E:/tcsi_for_nick/Scenario6 - historical - Run ", c(1:5),"/social-climate-fire/")
+fire_dirs <- paste0("E:/TCSI LANDIS/Scenario6 - historical - Run ", c(2:6),"/social-climate-fire/")
 
 dnbr_runs_list <- fire_dirs %>% 
   purrr::map(.f = ~get_raster_stack(.x, "dnbr"))
@@ -286,7 +286,8 @@ severe_diff <- severe_frequency %>%
 
 severe_diff_sum <- collapse_list_to_layers(severe_diff) %>%
   terra::app(fun=mean)
-
+values(severe_diff_sum)[values(severe_diff_sum) > 0] <- 0
+NAflag(severe_diff_sum) <- 0
 plot(severe_diff_sum)
 
 
@@ -308,12 +309,14 @@ smoothed_biomass <- terra::focal(biomass_diff[[1]],
                                  fun = "mean", 
                                  na.rm = TRUE, na.policy = "omit")
   
-plot(values(smoothed_fire_diff_mean6)*-1 ~ values(smoothed_biomass))  
+plot(values(smoothed_fire_diff_mean6)*-1 ~ values(smoothed_biomass),
+     xlab = "Biomass harvested or Rx burned",
+     ylab = "Biomass burned by wildfire")  
 
 smoothed_fire[smoothed_fire == 0] <- NA
 smoothed_biomass[smoothed_biomass == 0] <- NA
 
-test <- (smoothed_fire * -1) / smoothed_biomass
+test <- (smoothed_fire_diff_mean6 * -1) / smoothed_biomass
 
 test <- terra::clamp(test, lower = -2, upper = 2, values = TRUE)
 
