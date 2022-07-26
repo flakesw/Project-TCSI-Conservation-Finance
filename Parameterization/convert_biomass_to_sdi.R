@@ -1,3 +1,7 @@
+library(tidyverse)
+library(sf)
+
+
 # crosswalk biomass/age to SDI
 ca_fia_plot <- read.csv("D:/data/fia/rFIA_downloads/CA_PLOT.csv") %>%
   dplyr::filter(!is.na(LAT) & !is.na(LON)) %>%
@@ -14,6 +18,8 @@ all_fia_plot <- rbind(ca_fia_plot, nv_fia_plot) %>%
 
 ca_fia_cond <- read.csv("D:/Data/fia/rFIA_downloads/CA_COND.csv")
 nv_fia_cond <- read.csv("D:/data/fia/rFIA_downloads/NV_COND.csv")
+
+forest_ref <- read.csv("D:/Data/fia/FIADB_REFERENCE/REF_FOREST_TYPE.csv")
 
 all_fia_cond <- rbind(ca_fia_cond, nv_fia_cond)
 
@@ -42,7 +48,8 @@ sierra_fia_cond <- all_fia_cond %>%
   summarise(total_cond = sum(CONDPROP_UNADJ),
             natural = sum(STDORGCD, na.rm = TRUE),
             treatment = sum(TRTCD1, na.rm = TRUE),
-            proportion_forest = sum(CONDPROP_UNADJ * IS_FOREST)) %>%
+            proportion_forest = sum(CONDPROP_UNADJ * IS_FOREST),
+            cc = sum(CONDPROP_UNADJ * LIVE_CANOPY_CVR_PCT, na.rm = TRUE)) %>%
   filter(total_cond > 0.95 )
 
 plot_forest_type <- all_fia_cond %>%
@@ -51,19 +58,20 @@ plot_forest_type <- all_fia_cond %>%
   slice_max(total_fortypcd)
 
 sierra_fia_cond <- left_join(sierra_fia_cond, plot_forest_type, by = "PLT_CN")
+sierra_fia_cond$forest_group <- forest_ref[match(sierra_fia_cond$FORTYPCD, forest_ref$VALUE), "TYPGRPCD"]
 
-#-------------------------------------------------------------------------------
+ #-------------------------------------------------------------------------------
 # Match FIA data to LANDFIRE 
 #-------------------------------------------------------------------------------
-bps <- terra::rast("D:/Data/landfire vegetation/BPS/landfire_bps_200_sierra/LF2016_BPS_200_CONUS/LC16_BPS_200.tif")
-plot(bps)
-
-sierra_fia_plot <- sierra_fia_plot %>%
-  sf::st_transform(crs= st_crs(bps))
-
-plot(sf::st_geometry(sierra_fia_plot), add = TRUE)
-
-sierra_fia_plot$bps_code <- terra::extract(bps, vect(sierra_fia_plot), layer = "BPS_NAME")$BPS_CODE
+# bps <- terra::rast("D:/Data/landfire vegetation/BPS/landfire_bps_200_sierra/LF2016_BPS_200_CONUS/LC16_BPS_200.tif")
+# plot(bps)
+# 
+# sierra_fia_plot <- sierra_fia_plot %>%
+#   sf::st_transform(crs= st_crs(bps))
+# 
+# plot(sf::st_geometry(sierra_fia_plot), add = TRUE)
+# 
+# sierra_fia_plot$bps_code <- terra::extract(bps, vect(sierra_fia_plot), layer = "BPS_NAME")$BPS_CODE
 
 
 #----
@@ -106,16 +114,78 @@ tree_summary <- sierra_trees %>%
                    plot_qmd = sqrt((plot_bapa/plot_tpa)/0.005454),
                    plot_sdi = plot_tpa * ((plot_qmd/10)^(-1.605)),
                    sum_sdi = sum(TPA_UNADJ * ((DIA/10)^(-1.605))),
-                   biomass = sum(DRYBIO_TOTAL * TPA_UNADJ),
+                   biomass = sum(DRYBIO_TOTAL * TPA_UNADJ) / 892, #convert to megagrams per ha
                    mean_age = mean(TOTAGE, na.rm = TRUE),
                    high_age = quantile(TOTAGE, 0.9, na.rm = TRUE),
                    .groups = "keep") %>%
   # filter(!is.na(high_age)) %>%
   droplevels() %>%
   left_join(., sierra_fia_plot, by = c("PLT_CN" = "CN")) %>%
-  left_join(., sierra_fia_cond, by = c("PLT_CN" = "PLT_CN"))
-# 
-# tree_summary <- tree_summary %>%
+  left_join(., sierra_fia_cond, by = c("PLT_CN" = "PLT_CN")) %>%
+  filter(cc > 0)  %>%
+  group_by(forest_group) %>%
+  filter(n() >= 20)
+
+tree_summary$conifer <- as.factor(ifelse(as.numeric(as.character(tree_summary$forest_group)) < 500, 1, 2))
+
+tree_summary$cc_bin <- cut(tree_summary$cc, breaks = c(0, 10, 25, 40, 60, 100), labels = FALSE)
+
+tree_summary$cc_bin <- as.factor(tree_summary$cc_bin)
+
+tree_summary$FORTYPCD <- as.factor(tree_summary$FORTYPCD)
+tree_summary$forest_group <- as.factor(tree_summary$forest_group)
+ 
+tree_summary$sqrt_biomass <- sqrt(tree_summary$biomass)
+
+plot(tree_summary$cc ~ I(tree_summary$biomass^(0.5)))
+
+test <- (lm(tree_summary$cc ~ tree_summary$biomass * tree_summary$FORTYPCD))
+summary(test)
+test <- MASS::rlm(cc ~ sqrt(biomass) + 0, data = tree_summary)
+summary(test)
+
+tree_summary$cc_preds <- predict(test, newdata = tree_summary)
+tree_summary$cc_preds[tree_summary$cc_preds < 0] <- 0
+tree_summary$cc_preds_bin <- cut(tree_summary$cc_preds, breaks = c(0, 10, 25, 40, 60, 100), labels = FALSE)
+
+# plot(tree_summary$cc_preds_bin ~ I(tree_summary$cc_bin + rnorm(nrow(tree_summary), 0, 0.1)))
+
+tab <- table(tree_summary$cc_preds_bin, tree_summary$cc_bin)
+ca <- sum(diag(tab)) / sum(tab)
+
+plot(tree_summary$cc ~ tree_summary$biomass)
+curve(predict(test, newdata = data.frame(biomass=x)), add=TRUE, lwd = 2, col = "blue")
+
+
+m <- polr(cc_bin ~ sqrt(biomass) * forest_group, data = tree_summary, Hess=TRUE)
+
+table(predict(m, newdata = tree_summary), tree_summary$cc_bin)
+ca <- sum(diag(table(predict(m, newdata = tree_summary), tree_summary$cc_bin))) /
+  sum(table(predict(m, newdata = tree_summary), tree_summary$cc_bin))
+
+
+plot(tree_summary$cc ~ tree_summary$biomass)
+for(group in unique(tree_summary$forest_group)){
+  newdata <- data.frame(biomass = seq(0, 7e5, length.out = 1000),
+                        forest_group = rep(group, 1000))
+  lines(predict(test, newdata = newdata) ~ newdata$biomass)
+}
+
+plot(tree_summary$cc ~ tree_summary$biomass)
+plot(residuals(test) ~ fitted(test))
+abline(h = 0)
+sqrt(mean(residuals(test)^2))
+
+test <- nls(cc ~ SSlogis(sqrt(biomass), Asym, xmid, scal), data=tree_summary)
+summary(fit)
+sqrt(mean(residuals(fit)^2))
+
+plot(tree_summary$cc ~ tree_summary$plot_bapa)
+curve(predict(fit, newdata = data.frame(plot_bapa=x)), add=TRUE)
+plot(tree_summary$cc ~ tree_summary$plot_bapa)
+curve(predict(fit, newdata = data.frame(plot_bapa=x)), add=TRUE)
+
+# tree_summary <- tree_summary %>%# tree_summary <- tree_summary %>%# tree_summary <- tree_summary %>%
 #   filter(!is.na(mean_age))
 
 plot(log10(tree_summary$sum_sdi) ~ log10(tree_summary$biomass),
