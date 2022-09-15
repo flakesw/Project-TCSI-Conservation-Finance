@@ -3,8 +3,15 @@ library("stars")
 library("sf")
 library("tidyverse")
 library("terra")
+setGDALconfig("OSR_USE_NON_DEPRECATED", value="NO") #so we can still use EPSG:2163
+
 
 project_to_template <- function(input_raster, template){
+  #if input is terra or raster
+  
+  #if input is stars
+  
+  
   #function to project landis input rasters with no CRS to an input file
   input_raster <- terra::rast(input_raster)
     #replace values of template with values from input raster
@@ -16,22 +23,35 @@ project_to_template <- function(input_raster, template){
 
 #import boundary data
 
-tcsi_mask <- stars::read_stars("./Models/Inputs/masks_boundaries/mask.tif")
-tcsi_mask_terra <- as(tcsi_mask, "SpatRaster")
+tcsi_mask <- stars::read_stars("./Models/Inputs/masks_boundaries/mask_9311.tif") 
+st_crs(tcsi_mask)
+tcsi_mask_terra <- rast("./Models/Inputs/masks_boundaries/mask_9311.tif") 
 empty_mask <- tcsi_mask
 empty_mask$mask.tif <- 0
-
 tcsi_shape <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_area_shapefile/TCSI_v2.shp") %>%
-  st_transform(crs = st_crs(tcsi_mask))
+  st_transform(crs = "EPSG:9311")
+
+test <- mask(tcsi_mask_terra, vect(tcsi_shape))
+plot(test) #check alignment
 
 # 
-# stands <- stars::read_stars("./Models/Inputs/input_rasters_reproject/stands_ssp2_20_180_v5.tif")
-# stands
-# plot(stands)
-# table(stands)
+stands <- terra::rast("./Models/Inputs/input_rasters_reproject/stands_ssp2_20_180_v5.tif") %>%
+  terra::set.crs("EPSG:2163") %>%
+  terra::project("EPSG:9311") %>%
+  stars::st_as_stars()
+stands <- stars::read_stars("./Models/Inputs/input_rasters_reproject/stands_ssp2_20_180_v5.tif")
+st_crs(stands) <- "EPSG:2163"
+stands
+plot(stands)
+table(stands)
+
+test <- st_crop(stands, tcsi_shape)
+plot(test) #check alignment
+
 
 #import and process biomass data to make maximum biomass maps
 initial_biomass <- stars::read_stars("C:/Users/Sam/Documents/GlobusEndpoint/TotalBiomass-0.img")
+crs(initial_biomass)
 # plot(initial_biomass)
 
 hist(initial_biomass)
@@ -53,13 +73,19 @@ biomass_nodist <- st_redimension(biomass_nodist, new_dims = st_dimensions(biomas
                                  along = list(biomass = names(biomass_nodist)))
 names(biomass_nodist) <- "biomass"
 
-biomass_max <- stars::st_apply(biomass_stack_100, 1:2, FUN = function(x) max(x, na.rm = TRUE))
+biomass_max <- stars::st_apply(biomass_nodist, 1:2, FUN = function(x) max(x, na.rm = TRUE))
 biomass_max
-# plot(biomass_max)
-biomass_max_terra <- project_to_template(biomass_max, tcsi_mask_terra)
-plot(terra::rast(biomass_max))
+st_crs(biomass_max)
+plot(biomass_max)
+
+test <- stars:::st_as_raster(biomass_max)
+
+biomass_max_terra <- project_to_template(stars:::st_as_raster(biomass_max), tcsi_mask_terra)
+plot(terra::rast(biomass_max_terra))
 # write_stars(biomass_max, "biomass_max.tif")
 writeRaster(biomass_max_terra, "biomass_max.tif", overwrite = TRUE)
+test <- crop(tcsi_mask_terra, vect(tcsi_shape))
+plot(test)
 
 biomass_mean_100 <- stars::st_apply(biomass_stack_dist, 1:2, FUN = function(x) mean(x, na.rm = TRUE))
 
@@ -71,10 +97,10 @@ plot(diff_fire_beetles,
      main = "Difference in biomass due to disturance and management")
 
 biomass_35 <- biomass_max * 0.35
-# plot(biomass_35)
+plot(biomass_35)
 # write_stars(biomass_35, "biomass_35.tif")
 biomass_35_terra <- project_to_template(biomass_35, tcsi_mask_terra)
-writeRaster(biomass_35_terra, "biomass_35.tif", overwrite=TRUE)
+# writeRaster(biomass_35_terra, "biomass_35.tif", overwrite=TRUE)
 
 hist(biomass_35_terra[biomass_35_terra != 0])
 
@@ -128,10 +154,9 @@ final_mean_vs_biomass_35 <- biomass_mean - biomass_35
 # plot(final_mean_vs_biomass_35)
 
 initial_vs_biomass_35 <- initial_biomass - biomass_35
-# plot(initial_vs_biomass_35)
+plot(initial_vs_biomass_35)
 
-biomass_terra <- as(biomass_max, "SpatRaster") %>%
-  project_to_template(tcsi_mask_terra)
+biomass_terra <- biomass_max_terra
 terra::NAflag(biomass_terra) <- 0
 biomass_max_smooth <- focal(biomass_terra, w=3, fun="mean", na.policy="omit", na.rm = TRUE,
                             fillvalue=NA, 
@@ -258,6 +283,21 @@ plot(carbon_protect_rcl)
 ####################
 # Intersect layers
 
+#subdivisions to use: 
+#first digit: land type
+  #--1: wilderness
+  #--2: WUI threat
+  #--3: WUI defense
+  #--4: general forest
+  #--5: private industrial
+  #--6: private nonindustrial
+#second digit: max biomass
+  #--1: <10000
+  #--2: 
+  #--3:
+#third digit:
+  
+
 # I can't figure out how to do this in stars; it's in terra instead, sorry
 
 management_zones <- tcsi_mask_terra
@@ -269,6 +309,7 @@ management_zones <- tcsi_mask_terra
 #rasterize land ownership map
 fs_rast <- fs %>%
   mutate(OWNERCLASS = ifelse(OWNERCLASS == "NON-FS", 1, 2)) %>%
+  sf::st_transform(crs = "EPSG:9311") %>%
   vect() %>%
   terra::rasterize(tcsi_mask_terra, field = "OWNERCLASS")
 
