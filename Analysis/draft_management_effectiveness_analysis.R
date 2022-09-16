@@ -235,7 +235,7 @@ total_rx6 <- collapse_list_to_layers(rx_biomass_totals6) %>%
 plot(total_rx6)
 
 
-fire_summary6 <- read.csv("E:/tcsi_for_nick/Scenario1 - historical - Run 1/scrapple-summary-log.csv")
+# fire_summary6 <- read.csv("E:/tcsi_for_nick/Scenario1 - historical - Run 1/scrapple-summary-log.csv")
 
 
 ## update biomass removed to add in Rx fire

@@ -1,0 +1,16 @@
+LandisData "Climate Config"				
+		
+ClimateTimeSeries			Daily_RandomYears
+ClimateFile				"../../Inputs/Climate_IC/one_year_climate.csv"
+ClimateFileFormat			Daily_Temp-K_Precip-mmDay
+
+SpinUpClimateTimeSeries			Daily_RandomYears
+SpinUpClimateFile			"../../Inputs/Climate_IC/one_year_climate.csv"
+SpinUpClimateFileFormat			Daily_Temp-K_Precip-mmDay
+
+UsingFireClimate			yes
+FineFuelMoistureCode			85
+DuffMoistureCode			8
+DroughtCode				15
+FirstDayFire				10
+LastDayFire 				360

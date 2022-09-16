@@ -5,18 +5,20 @@
 # It depends on the naming convention of the files used to extract management and climate
 # information.
 
-#what folder do all the runs to be analyze live in?
-scenario_folder <- "E:/tcsi_for_nick"
-scenarios <- list.dirs(scenario_folder, recursive = FALSE)[-1]
-# scenarios <- scenarios[-1]
 
-flnm <- paste0(scenarios, "/harvest/summary-log.csv")[1]
+library("tidyverse")
+
+#what folder do all the runs to be analyzed live in?
+scenario_folder <- "E:/TCSI LANDIS/"
+# scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model runs"
+scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
+  `[`(grep("Scenario", .))
 
 #some helper functions
 read_plus <- function(flnm) {
   read_csv(flnm) %>% 
     mutate(filename = as.character(flnm),
-           run_name = strsplit(flnm, "/")[[1]][3]) #changed this haphazardly; TODO make more flexible
+           run_name = basename(substr(flnm, 0, regexpr("/[^/]*$", flnm)))) 
   
 }
 
@@ -25,7 +27,7 @@ get_mgmt <- function(scenario){
     pluck(1) %>%
     as.character() %>%
     strsplit(x = ., split = "[.]") %>%
-    pluck(1, 1)  %>%
+    pluck(1, 1)%>%
     strsplit(x = ., split = "[_]") %>%
     pluck(1, 1)
 }
@@ -43,11 +45,10 @@ scenario_type <- data.frame(run_name = character(length(scenarios)),
                             climate = character(length(scenarios)))
 
 scenario_type <- scenario_type %>%
-  mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(3, 1)))) %>%
+  mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(4, 1)))) %>%
   mutate(mgmt = unlist(map(scenarios, get_mgmt))) %>%
-  mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", "Historical")) 
-
-# scenario_type$fire_model <- rep(c("fixed", "mixed"), each = 3)
+  mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", 
+                          ifelse(grepl(pattern = "cnrm", run_name), "CNRM", "Historical"))) 
 
 bda_summaries <- paste0(scenarios, "/bda_log.csv")  %>%
   purrr::map_df(~read_plus(.)) %>%
@@ -108,7 +109,7 @@ ggplot(data = bda_summaries2, mapping = aes(x = Time, y = TotalBiomassKilled)) +
        subtitle = "by management scenario and climate scenario",
        y = "Biomass killed (Mg)", x = "Timestep") + 
   geom_smooth( color = "black") + 
-  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 2)
+  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 3)
 
 ggplot(data = bda_summaries2, mapping = aes(x = Time, y = TotalSitesAffected)) + 
   geom_point(color="steelblue") + 

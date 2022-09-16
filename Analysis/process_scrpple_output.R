@@ -1,6 +1,5 @@
 # process outputs for the subset landscape
 
-library("raster")
 library("tidyverse")
 library("sf")
 library("vioplot")
@@ -40,7 +39,7 @@ area_ca <- sf::st_read("./Models/Inputs/masks_boundaries/WIP_Capacity_V1Draft/WI
   summarise(do.union = TRUE) %>% 
   st_make_valid() %>%
   smoothr::fill_holes(threshold = 0.5) %>%
-  st_transform(crs(short_ca)) %>%
+  st_transform(sf::st_crs(short_ca)) %>%
   sf::st_area()
 
 
@@ -93,6 +92,8 @@ get_mgmt <- function(scenario){
     pluck(1) %>%
     as.character() %>%
     strsplit(x = ., split = "[.]") %>%
+    pluck(1, 1) %>%
+    strsplit(x = ., split = "[_]") %>%
     pluck(1, 1)
 }
 
@@ -120,38 +121,6 @@ fire_summaries <- paste0(scenarios, "/scrapple-summary-log.csv")  %>%
     purrr::map_df(~read_plus(.)) %>%
     left_join(scenario_type, c("run_name" = "run_name"))
 
-#---------------------
-# #do it manually if needed
-# scenarios <- c("./Analysis/Test/scen1/scrapple-summary-log.csv",
-#                "./Analysis/Test/scen1/scrapple-summary-log (1).csv",
-#                "./Analysis/Test/scen1/scrapple-summary-log (2).csv",
-#                "./Analysis/Test/scen1/scrapple-summary-log (3).csv",
-#                "./Analysis/Test/scen1/scrapple-summary-log (4).csv",
-#                "./Analysis/Test/scen6/scrapple-summary-log.csv",
-#                "./Analysis/Test/scen6/scrapple-summary-log (1).csv",
-#                "./Analysis/Test/scen6/scrapple-summary-log (2).csv",
-#                "./Analysis/Test/scen6/scrapple-summary-log (3).csv",
-#                "./Analysis/Test/scen6/scrapple-summary-log (4).csv",
-#                "./Analysis/Test/scen1miroc/scrapple-summary-log.csv",
-#                "./Analysis/Test/scen1miroc/scrapple-summary-log (1).csv",
-#                "./Analysis/Test/scen1miroc/scrapple-summary-log (2).csv",
-#                "./Analysis/Test/scen1miroc/scrapple-summary-log (3).csv",
-#                "./Analysis/Test/scen1miroc/scrapple-summary-log.csv",
-#                "./Analysis/Test/scen6miroc/scrapple-summary-log.csv",
-#                "./Analysis/Test/scen6miroc/scrapple-summary-log (1).csv",
-#                "./Analysis/Test/scen6miroc/scrapple-summary-log (2).csv",
-#                "./Analysis/Test/scen6miroc/scrapple-summary-log (3).csv",
-#                "./Analysis/Test/scen6miroc/scrapple-summary-log (4).csv")
-
-# fire_summaries <- scenarios %>%
-#   purrr::map_df(~read_plus(.))
-# 
-# scenario_type <- data.frame(filename = scenarios,
-#                             mgmt = rep(c(1,1,1,1,1,6,6,6,6,6), times = 2),
-#                             climate = rep(c("historical", "miroc"), each = 10))
-# fire_summaries <- fire_summaries %>%
-#   left_join(scenario_type, by = "filename")
-
 #----------------------
 
 fire_summaries$TotalBurnedSites <- fire_summaries$TotalBurnedSitesAccidental + 
@@ -169,6 +138,37 @@ fire_events <- paste0(scenarios, "/scrapple-events-log.csv")  %>%
   purrr::map_df(~read_plus(.)) %>%
   left_join(scenario_type, c("run_name" = "run_name"))
 
+
+#-------------------------------------------------------------------------------
+# process fire rasters
+# this can take a long time
+
+get_burn_intensity <- function(raster, intensity){
+  return(sum(terra::values(raster) >= intensity))
+}
+
+years <- 1:81
+#need to summarize fire data to 5-year chunks to compare with NECN data
+year_bins <- cut(years, breaks = seq(0,81, by = 5))
+
+intensity_paths <- paste0(rep(paste0(scenarios, "/social-climate-fire/"), each = length(years)), "/fire-intensity-", years, ".img")
+
+high_intensity_cells <- NA
+for(i in 1:length(intensity_paths)){
+  #TODO remake this a purrr::map workflow
+  high_intensity_cells[i] <- terra::rast(intensity_paths[i]) %>% 
+    get_burn_intensity(., 4)
+}
+
+fire_summaries$TotalSitesHighIntensity <- high_intensity_cells
+
+#TODO extract more information from rasters?
+
+## aggregate to five-year chunks
+# scr_summaries_5_year <- scr_summaries %>%
+#   dplyr::mutate(year_round = plyr::round_any(SimulationYear, 5, f = ceiling)) %>%
+#   dplyr::group_by(id, year_round) %>%
+#   dplyr::summarise(across(where(is.numeric), sum))
 
 #-------------------------------------------------------------------------------
 #Compare ignitions
@@ -259,7 +259,7 @@ vioplot(fire_summaries[fire_summaries$climate == "Historical", ]$NumberFiresLigh
         n_fires_short_tcsi_by_year_type[n_fires_short_tcsi_by_year_type$cause == "Natural", ]$n * subset_proportion_tcsi,
         n_fires_short_ca_by_year_type[n_fires_short_ca_by_year_type$cause == "Natural", ]$n * subset_proportion_ca)
 
-test <- fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(NumberFiresLightning))
+test <- fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(NumberFiresAccidental))
 
 log(0.6942149/0.2211845)
 
@@ -287,7 +287,9 @@ mean(area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause =
 var(area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Human", ]$area_burned / 2.47* subset_proportion_ca) #convert to ha
 vioplot(fire_summaries[fire_summaries$climate == "Historical", ]$TotalBurnedSitesAccidental*3.24, 
         area_burned_short_tcsi_by_year_type[area_burned_short_tcsi_by_year_type$cause == "Human", ]$area_burned / 2.47  * subset_proportion_tcsi,
-        area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Human", ]$area_burned / 2.47 * subset_proportion_ca)
+        area_burned_short_ca_by_year_type[area_burned_short_ca_by_year_type$cause == "Human", ]$area_burned / 2.47 * subset_proportion_ca,
+        names = c("Simulated", "Observed TCSI", "Observed Sierra"),
+        ylab = "Area burned per year (hectares)")
 
 
 test <- fire_summaries %>% group_by(run_name) %>% summarise(mean = max(TotalBurnedSitesAccidental)*3.24)
@@ -348,7 +350,7 @@ fire_events_lightning <-fire_events %>%
   filter(IgnitionType == "Lightning")
 
 #wrong shape for fire size distribution, not enough small fires
-hist(log(fire_events_accidental$TotalSitesBurned[fire_events_accidental$run_name == "Scenario1 - test spread - run 1 - Copy (3)"] * 3.24)) #convert to ha
+hist(log(fire_events_accidental$TotalSitesBurned * 3.24)) #convert to ha
 mean(log(fire_events_accidental$TotalSitesBurned * 3.24))
 hist(log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
 mean(log(short_tcsi[short_tcsi$NWCG_CAUSE_CLASSIFICATION == "Human", ]$FIRE_SIZE / 2.47))
@@ -424,6 +426,96 @@ ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedSitesLightn
   facet_wrap(~ mgmt + climate, nrow = 3, ncol = 3)
 
 
+#-------------------------------------------------------------------------------
+# High-intensity fire
+
+
+ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalSitesHighIntensity * 8)) + 
+  geom_point(color="steelblue") + 
+  labs(title = "Prescribed burn area",
+       subtitle = "by management scenario and climate scenario",
+       y = "Area burned (acres)", x = "Year") + 
+  geom_smooth( color = "black") + 
+  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 3)
+
+ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalSitesHighIntensity/TotalBurnedSites)) + 
+  geom_point(color="steelblue") + 
+  labs(title = "Prescribed burn area",
+       subtitle = "by management scenario and climate scenario",
+       y = "Area burned (acres)", x = "Year") + 
+  geom_smooth( color = "black") + 
+  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 3)
+
+
+
+events_sum <- fire_events_accidental %>%
+  group_by(SimulationYear, run_name) %>%
+  summarise(mean_dnbr = weighted.mean(MeanDNBR, TotalSitesBurned),
+            mgmt = mgmt[1],
+            climate = climate[1])
+
+ggplot(data = events_sum, mapping = aes(x = SimulationYear, y = mean_dnbr)) + 
+  geom_point(color="steelblue") + 
+  labs(title = "Mean DNBR",
+       subtitle = "by management scenario and climate scenario",
+       y = "DNBR", x = "Year") + 
+  geom_smooth( color = "black") + 
+  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 3)
+
+
+
+#-------------------------------------------------------------------------------
+# Fire over time -- biomass burned
+fire_summaries <- fire_summaries %>%
+  group_by(run_name) %>%
+  mutate(CumBiomassMort = cumsum(TotalBiomassMortalityAccidental)) %>%
+  ungroup()
+
+fire_summaries %>% 
+  filter(Year == 2100, climate == "MIROC", mgmt == "Scenario1") %>% 
+  select(CumBiomassMort)  %>%
+  unlist() %>%
+  mean()
+
+fire_summaries %>% 
+  filter(Year == 2100, climate == "MIROC", mgmt == "Scenario6") %>% 
+  select(CumBiomassMort)  %>%
+  unlist() %>%
+  mean()
+
+
+ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBiomassMortalityRx)) + 
+  geom_point(color="steelblue") + 
+  labs(title = "Prescribed burn area",
+       subtitle = "by management scenario and climate scenario",
+       y = "Biomass burned (units)", x = "Year") + 
+  geom_smooth( color = "black") + 
+  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 3)
+
+ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBiomassMortalityAccidental)) + 
+  geom_point(color="steelblue") + 
+  labs(title = "Biomass killed by fire",
+       subtitle = "by management scenario and climate scenario",
+       y = "Biomass killed (g m-2)", x = "Year") + 
+  geom_smooth( color = "black") + 
+  facet_wrap(~ climate + mgmt, nrow = 3, ncol = 3)
+
+ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBiomassMortalityLightning)) + 
+  geom_point(color="steelblue") + 
+  labs(title = "Prescribed burn area",
+       subtitle = "by management scenario and climate scenario",
+       y = "Area burned (acres)", x = "Year") + 
+  geom_smooth( color = "black") + 
+  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 3)
+
+ggplot(data = fire_summaries[fire_summaries$climate != "CNRM", ], mapping = aes(x = Year, y = CumBiomassMort*(120*120)/1000/1000)) + 
+  geom_point(color="steelblue") + 
+  labs(title = "Cumulative biomass burned",
+       subtitle = "by management scenario and climate scenario",
+       y = "Biomass (Mg)", x = "Year") + 
+  geom_smooth( color = "black") + 
+  facet_wrap(~ mgmt + climate, nrow = 2, ncol = 3, dir = "v")
+
 ### compare fire and beetles
 #TODO where did the bda summary come from?
 
@@ -431,21 +523,33 @@ combined <- fire_summaries %>%
   left_join(dplyr::select(bda_summaries2, !c("mgmt", "climate")),  by = c("run_name", "Year")) %>%
   mutate((across(c("TotalBiomassKilled", "TotalSitesAffected"), ~replace(., is.na(.), 0)))) %>%
   mutate(TotalBiomassWildfire = TotalBiomassMortalityAccidental + TotalBiomassMortalityLightning,
-         TotalBurnedSites = TotalBurnedSitesAccidental + TotalBurnedSitesLightning)
+         TotalBurnedSites = TotalBurnedSitesAccidental + TotalBurnedSitesLightning) %>%
+  filter(climate != "CNRM")
 
 ggplot() + 
   labs(title = "Area affected by fire and beetles",
        subtitle = "by management scenario and climate scenario",
-       y = "Area burned (acres)", x = "Year") + 
-  geom_smooth(color="steelblue", data = combined, mapping = aes(x = Year, y = TotalBurnedSites)) + 
-  geom_smooth(color="green", data = combined, mapping = aes(x = Year, y = TotalSitesAffected)) +
-  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 2)
+       y = "Area affected (acres)", x = "Year") + 
+  geom_smooth(color="steelblue", data = combined, mapping = aes(x = Year, y = TotalBurnedSites * 8)) + 
+  geom_smooth(color="green", data = combined, mapping = aes(x = Year, y = TotalSitesAffected * 8)) + 
+  facet_wrap(~ mgmt + climate, nrow = 2, ncol = 3, dir = "v") + 
+  scale_color_manual(name = "", values = c("TotalBurnedSites" = "steelblue", "TotalSitesAffected" = "green"))
 
 ggplot() + 
   labs(title = "Biomass killed by fire and beetles",
        subtitle = "by management scenario and climate scenario",
-       y = "Area burned (acres)", x = "Year") + 
-  geom_smooth(color="steelblue", data = combined, mapping = aes(x = Year, y = TotalBiomassWildfire)) + 
-  geom_smooth(color="green", data = combined, mapping = aes(x = Year, y = TotalBiomassKilled)) +
-  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 2)
+       y = "Biomass killed (Mg)", x = "Year") + 
+  geom_smooth(color="steelblue", data = combined, mapping = aes(x = Year, y = TotalBiomassWildfire*(120*120)/1000/1000)) + 
+  geom_smooth(color="green", data = combined, mapping = aes(x = Year, y = TotalBiomassKilled*(120*120)/1000/1000)) +
+  facet_wrap(~ mgmt + climate, nrow = 2, ncol = 3, dir = "v")
+
+
+
+
+
+#-------------------------------------------------------------------------------
+# Get fires which occur after a harvest
+
+# Match harvests and fires -- overlap and time since treatment
+# Get harvest intensity and fire intensity
 
