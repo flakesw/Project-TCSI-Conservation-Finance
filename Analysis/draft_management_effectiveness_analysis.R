@@ -47,7 +47,7 @@ select_severe_fire <- function(raster){
 }
 
 #-------------------------------------------------------------------------------
-mgmt_dirs <- paste0("E:/TCSI LANDIS/Scenario1 - historical - Run ", c(1:5),"/harvest/")
+mgmt_dirs <- paste0("E:/TCSI LANDIS/LANDIS Runs/Scenario1 - historical - Run ", c(1:5),"/harvest/")
 
 biomass_runs_list <- mgmt_dirs %>%
   purrr::map(~get_raster_stack(.x, "biomass"))
@@ -91,7 +91,7 @@ total_biomass6 <- collapse_list_to_layers(biomass_sums6) %>%
 # Scenario 1 -- reference
 #-------------------------------------------------------------------------------
 
-fire_dirs <- paste0("E:/TCSI LANDIS/Scenario1 - historical - Run ", c(1:5),"/social-climate-fire/")
+fire_dirs <- paste0("E:/TCSI LANDIS/LANDIS runs/Scenario1 - historical - Run ", c(1:5),"/social-climate-fire/")
 
 dnbr_runs_list <- fire_dirs %>% 
   purrr::map(.f = ~get_raster_stack(.x, "dnbr"))

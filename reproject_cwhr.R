@@ -1,6 +1,7 @@
 #fix epsg 2163 and 9311 issue
 library(terra)
 library(sf)
+library("tidyverse")
 setGDALconfig("OSR_USE_NON_DEPRECATED", value="NO") #so we can still use EPSG:2163
 
 
@@ -16,13 +17,37 @@ st_crs(tcsi_shape) #automatically updated to 9311
 test <- mask(tcsi_mask_9311, vect(tcsi_shape))
 plot(test) #aligned!
 
-dhsvm_grid <-  rast("./Models/Inputs/masks_boundaries/TCSIdomain_90mDEMfilled.tif")
-crs(dhsvm_grid)
-
 #original DHSVM layers in EPSG:2163
 in_folder <- "E:/TCSI LANDIS/CWHR/CWHR_diversity"
-raster_list <- list.files(in_folder, full.names = TRUE)
-raster_list <- raster_list[grepl(".tif", raster_list)]
+# in_folder <- "E:/tcsi backup/CWHR_diversity"
+raster_list <- list.files(in_folder, full.names = FALSE)
+raster_list <- raster_list[grepl(".tif$", raster_list)] #1600 vegetation layers, 405 year-run combos
+
+raster_list_fixed <- gsub(" ", "", raster_list) #1600 vegetation layers, 405 year-run combos
+raster_list_fixed <- gsub("-", "_", raster_list_fixed)
+raster_list_fixed <- gsub("run", "Run", raster_list_fixed)
+raster_list_fixed <- gsub("all_species", "allspecies", raster_list_fixed)
+
+test <- map(raster_list_fixed, .f = ~str_split_fixed(., pattern = "_", 9)) %>%
+  do.call(rbind, .) 
+
+table(test[, 7])
+table(test[, 9])
+
+test2 <- test[test[, 7] == "predators", ]
+
+table(test2[, 1], test2[, 6]) 
+
+#missing 6 from scenario 6, 3 from scenario 3
+#equal beta, nestedness, and turnover missing
+
+#scenario3 year 20
+#scenario6 year 0 and 10
+
+#predators are missing 9 steps
+#herbivores has 1 extra step
+
+
 
 out_folder <- "E:/TCSI LANDIS/Outputs_to_DHSVM_reprojected/"
 
