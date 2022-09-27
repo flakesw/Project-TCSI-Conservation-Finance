@@ -21,6 +21,7 @@ project_to_template <- function(input_raster, template){
 
 #import boundary data
 tcsi_mask_terra <- rast("./Models/Inputs/masks_boundaries/mask_9311.tif") 
+tcsi_mask_nad83 <- rast("./Models/Inputs/masks_boundaries/mask_nad83.tif")
 empty_mask <- tcsi_mask
 empty_mask$mask.tif <- 0
 tcsi_shape <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_area_shapefile/TCSI_v2.shp") %>%
@@ -392,3 +393,7 @@ table(values(management_zones))
 as.numeric(names(table(values(management_zones))))
 
 writeRaster(management_zones, "new_treatment_zones_v1.tif", overwrite = TRUE)
+
+
+tz_nad83 <- project(management_zones, tcsi_mask_nad83)
+writeRaster(tz_nad83, "tz_nad83.tif", overwrite = TRUE)
