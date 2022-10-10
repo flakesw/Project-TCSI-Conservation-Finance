@@ -1,5 +1,5 @@
 LandisData Scenario
->> scenario 2, miroc5
+>> scenario 2, cnrm
 Duration 81
 
 Species 		"../../Inputs/other_extensions/species.txt"
@@ -11,7 +11,7 @@ CellLength 180 << meters, so cell area = 3.24 ha
 >> Succession Extension Initialization File
 >> -------------------- -------------------
 
-"NECN Succession"	"../../Inputs/necn/NECN_Succession_miroc.txt" 					
+"NECN Succession"	"../../Inputs/necn/NECN_Succession_cnrm.txt" 					
 
 
 >> Disturbance Extensions Initialization File
