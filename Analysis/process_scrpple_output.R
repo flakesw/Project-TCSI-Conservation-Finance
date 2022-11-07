@@ -73,7 +73,7 @@ short_ca_by_year <- short_ca %>%
 # information.
 
 #what folder do all the runs to be analyze live in?
-scenario_folder <- "E:/TCSI LANDIS/"
+scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
 # scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model runs"
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
@@ -532,7 +532,7 @@ ggplot() +
        y = "Area affected (acres)", x = "Year") + 
   geom_smooth(color="steelblue", data = combined, mapping = aes(x = Year, y = TotalBurnedSites * 8)) + 
   geom_smooth(color="green", data = combined, mapping = aes(x = Year, y = TotalSitesAffected * 8)) + 
-  facet_wrap(~ mgmt + climate, nrow = 2, ncol = 3, dir = "v") + 
+  facet_wrap(~ mgmt + climate, dir = "v") + 
   scale_color_manual(name = "", values = c("TotalBurnedSites" = "steelblue", "TotalSitesAffected" = "green"))
 
 ggplot() + 
@@ -541,7 +541,7 @@ ggplot() +
        y = "Biomass killed (Mg)", x = "Year") + 
   geom_smooth(color="steelblue", data = combined, mapping = aes(x = Year, y = TotalBiomassWildfire*(120*120)/1000/1000)) + 
   geom_smooth(color="green", data = combined, mapping = aes(x = Year, y = TotalBiomassKilled*(120*120)/1000/1000)) +
-  facet_wrap(~ mgmt + climate, nrow = 2, ncol = 3, dir = "v")
+  facet_wrap(~ mgmt + climate, dir = "v")
 
 
 
