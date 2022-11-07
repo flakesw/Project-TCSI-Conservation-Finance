@@ -509,7 +509,7 @@ row_tracker <- 1
 
 start_time <- Sys.time()
 
-for(i in 400:length(mtbs_shape)){
+for(i in 1:length(mtbs_shape)){
   
   error_flag <- FALSE
   try_again <- FALSE
@@ -911,9 +911,6 @@ plot(preds1 ~ newdata$ews, type = "l",
 
 
 #TODO: combine all shapefiles into one file for plotting, getting centroids
-
-
-
 
 
 # 

@@ -22,8 +22,8 @@ project_to_template <- function(input_raster, template){
 #import boundary data
 tcsi_mask_terra <- rast("./Models/Inputs/masks_boundaries/mask_9311.tif") 
 tcsi_mask_nad83 <- rast("./Models/Inputs/masks_boundaries/mask_nad83.tif")
-empty_mask <- tcsi_mask
-empty_mask$mask.tif <- 0
+# empty_mask <- tcsi_mask
+# empty_mask$mask.tif <- 0
 tcsi_shape <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_area_shapefile/TCSI_v2.shp") %>%
   st_transform(crs = "EPSG:9311")
 
@@ -123,7 +123,7 @@ ggplot(proportion_max, aes(x = biomass)) +
 change_in_biomass <- biomass_max - initial_biomass
 plot(change_in_biomass)
 
-final_mean_vs_biomass_35 <- biomass_mean - biomass_35
+final_mean_vs_biomass_35 <- biomass_mean_100 - biomass_35
 # plot(final_mean_vs_biomass_35)
 
 initial_vs_biomass_35 <- initial_biomass - biomass_35
@@ -228,6 +228,7 @@ wild <- sf::st_read("./Parameterization/calibration data/landuse/wilderness/wild
 fire_adapt <- rast("D:/Data/pillars/fireDynamics/fire_severity/tif/adapt.tif") %>%
   project(tcsi_mask_terra)
 plot(fire_adapt)
+
 fire_transform <- rast("D:/Data/pillars/fireDynamics/fire_severity/tif/transform.tif") %>%
   project(tcsi_mask_terra)
 plot(fire_transform)
@@ -410,27 +411,33 @@ table(values(management_zones))
 as.numeric(names(table(values(management_zones))))
 values(management_zones)[is.na(values(management_zones))] <- 0
 
-setGDALconfig("OSR_USE_NON_DEPRECATED", value="NO") #so we can still use EPSG:2163
-template <- rast("C:/Users/Sam/Documents/Research/TCSI conservation finance/Models/Inputs/input_rasters_reproject/stands_ssp2_20_180_v5.tif")
+plot(management_zones)
+plot(management_zones2)
+test <- mask(management_zones, tcsi_shape)
+test2 <- mask(management_zones2, tcsi_shape)
 
-management_zones2 <- template
-values(management_zones2) <- values(management_zones)
+management_zones2 <- project_to_template(management_zones, tcsi_mask_terra)
 
 writeRaster(management_zones2, "C:/Users/Sam/Documents/Research/TCSI conservation finance/Models/Inputs/input_rasters_reproject/new_treatment_zones_v1.tif", 
-            overwrite = TRUE, datatype = "INT2S")
+            overwrite = TRUE, datatype = "INT4S")
 
 management_vector <- as.polygons(management_zones2)
 
-tz <- management_zones2
-values(tz)[values(management_zones2) > 0] <- 1:length(values(tz)[values(management_zones2) > 0])
-plot(tz)
+#stand method 1:
+#each cell is its own stand
+#this makes too many stands for harvest to handle
+stands1 <- management_zones2
+values(stands1)[values(management_zones2) > 0] <- 1:length(values(stands1)[values(management_zones2) > 0])
+plot(stands1)
 
-writeRaster(tz, "C:/Users/Sam/Documents/Research/TCSI conservation finance/Models/Inputs/input_rasters_reproject/new_stands_v1.tif", 
-            overwrite = TRUE, datatype = "INT2S")
+
+writeRaster(stands1, "C:/Users/Sam/Documents/Research/TCSI conservation finance/Models/Inputs/input_rasters_reproject/stands_all_cells_v1.tif", 
+            overwrite = TRUE, datatype = "INT4S")
 
 
 
-### make new stands
+#stand method 2:
+#intersect TZ with huc12s to  make stands
 hu_layers <- sf::st_layers("D:/Data/hydro unit/WBD_18_HU2_GDB/WBD_18_HU2_GDB.gdb")
 hu2_zone16 <- sf::st_read("D:/Data/hydro unit/WBD_16_HU2_GDB/WBD_16_HU2_GDB.gdb",
                           layer = "WBDHU12") %>%
@@ -448,6 +455,53 @@ huc12 <- dplyr::bind_rows(hu2_zone16, hu2_zone18) %>%
   sf::st_make_valid()
 plot(sf::st_geometry(huc12))
 
-mgmt_vector <- terra::as.polygons(management_zones2)
+management_vector <- sf::st_as_sf(management_vector) %>%
+  sf::st_make_valid()
+
+#the geometry here gets wonky so we have to do some weird stuff to fix it
+stands2_vect <-  sf::st_intersection(huc12, management_vector) %>%
+  sf::st_as_sf() %>%
+  sf::st_cast("MULTIPOLYGON") %>%
+  sf::st_cast("POLYGON") %>%
+  sf::st_make_valid() %>%
+  sf::st_set_geometry("shape")
+stands2_vect$id <- 0:(nrow(stands2_vect)-1)
+
+# plot(st_geometry(stands2_vect))
+
+stands2 <- terra::rasterize(vect(stands2_vect), tcsi_mask_terra, "id")
+plot(stands2)
+values(stands2)[is.na(values(stands2))] <- 0
+
+test <- mask(stands2, tcsi_shape)
+plot(test)
 
 
+
+#the harvest extension seems to want an unsigned integer, but writing
+#with unsigned integer doesn't work for some reason
+#in fact this huc12 method doesn't work at all; not sure why but the intersection has invalid geometry
+writeRaster(stands2, "C:/Users/Sam/Documents/Research/TCSI conservation finance/Models/Inputs/input_rasters_reproject/stands_huc12_v1.tif", 
+            overwrite = TRUE, datatype = "INT4S", NAflag = 0)
+
+#stands method 3:
+#make a regular grid and intersect it with the treatment zones
+grid_tcsi <- sf::st_make_grid(tcsi_shape, cellsize = 720)
+plot(grid_tcsi)
+
+stands3_vect <- sf::st_intersection(grid_tcsi, management_vector)
+
+stands3_vect_sf <- stands3_vect %>%
+  sf::st_as_sf() %>%
+  sf::st_cast("MULTIPOLYGON")
+
+stands3_vect_sf$id <- 1:nrow(stands3_vect_sf)
+stands3 <- terra::rasterize(stands3_vect_sf, tcsi_mask_terra, "id")
+plot(stands3)
+values(stands3)[is.na(values(stands3))] <- 0
+
+test <- mask(stands3, tcsi_shape)
+plot(test)
+
+writeRaster(stands3, "C:/Users/Sam/Documents/Research/TCSI conservation finance/Models/Inputs/input_rasters_reproject/stands_grid_v1.tif", 
+            overwrite = TRUE, datatype = "INT4S", NAflag = 0)

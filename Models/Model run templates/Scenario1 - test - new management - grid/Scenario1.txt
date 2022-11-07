@@ -17,7 +17,7 @@ CellLength 180 << meters, so cell area = 3.24 ha
 >> Disturbance Extensions Initialization File
 >> ---------------------- -------------------
 	"SCRAPPLE"		"../../Inputs/scrpple/scrpple_scenario1.txt"					
-	"Biomass Harvest Biomass Rank"	"../../Inputs/management_scenarios/output-biom-harvest_s1_1.txt"	
+	"Biomass Harvest Biomass Rank"	"../../Inputs/management_scenarios/output-biom-harvest_maximum_reduction.txt"	
     	"Biomass BDA"           "../../Inputs/bda/biomass-BDA-input.txt"
 
 DisturbancesRandomOrder no
