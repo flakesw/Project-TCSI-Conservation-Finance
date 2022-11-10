@@ -9,7 +9,7 @@
 library("tidyverse")
 
 #what folder do all the runs to be analyzed live in?
-scenario_folder <- "E:/TCSI LANDIS/"
+scenario_folder <- "E:/TCSI LANDIS/LANDIS runs/"
 # scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model runs"
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
@@ -45,7 +45,7 @@ scenario_type <- data.frame(run_name = character(length(scenarios)),
                             climate = character(length(scenarios)))
 
 scenario_type <- scenario_type %>%
-  mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(4, 1)))) %>%
+  mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(5, 1)))) %>%
   mutate(mgmt = unlist(map(scenarios, get_mgmt))) %>%
   mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", 
                           ifelse(grepl(pattern = "cnrm", run_name), "CNRM", "Historical"))) 
@@ -61,7 +61,8 @@ bda_summaries2 <- bda_summaries %>%
             mgmt = mgmt[1],
             climate = climate[1])
 
-
+bda_summaries2 <- bda_summaries2 %>%
+  filter(mgmt %in% c("Scenario1", "Scenario3", "Scenario6"))
 
 
 # #---------------------
@@ -109,7 +110,7 @@ ggplot(data = bda_summaries2, mapping = aes(x = Time, y = TotalBiomassKilled)) +
        subtitle = "by management scenario and climate scenario",
        y = "Biomass killed (Mg)", x = "Timestep") + 
   geom_smooth( color = "black") + 
-  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 3)
+  facet_wrap(~ mgmt + climate)
 
 ggplot(data = bda_summaries2, mapping = aes(x = Time, y = TotalSitesAffected)) + 
   geom_point(color="steelblue") + 
