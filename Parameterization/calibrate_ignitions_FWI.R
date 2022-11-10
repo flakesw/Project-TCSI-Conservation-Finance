@@ -14,15 +14,15 @@ setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance")
 
 # short dataset: https://www.fs.usda.gov/rds/archive/Catalog/RDS-2013-0009.5
 # import the full dataset -- only if you haven't subset it already
-short_full <- sf::st_read("./calibration data/short/Data/FPA_FOD_20210617.gdb",
-                          layer = "Fires") %>%
-              sf::st_transform(crs = "EPSG:2163")
+# short_full <- sf::st_read("./calibration data/short/Data/FPA_FOD_20210617.gdb",
+#                           layer = "Fires") %>%
+#               sf::st_transform(crs = "EPSG:2163")
 
 ecoregions <- raster("./Models/Inputs/input_rasters_tcsi/categorical/TCSI_ecoregions.tif")
 ecoregion_size <- table(values(ecoregions))[-1]
 
 #short dataset already extracted for the whole sierra
-short_ca <- readRDS("./Parameterization/calibration data/short_tcsi/short_ca.RDS")%>%
+short_ca <- readRDS("./Parameterization/calibration data/short_ignitions/short_sierra.RDS")%>%
   filter(FIRE_SIZE >= 8)
 
 subset_polygon <- sf::st_read("./Models/Inputs/masks_boundaries/subset_polygon/subset_polygon.shp") %>%
@@ -31,7 +31,7 @@ subset_polygon <- sf::st_read("./Models/Inputs/masks_boundaries/subset_polygon/s
 tcsi_polygon <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_area_shapefile/TCSI_v2.shp") %>%
   sf::st_transform(crs(short_ca))
 
-fwi_landis <- read.csv("./Parameterization/calibration data/climate/Climate_10_regions_historical.csv")
+fwi_landis <- read.csv("./Parameterization/calibration data/climate/Climate-future-input-log.csv")
 #add a date column
 fwi_landis$date <- parse_date_time(as.character(fwi_landis$Year), orders = "y")
 yday(fwi_landis$date) <- fwi_landis$Timestep
@@ -58,15 +58,15 @@ ca_region_wgs84 <- st_transform(ca_region, crs = "EPSG:4326")
 
 table(short_ca$FIRE_YEAR) #first year is 1992
 
-short_tcsi <- readRDS("./Parameterization/calibration data/short_tcsi/short_tcsi.RDS")%>%
+short_tcsi <- readRDS("./Parameterization/calibration data/short_ignitions/short_tcsi.RDS")%>%
   filter(FIRE_SIZE >= 8)
 
-short_ca$date_clean <- lubridate::parse_date_time(short_ca$DISCOVERY_DATE, order = "ymd")
+short_ca$date_clean <- lubridate::parse_date_time(as.Date(short_ca$DISCOVERY_DATE), orders = "ymd")
 
 short_by_day <- aggregate(short_ca, by = list(short_ca$date_clean, short_ca$NWCG_CAUSE_CLASSIFICATION), FUN = length)[, c(1:3)] %>%
   rename(date = Group.1, cause = Group.2, n.fires = FOD_ID)
 
-short_tcsi$date_clean <- lubridate::parse_date_time(short_tcsi$DISCOVERY_DATE, order = "ymd")
+short_tcsi$date_clean <- lubridate::parse_date_time(as.Date(short_tcsi$DISCOVERY_DATE), order = "ymd")
 
 short_tcsi_by_day <- aggregate(short_tcsi, by = list(short_tcsi$date_clean, short_tcsi$NWCG_CAUSE_CLASSIFICATION), FUN = length)[, c(1:3)] %>%
   rename(date = Group.1, cause = Group.2, n.fires = FOD_ID)
@@ -91,7 +91,7 @@ plot(n.fires ~ fwi, data = all_fwi_data_merge_lightning)
 plot(n.fires ~ fwi, data = all_fwi_data_merge_accidental)
 
 area_ca <- sf::st_area(ca_region)
-area_tcsi <- sf::st_area(tcsi_poly)
+area_tcsi <- sf::st_area(tcsi_polygon)
 area_subset <- sf::st_area(subset_polygon)
 scale_ca_to_tcsi <- as.numeric(area_tcsi / area_ca)
 scale_tcsi_to_subset <- as.numeric(area_subset / area_tcsi)
@@ -230,8 +230,6 @@ plot(mean_ignitions ~ jday, data = average_year_accidental)
 lines(predict(accidental_tcsi, newdata = data.frame(fwi = average_year_accidental$mean_fwi)) ~ average_year_accidental$jday)
 lines(predict(accidental_tcsi_poisson, newdata = data.frame(fwi = average_year_accidental$mean_fwi), type = "response") ~ 
         average_year_accidental$jday)
-
-
 
 
 plot(n.fires ~ fwi, data = all_fwi_data_merge_lightning)

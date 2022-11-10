@@ -2,8 +2,8 @@
 library(raster)
 library(dplyr)
 
-input_raster <- raster("C:/Users/swflake/Documents/LANDIS inputs/Model runs/Scenario1 - no disturbance - oneyear/NECN/LAI-1.img")
-template_raster <- raster("C:/Users/swflake/Documents/LANDIS inputs/Inputs/masks_boundaries/mask.tif")
+input_raster <- raster("./Models/Model run templates/Scenario1 - test - new management - grid/biomass/TotalBiomass-0.img")
+template_raster <- raster("./Models/Inputs/masks_boundaries/mask_9311.tif")
   
 project_to_template <- function(input_raster, template){
   #function to project landis input rasters with no CRS to an input file
@@ -21,5 +21,9 @@ project_to_template <- function(input_raster, template){
 
 output <- project_to_template(input_raster, template_raster)
 
-writeRaster(output, "LAI-initial.tif", datatype = "FLT4S", overwrite = TRUE)
+new <- raster("./Models/Inputs/masks_boundaries/mask_nad83.tif")
+
+out <- projectRaster(output, new)
+
+writeRaster(out, "biomass_initial_nad83.tif", datatype = "FLT4S", overwrite = TRUE)
 

@@ -1,7 +1,5 @@
 # Wrangle the harvest summary tables
 
-dirs <- paste0("E:/tcsi_for_nick/Scenario6 - historical - Run ", c(1:5),"/")
-
 # This chunk of code is designed to run directly on the folder of LANDIS model runs
 # and requires additional files like the scenario.txt file to grab some information.
 # It depends on the naming convention of the files used to extract management and climate

@@ -40,16 +40,15 @@ hist(initial_biomass)
 
 
 
-biomass_list <- list.files("C:/Users/Sam/Documents/GlobusEndpoint/Biomass", full.names = TRUE)
+biomass_list <- list.files("./Parameterization/calibration data/max_biomass", full.names = TRUE)
+biomass_list <- paste0(biomass_list, "/biomass/TotalBiomass-80.img")
 
 biomass_stack_all  <- rast((biomass_list))
 biomass_stack_all <- c(biomass_stack_all, initial_biomass)
 
 biomass_stack_100 <- rast(biomass_list)
-biomass_stack_dist <- rast(biomass_list[-1])
-biomass_nodist <- rast(biomass_list[1])
 
-biomass_max <- max(biomass_stack_all, na.rm = TRUE)
+biomass_max <- max(biomass_stack_100, na.rm = TRUE)
 biomass_max
 st_crs(biomass_max)
 plot(biomass_max)
@@ -61,13 +60,6 @@ test <- crop(tcsi_mask_terra, vect(tcsi_shape))
 plot(test)
 
 biomass_mean_100 <- mean(biomass_stack_100, na.rm = TRUE)
-
-diff_fire_beetles <- (biomass_nodist - biomass_mean_100)/100
-plot(diff_fire_beetles)
-diff_fire_beetles <- project_to_template(diff_fire_beetles, tcsi_mask_terra)
-NAflag(diff_fire_beetles) <- 0
-plot(diff_fire_beetles,
-     main = "Difference in biomass due to disturance and management")
 
 biomass_35 <- biomass_max * 0.35
 plot(biomass_35)
@@ -124,7 +116,7 @@ change_in_biomass <- biomass_max - initial_biomass
 plot(change_in_biomass)
 
 final_mean_vs_biomass_35 <- biomass_mean_100 - biomass_35
-# plot(final_mean_vs_biomass_35)
+plot(final_mean_vs_biomass_35)
 
 initial_vs_biomass_35 <- initial_biomass - biomass_35
 plot(initial_vs_biomass_35)

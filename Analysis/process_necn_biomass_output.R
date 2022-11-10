@@ -8,10 +8,13 @@
 library("tidyverse")
 
 #what folder do all the runs to be analyzed live in?
-scenario_folder <- "E:/TCSI LANDIS/"
-# scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model runs"
+# scenario_folder <- "E:/TCSI LANDIS/"
+# scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model templates"
+scenario_folder <- "./Models/Model run templates/"
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
+
+scenarios <- scenarios[6]
 
 #some helper functions
 read_plus <- function(flnm) {
@@ -76,6 +79,14 @@ ggplot(data = necn_summaries2[necn_summaries2$climate %in% c("Historical", "MIRO
        y = "Average AGB (g m-2)", x = "Simulation Year") + 
   geom_smooth( color = "black") + 
   facet_wrap(~ mgmt + climate, nrow = 2, ncol = 3, dir = "v")
+
+
+ggplot(data = necn_summaries2, mapping = aes(x = Time+2020, y = TotalAGB)) + 
+  geom_point(color="steelblue") + 
+  labs(title = "Aboveground biomass",
+       subtitle = "by management scenario and climate scenario",
+       y = "Average AGB (g m-2)", x = "Simulation Year") + 
+  geom_smooth( color = "black")
 
 ggplot(data = harvest_summaries, mapping = aes(x = Time, y = AcresHarvested)) + 
   geom_point(color="steelblue") + 
