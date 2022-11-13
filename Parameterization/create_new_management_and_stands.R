@@ -302,7 +302,7 @@ wild_rast <- wild %>%
   sf::st_transform(crs = st_crs(tcsi_mask_terra)) %>%
   vect() %>%
   terra::rasterize(tcsi_mask_terra)
-plot(wild_rast)
+# plot(wild_rast)
 
 wui_threat_rast <- wui_threat %>%
   sf::st_transform(crs = st_crs(tcsi_mask_terra)) %>%
@@ -322,7 +322,7 @@ all_public_rast <- ownership[ownership$Own_Level != "Non Profit", ] %>%
   terra::rasterize(tcsi_mask_terra)
 
 private_indust_rast <- ownership2[ownership2 %in% c(2,3)]
-plot(private_indust_rast)
+# plot(private_indust_rast)
 
 #slope constraints -- 35% to 50% slopes, 40% as a general constraint
 
@@ -404,9 +404,9 @@ as.numeric(names(table(values(management_zones))))
 values(management_zones)[is.na(values(management_zones))] <- 0
 
 plot(management_zones)
-plot(management_zones2)
+# plot(management_zones2)
 test <- mask(management_zones, tcsi_shape)
-test2 <- mask(management_zones2, tcsi_shape)
+# test2 <- mask(management_zones2, tcsi_shape)
 
 management_zones2 <- project_to_template(management_zones, tcsi_mask_terra)
 
@@ -435,17 +435,17 @@ hu2_zone16 <- sf::st_read("D:/Data/hydro unit/WBD_16_HU2_GDB/WBD_16_HU2_GDB.gdb"
                           layer = "WBDHU12") %>%
   sf::st_transform(crs = st_crs(tcsi_shape)) %>%
   sf::st_intersection(tcsi_shape)
-plot(sf::st_geometry(hu2_zone16))
+# plot(sf::st_geometry(hu2_zone16))
 
 hu2_zone18 <- sf::st_read("D:/Data/hydro unit/WBD_18_HU2_GDB/WBD_18_HU2_GDB.gdb",
                           layer = "WBDHU12") %>%
   sf::st_transform(crs = st_crs(tcsi_shape)) %>%
   sf::st_intersection(tcsi_shape)
-plot(sf::st_geometry(hu2_zone18))
+# plot(sf::st_geometry(hu2_zone18))
 
 huc12 <- dplyr::bind_rows(hu2_zone16, hu2_zone18) %>%
   sf::st_make_valid()
-plot(sf::st_geometry(huc12))
+# plot(sf::st_geometry(huc12))
 
 management_vector <- sf::st_as_sf(management_vector) %>%
   sf::st_make_valid()
@@ -479,7 +479,7 @@ writeRaster(stands2, "C:/Users/Sam/Documents/Research/TCSI conservation finance/
 #stands method 3:
 #make a regular grid and intersect it with the treatment zones
 grid_tcsi <- sf::st_make_grid(tcsi_shape, cellsize = 720)
-plot(grid_tcsi)
+# plot(grid_tcsi)
 
 stands3_vect <- sf::st_intersection(grid_tcsi, management_vector)
 
