@@ -16,7 +16,7 @@ CellLength 180 << meters, so cell area = 3.24 ha
 
 >> Disturbance Extensions Initialization File
 >> ---------------------- -------------------
-	"SCRAPPLE"		SCRAPPLE_TCSI.txt
+	"SCRAPPLE"		SCRAPPLE_TCSI_from_charles.txt
 	"Biomass Harvest Biomass Rank"	output-biom-harvest_s3.txt	   
     	"Biomass BDA"           biomass-BDA-input.txt
 

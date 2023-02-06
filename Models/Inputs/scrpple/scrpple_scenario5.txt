@@ -5,25 +5,25 @@ LandisData  "SCRAPPLE"
 
 Timestep                            1
 
-Species_CSV_File	SCRPPLE_spp_sierra.csv
+Species_CSV_File	"../../Inputs/scrpple/SCRPPLE_spp_sierra.csv"
 
-AccidentalIgnitionsMap     	"../input_rasters_subset/accidental_tcsi_subset.tif"
-LightningIgnitionsMap  		"../input_rasters_subset/lightning_tcsi_subset.tif"
-RxIgnitionsMap  		"../input_rasters_subset/scen3rx_subset.tif"
+AccidentalIgnitionsMap     	"../../Inputs/input_rasters_reproject/accidental_tcsi.tif"
+LightningIgnitionsMap  		"../../Inputs/input_rasters_reproject/lightning_tcsi.tif"
+RxIgnitionsMap  		"../../Inputs/input_rasters_reproject/scen4rx.tif"
 
-AccidentalSuppressionMap	"../input_rasters_subset/suppression_accidental_subset.tif"
-LightningSuppressionMap		"../input_rasters_subset/suppression_lightning_subset.tif"
-RxSuppressionMap		"../input_rasters_subset/full_suppression_subset.tif" <<NEED
+AccidentalSuppressionMap	"../../Inputs/input_rasters_reproject/suppression_accidental.tif"
+LightningSuppressionMap		"../../Inputs/input_rasters_reproject/suppression_lightning.tif"
+RxSuppressionMap		"../../Inputs/input_rasters_reproject/full_suppression.tif" <<NEED
 
-GroundSlopeMap "../input_rasters_subset/Slope2_subset.tif"		
-UphillSlopeAzimuthMap  "../input_rasters_subset/upslope_subset.tif"	
-ClayMap "../input_rasters_subset/PercClay_subset.tif"
+GroundSlopeMap "../../Inputs/input_rasters_reproject/Slope2.tif"		
+UphillSlopeAzimuthMap  "../../Inputs/input_rasters_reproject/upslope.tif"	
+ClayMap "../../Inputs/input_rasters_reproject/PercClay.tif"
 
 >>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
-LightningIgnitionsB0 -6.770389 <<-2.729175 before scaling
+LightningIgnitionsB0 -2.729175
 LightningIgnitionsB1  0.087775
 
-AccidentalIgnitionsB0   -4.678591 <<-0.63738 before scaling
+AccidentalIgnitionsB0   -0.63738
 AccidentalIgnitionsB1   0.01361
 IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
 
@@ -42,8 +42,8 @@ MinimumRxFireWeatherIndex 6.0
 MaximumRxTemperature 32.0	<< Optional
 MinimumRxRelativeHumidity 22.0	<< Optional
 MaximumRxFireIntensity 1
-NumberRxAnnualFires 80
-NumberRxDailyFires 1
+NumberRxAnnualFires 160
+NumberRxDailyFires 2
 FirstDayRxFires 10
 LastDayRxFires 350
 TargetRxSize 40
@@ -57,14 +57,13 @@ SpreadProbabilityB1 0.0388  <<FWI
 SpreadProbabilityB2  0.0313 << relativized fine fuels. Was .915
 SpreadProbabilityB3 0.0138 << effective wind speed. 
 
-<<updated 11/7/2022 SF
-SiteMortalityB0	0	<< Intercept
-SiteMortalityB1	55.1225	<< Clay
-SiteMortalityB2	0.536	<< Previous PET
-SiteMortalityB3	25.506	<<Wind
-SiteMortalityB4	-0.096	<<CWD
-SiteMortalityB5	53.123	<<Fine
-SiteMortalityB6	0	<<Ladder
+SiteMortalityB0	-0.0004047	<< Intercept
+SiteMortalityB1	0.00026380	<< Clay
+SiteMortalityB2	-0.00000483	<< Previous PET
+SiteMortalityB3	0.00003033	<<Wind
+SiteMortalityB4	0.00000857	<<CWD
+SiteMortalityB5	0.00358100	<<Fine
+SiteMortalityB6	0.00000064	<<Ladder
 
 CohortMortalityB0 -0.73 << Intercept
 CohortMortalityB1 -0.9 << The parameter fit for the relationship between bark thickness and cohort mortality.
@@ -76,7 +75,7 @@ LadderFuelSpeciesList
 AbieConc CaloDecu PinuCont PinuJeff PinuLamb PinuPond PinuMono PinuSabi PinuWash PseuMenz FX_R_SEED NOFX_R_SEED NOFX_NOR_SEED
 
 SuppressionMaxWindSpeed 12
-Suppression_CSV_File "../scrpple/Suppression_Input_Gannon.csv"
+Suppression_CSV_File "../../Inputs/scrpple/Suppression_Input_Gannon.csv"
 
 DeadWoodTable
 PinuJeff	22
