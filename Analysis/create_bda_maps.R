@@ -1,24 +1,25 @@
-# Wrangle the NECN biomass tables
+#create BDA maps
 
+#create maps of total fire mortality
+
+#-------------------------------------------------------------------------------
+# Import BDA data
+#-------------------------------------------------------------------------------
 # This chunk of code is designed to run directly on the folder of LANDIS model runs
 # and requires additional files like the scenario.txt file to grab some information.
 # It depends on the naming convention of the files used to extract management and climate
 # information.
 
-library("tidyverse")
-
-#what folder do all the runs to be analyzed live in?
+#what folder do all the runs to be analyze live in?
 scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
-# scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model templates"
-# scenario_folder <- "./Models/Model run templates/"
+# scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model runs"
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
-
-# scenarios <- scenarios[-74]
+# scenarios <- scenarios[-1]
 
 #some helper functions
 read_plus <- function(flnm) {
-  read_csv(flnm, show_col_types = FALSE) %>% 
+  read_csv(flnm) %>% 
     mutate(filename = as.character(flnm),
            run_name = basename(substr(flnm, 0, regexpr("/[^/]*$", flnm)))) 
   
@@ -29,7 +30,7 @@ get_mgmt <- function(scenario){
     pluck(1) %>%
     as.character() %>%
     strsplit(x = ., split = "[.]") %>%
-    pluck(1, 1)%>%
+    pluck(1, 1) %>%
     strsplit(x = ., split = "[_]") %>%
     pluck(1, 1)
 }
@@ -54,36 +55,22 @@ scenario_type <- scenario_type %>%
 
 # scenario_type$fire_model <- rep(c("fixed", "mixed"), each = 3)
 
-necn_summaries <- paste0(scenarios, "/NECN-succession-log.csv")  %>%
+bda_summaries <- paste0(scenarios, "/bda_log.csv")  %>%
   purrr::map_df(~read_plus(.)) %>%
   left_join(scenario_type, c("run_name" = "run_name"))
 
-necn_summaries2 <- necn_summaries %>%
-  group_by(run_name, Time) %>%
-  summarise(TotalAGB = weighted.mean(AGB, NumSites),
-            mgmt = mgmt[1],
-            climate = climate[1])
+#read in BDA rasters
+bda_mortality <- rast()
 
-#-------------------------------------------------------------------------------
-# Figures
-#-------------------------------------------------------------------------------
-
-#Biomass over time
-
-ggplot(data = necn_summaries2[necn_summaries2$climate == "Historical", ], 
-       mapping = aes(x = Time+2020, y = TotalAGB)) + 
-  geom_point(color="steelblue") + 
-  labs(title = "Aboveground biomass",
-       subtitle = "by management scenario and climate scenario",
-       y = "Average AGB (g m-2)", x = "Simulation Year") + 
-  geom_smooth( color = "black") + 
-  facet_wrap(~ mgmt + climate, dir = "v")
-
-
-ggplot(data = necn_summaries2, mapping = aes(x = Time+2020, y = TotalAGB)) + 
-  geom_point(color="steelblue") + 
-  labs(title = "Aboveground biomass",
-       subtitle = "by management scenario and climate scenario",
-       y = "Average AGB (g m-2)", x = "Simulation Year") + 
-  geom_smooth( color = "black")
+for(scen in scenarios){
+  bda_rasts <- list.files(paste0(scen, "/bda"), full.names = TRUE) %>%
+    `[`(grepl("img", .))
+  #TODO translate to presence/absence
+  bda_stack <- terra::rast(bda_rasts)
+  
+  bda_sum <- sum(bda_stack)
+  names(bda_sum) <- basename(scen)
+  
+  bda_mortality <- c(bda_mortality, bda_sum)
+}
 

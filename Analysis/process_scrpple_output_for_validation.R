@@ -1,4 +1,4 @@
-# process outputs for the subset landscape
+# process SCRPPLE outputs and create visualizations for presentation
 
 library("tidyverse")
 library("sf")
@@ -83,7 +83,7 @@ scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
 
 #some helper functions
 read_plus <- function(flnm) {
-  read_csv(flnm) %>% 
+  read_csv(flnm, show_col_types = FALSE) %>% 
     mutate(filename = as.character(flnm),
            run_name = basename(substr(flnm, 0, regexpr("/[^/]*$", flnm)))) 
   
@@ -178,10 +178,7 @@ fire_summaries$TotalSitesHighIntensity <- high_intensity_cells
 
 #-------------------------------------------------------------------------------
 #Compare ignitions
-#scenario1: ignitions are pretty good for sierra; too  many for TCSI
-#subset_scenario2: ignitions between tcsi and sierra; long right tail
-#subset_scenario4: too many fires!
-#subset_scenario5: pretty good really; maybe too many zeroes
+
 hist(fire_summaries$TotalFires)
 mean(fire_summaries$TotalFires)
 hist(short_tcsi_by_year$n * subset_proportion_tcsi)
@@ -267,7 +264,6 @@ vioplot(fire_summaries[fire_summaries$climate == "Historical", ]$NumberFiresLigh
 
 test <- fire_summaries %>% group_by(run_name) %>% summarise(mean = mean(NumberFiresAccidental))
 
-log(0.6942149/0.2211845)
 
 vioplot(NumberFiresLightning ~ run_name, data = fire_summaries)
 vioplot(NumberFiresAccidental ~ run_name, data = fire_summaries)
@@ -277,9 +273,7 @@ vioplot(NumberFiresRx ~ run_name, data = fire_summaries)
 
 #-------------------------------------------------------------------------------
 #area burned per year?
-#waaaaay too  much area burned
 
-#run 5 is pretty close!
 
 hist(fire_summaries$TotalBurnedSitesAccidental*3.24) #convert to ha
 mean(fire_summaries$TotalBurnedSitesAccidental*3.24)
@@ -465,7 +459,7 @@ ggplot(data = events_sum, mapping = aes(x = SimulationYear, y = mean_dnbr)) +
        subtitle = "by management scenario and climate scenario",
        y = "DNBR", x = "Year") + 
   geom_smooth( color = "black") + 
-  facet_wrap(~ mgmt + climate, nrow = 3, ncol = 3)
+  facet_wrap(~ mgmt + climate)
 
 
 
