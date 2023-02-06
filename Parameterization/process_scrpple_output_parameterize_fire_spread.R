@@ -25,12 +25,12 @@ setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance/")
 # #write as RDS; shapefile generates errors and cannot write as a .gdb file
 # saveRDS(short_tcsi, "../calibration data/short_tcsi/short_tcsi.RDS")
 
-short_tcsi <- readRDS("./Parameterization/calibration data/short_tcsi/short_tcsi.RDS") %>%
+short_tcsi <- readRDS("./Parameterization/calibration data/short_ignitions/short_tcsi.RDS") %>%
   # st_transform(crs(subset_poly)) %>%
   # st_intersection(subset_poly) %>%
   dplyr::filter(FIRE_SIZE >= 8) #filter to size of a cell, in acres %>%
 
-short_ca <- readRDS("./Parameterization/calibration data/short_tcsi/short_ca.RDS") %>%
+short_ca <- readRDS("./Parameterization/calibration data/short_ignitions/short_sierra.RDS") %>%
   dplyr::filter(FIRE_SIZE >= 8)
 
 area_tcsi <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_area_shapefile/TCSI_v2.shp") %>%
