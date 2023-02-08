@@ -160,7 +160,7 @@ model  <- earth(logit(understory_cover) ~ log(biomass) + forest_group, data = un
 # plot(model)
 plotmo(model)
 summary(model)
-plot(effects::allEffects(model))
+# plot(effects::allEffects(model))
 
 
 library(betareg)
@@ -181,11 +181,12 @@ predict(model, newdata = newdat)
 saveRDS(model, "understory_model_with_group.RDS")
 
 
-model_no_age <- betareg(understory_cover ~ log(biomass) + ELEV + forest_group, data = under)
+model_no_age <- betareg(understory_cover ~ log(biomass) +  mean_age, data = under)
 summary(model_no_age)
 plot(effects::allEffects(model_no_age))
 predict(model_no_age, newdata = newdat)
 
+saveRDS(model_no_age, "understory_model_no_group.RDS")
 
 # TO Do # TO Do newdata
 #crosswalk from forest group to CWHR forest type
