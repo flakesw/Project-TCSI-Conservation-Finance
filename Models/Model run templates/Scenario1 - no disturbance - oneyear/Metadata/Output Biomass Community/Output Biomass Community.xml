@@ -1,0 +1,1 @@
+<landisMetadata><extension name="Output Biomass Community" timeInterval="10"><scenario-replication timeMin="0" timeMax="1" rasterOutCellArea="3.24" /><outputs><output type="Map" name="biomass removed" filePath="output-community-0.img" visualize="False" unit="" dataType="Continuous" /></outputs></extension></landisMetadata>
