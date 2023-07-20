@@ -124,7 +124,7 @@ t.test(trees$mean_dnbr ~ trees$yr2status)
 boxplot(trees$bark_thickness ~ trees$yr2status)
 t.test(trees$bark_thickness ~ trees$yr2status)
 
-dnbr_mod <- glmer(yr2status ~ mean_dnbr + bark_thickness + (1|YrFireName), 
+dnbr_mod <- glmer(yr2status ~ mean_dnbr + bark_thickness + (1|YrFireName) + (1|Species), 
                 data = trees, family = binomial(link = "logit"))
 summary(dnbr_mod)
 plot(effects::allEffects(dnbr_mod))
@@ -146,7 +146,7 @@ table(fia_trees$SPCD)
 
 sp_ref <- read.csv("D:/Data/fia/FIADB_REFERENCE/REF_SPECIES.csv") %>%
   mutate(SpeciesLandis = paste0(substr(GENUS, 1, 4), stringr::str_to_title(substr(SPECIES, 1, 4)))) %>%
-  filter(SPCD != 143) %>% #subspecies we don't want
+  filter(SPCD != 143)  #subspecies we don't want
 
 species <- read.csv("./Models/Inputs/scrpple/SCRPPLE_spp_sierra.csv")$SpeciesCode
 species <- species[species %in% sp_ref$SpeciesLandis]
@@ -167,24 +167,35 @@ bark_growth_params <- fia_trees %>%
   dplyr::nest_by(SPCD) %>%
   mutate(model = list(possibly_nls(dia_cm ~ dia_age(maxDBH, TOTAGE, alpha), 
                           data = data,
-                          start = list(alpha = max(test$TOTAGE, na.rm = TRUE))))) %>%
+                          start = list(alpha = max(200, na.rm = TRUE))))) %>%
   filter(!is.na(model[1])) %>%
   mutate(alpha = broom::tidy(model) %>% pluck(., 2, 1)) %>%
   mutate(maxDBH = data$maxDBH[[1]]) %>%
   left_join(dplyr::select(sp_ref, SPCD, SPECIES_SYMBOL, SpeciesLandis), by = "SPCD") %>%
-  left_join(bark_data, by = c("SPECIES_SYMBOL" = "PLANTS_Species_Code"))
-  
+  left_join(bark_data, by = c("SPECIES_SYMBOL" = "PLANTS_Species_Code")) %>%
+  mutate(maxBark = maxDBH * BT_coef)
 
 
-test <- fia_trees[fia_trees$SPCD == spcd_to_use[2], ]
-maxDBH <- max(test$DIA, na.rm = TRUE)
+for(i in 1:nrow(bark_growth_params)){
+  if(is.na(bark_growth_params$maxBark[i])) next()
+    ages <- seq(0,220)
+    dnbr <- 400
+    
+    d <- bark_growth_params$maxBark[i] * ages/(ages + bark_growth_params$alpha[i])
+    # plot(d ~ ages)
+    
+    p <- predict(dnbr_mod, 
+               newdata = data.frame(mean_dnbr = dnbr, 
+                                    bark_thickness = d),
+               re.form = ~0,
+               allow.new.levels = TRUE)
+    prob_mort <- boot::inv.logit(p)
+    plot(prob_mort ~ ages,
+       xlab = "Age",
+       ylab = "P(mort)",
+       main = paste(bark_growth_params$SpeciesLandis[i], ", DNBR = ", dnbr))
+    graphics::text(x = 0, y = min(prob_mort), pos = 4, labels = paste0("Prob of mortality at age 50 = ", prob_mort[51]))
+    
+}
 
 
-test_mod <- nls(DIA ~ dia_age(maxDBH, TOTAGE, alpha), 
-                data = test,
-                start = list(alpha = max(test$TOTAGE, na.rm = TRUE)))
-
-ages <- seq(0,220)
-
-d <- maxDBH * ages/(ages + 335)
-plot(d ~ ages)
