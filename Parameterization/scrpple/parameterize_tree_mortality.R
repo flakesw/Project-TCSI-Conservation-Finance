@@ -126,16 +126,8 @@ t.test(trees$bark_thickness ~ trees$yr2status)
 
 dnbr_mod <- glmer(yr2status ~ mean_dnbr + bark_thickness + (1|YrFireName) + (1|Species), 
                 data = trees, family = binomial(link = "logit"))
-summary(dnbr_mod)
-plot(effects::allEffects(dnbr_mod))
-
-
-p <- predict(dnbr_mod, 
-        newdata = data.frame(mean_dnbr = 800, 
-                             bark_thickness = 1),
-        re.form = ~0,
-        allow.new.levels = TRUE)
-boot::inv.logit(p)
+summary(dnbr_mod) #these are the parameters for the CohortMortality equation in SCRPPLE
+# plot(effects::allEffects(dnbr_mod))
 
 
 #------------------------------------------------------------------------------
@@ -162,7 +154,7 @@ possibly_nls <- possibly(nls, otherwise = NA)
 bark_growth_params <- fia_trees %>%
   filter(SPCD %in% spcd_to_use) %>%
   group_by(SPCD) %>%
-  mutate(maxDBH = max(dia_cm, na.rm = TRUE)) %>%
+  mutate(maxDBH = quantile(dia_cm, 0.95, na.rm = TRUE)) %>%
   ungroup() %>%
   dplyr::nest_by(SPCD) %>%
   mutate(model = list(possibly_nls(dia_cm ~ dia_age(maxDBH, TOTAGE, alpha), 
@@ -194,7 +186,7 @@ for(i in 1:nrow(bark_growth_params)){
        xlab = "Age",
        ylab = "P(mort)",
        main = paste(bark_growth_params$SpeciesLandis[i], ", DNBR = ", dnbr))
-    graphics::text(x = 0, y = min(prob_mort), pos = 4, labels = paste0("Prob of mortality at age 50 = ", prob_mort[51]))
+    graphics::text(x = 0, y = min(prob_mort), pos = 4, labels = paste0("Prob of mortality at age 100 = ", round(prob_mort[101], 2)))
     
 }
 
