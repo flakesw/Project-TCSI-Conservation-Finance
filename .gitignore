@@ -96,3 +96,12 @@ Parameterization/calibration data/topography/sierra_slope.tif
 Parameterization/calibration data/landuse/
 Parameterization/calibration data/landuse/*
 Parameterization/management scenario data/*
+Models/Model run templates/Scenario1 - no disturbance - oneyear/community-input-file-0.csv
+Parameterization/calibration data/geomac_all_years/perims_2000_2022.shx
+Parameterization/calibration data/geomac_all_years/perims_2000_2022.shp
+Parameterization/calibration data/geomac_all_years/perims_2000_2022.prj
+Parameterization/calibration data/geomac_all_years/perims_2000_2022.dbf
+Parameterization/calibration data/geomac_all_years/2022_perimeters_clean.shx
+Parameterization/calibration data/geomac_all_years/2022_perimeters_clean.shp
+Parameterization/calibration data/geomac_all_years/2022_perimeters_clean.prj
+Parameterization/calibration data/geomac_all_years/2022_perimeters_clean.dbf

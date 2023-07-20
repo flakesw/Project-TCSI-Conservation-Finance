@@ -16,10 +16,8 @@ project_to_template <- function(input_raster, template){
 #import boundary data
 tcsi_mask_terra <- rast("./Models/Inputs/masks_boundaries/mask_9311.tif") 
 
-test <- terra::project(tcsi_mask_terra, "EPSG:5039")
 
-
-stands <- terra::rast("./Models/Inputs/input_rasters_reproject/stands_ssp2_20_180_v5.tif") %>%
+stands <- terra::rast("./Models/Inputs/input_rasters_reproject/stands180_yr20.tif") %>%
   project_to_template(tcsi_mask_terra)
 
 stands_nad83 <- stands %>% project("EPSG:26910", method = "near")
@@ -32,11 +30,13 @@ plot(test) #check alignment
 
 
 
-terra::writeCDF(stands, "stands_equal_area.nc")
-terra::writeRaster(stands_nad83, "stands_nad83.tif")
+terra::writeRaster(stands, "stands_equal_area.tif", overwrite = TRUE)
+terra::writeRaster(stands_nad83, "stands_nad83.tif", overwrite = TRUE)
 
 stands_shape <- terra::as.polygons(stands, dissolve = TRUE) %>%
   sf::st_as_sf()
 plot(stands_shape)
 
 sf::write_sf(stands_shape, "stands_poly_equal_area.shp")
+
+
