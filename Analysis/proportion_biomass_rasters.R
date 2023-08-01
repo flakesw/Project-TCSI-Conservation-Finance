@@ -2,8 +2,8 @@
 library("terra")
 library("tidyverse")
 
-biomass_max <- terra::rast("biomass_max.tif")
-biomass_initial <- terra::rast("biomass_initial.tif")
+biomass_max <- terra::rast("./misc/biomass_max.tif")
+biomass_initial <- terra::rast("./misc/biomass_initial.tif")
 
 plot(biomass_max)
 
@@ -141,8 +141,8 @@ necn_summaries2 <- rbind(necn_summaries2, necn_summaries2_nodist)
 # Import biomass layers
 #-------------------------------------------------------------------------------
 
-biomass_max <- terra::rast("biomass_max.tif")
-biomass_initial <- terra::rast("biomass_initial.tif")
+biomass_max <- terra::rast("./misc/biomass_max.tif")
+biomass_initial <- terra::rast("./misc/biomass_initial.tif")
 
 plot(biomass_max)
 
@@ -150,9 +150,10 @@ final_biomass_layers <- list.files("E:/TCSI LANDIS/LANDIS runs/", full.names = T
   `[`(grep("Scenario", .)) %>%
   `[`(grep("historical", .))
 final_biomass_layers <- list.files("E:/TCSI LANDIS/LANDIS runs/", full.names = TRUE) %>%
-  `[`(grep("Scenario8|Scenario9|Scenario10|Scenario7", .)) 
+  # `[`(grep("Scenario8|Scenario9|Scenario10|Scenario7", .)) #CHANGE HERE to choose different scenarios
+  `[`(grep("Scenario1|Scenario2|Scenario3|Scenario4|Scenario5|Scenario6", .))
 # final_biomass_layers <- final_biomass_layers[-length(final_biomass_layers)] #remove the scenario 7 run with no biomass output
-# final_biomass_layers <- paste0(final_biomass_layers, "/biomass/TotalBiomass-80.img")
+final_biomass_layers <- paste0(final_biomass_layers, "/biomass/TotalBiomass-80.img")
 final_biomass <- rast(final_biomass_layers)
 
 biomass_max2 <- final_biomass[[1]]
@@ -243,6 +244,7 @@ sum(values(mean_prop_scen8_new)<0.6 & !is.na(values(mean_prop_scen8_new)))/sum(!
 values(mean_prop_scen8_new) <- cut(values(mean_prop_scen8_new), c(0, .35, .6, 1, 10))
 plot(mean_prop_scen8_new)
 
+#TODO new scenario
 mean_prop_scen8_heavy <- rast("C:/Users/swflake/Documents/LANDIS inputs/Model runs/Scenario8 - test - 100 years - heavy/biomass/TotalBiomass-80.img")/biomass_max2
 plot(mean_prop_scen8_heavy)
 hist(mean_prop_scen8_heavy)

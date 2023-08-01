@@ -8,9 +8,9 @@
 library("tidyverse")
 
 #what folder do all the runs to be analyzed live in?
-scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
+# scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
 # scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model templates"
-# scenario_folder <- "./Models/Model run templates/"
+scenario_folder <- "./Models/Model runs"
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
 
@@ -47,7 +47,7 @@ scenario_type <- data.frame(run_name = character(length(scenarios)),
                             climate = character(length(scenarios)))
 
 scenario_type <- scenario_type %>%
-  mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(4, 1)))) %>%
+  mutate(run_name = unlist(map(strsplit(scenarios, split = "/"), pluck(4, 1)))) %>% #change to fit scenario name
   mutate(mgmt = unlist(map(scenarios, get_mgmt))) %>%
   mutate(climate = ifelse(grepl(pattern = "miroc", run_name), "MIROC", 
                           ifelse(grepl(pattern = "cnrm", run_name), "CNRM", "Historical"))) 
@@ -61,6 +61,8 @@ necn_summaries <- paste0(scenarios, "/NECN-succession-log.csv")  %>%
 necn_summaries2 <- necn_summaries %>%
   group_by(run_name, Time) %>%
   summarise(TotalAGB = weighted.mean(AGB, NumSites),
+            TotalC = weighted.mean(AGB + SOMTC, NumSites),
+            SOMTC = weighted.mean(SOMTC, NumSites),
             mgmt = mgmt[1],
             climate = climate[1])
 
@@ -77,10 +79,10 @@ ggplot(data = necn_summaries2[necn_summaries2$climate == "Historical", ],
        subtitle = "by management scenario and climate scenario",
        y = "Average AGB (g m-2)", x = "Simulation Year") + 
   geom_smooth( color = "black") + 
-  facet_wrap(~ mgmt + climate, dir = "v")
+  facet_wrap(~ mgmt + climate, ncol = 3, dir = "v")
 
 
-ggplot(data = necn_summaries2, mapping = aes(x = Time+2020, y = TotalAGB)) + 
+ggplot(data = necn_summaries2, mapping = aes(x = Time+2020, y = SOMTC)) + 
   geom_point(color="steelblue") + 
   labs(title = "Aboveground biomass",
        subtitle = "by management scenario and climate scenario",

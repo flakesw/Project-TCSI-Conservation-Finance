@@ -9,7 +9,7 @@ Species_CSV_File	"../../Inputs/scrpple/SCRPPLE_spp_sierra.csv"
 
 AccidentalIgnitionsMap     	"../../Inputs/input_rasters_reproject/accidental_tcsi.tif"
 LightningIgnitionsMap  		"../../Inputs/input_rasters_reproject/lightning_tcsi.tif"
-RxIgnitionsMap  		"../../Inputs/input_rasters_reproject/scen4rx.tif"
+RxIgnitionsMap  		"../../Inputs/input_rasters_reproject/scen5rx.tif"
 
 AccidentalSuppressionMap	"../../Inputs/input_rasters_reproject/suppression_accidental.tif"
 LightningSuppressionMap		"../../Inputs/input_rasters_reproject/suppression_lightning.tif"
