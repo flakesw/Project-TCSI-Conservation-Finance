@@ -1,0 +1,55 @@
+SPGRPCD,NAME,REGION,CLASS,CREATED_BY,CREATED_DATE,CREATED_IN_INSTANCE,MODIFIED_BY,MODIFIED_DATE,MODIFIED_IN_INSTANCE,ShadeFactor_Nowak1996,ShadeCoef_iTree,Representative species
+1,Longleaf and slash pines,Eastern,Softwood,,2/24/2005,333,,,,,-0.059779,P. eliottii
+2,Loblolly and shortleaf pines,Eastern,Softwood,,2/24/2005,333,,,,,-0.0274655,Mean of P. taeda and P. echinata
+3,Other yellow pines,Eastern,Softwood,,2/24/2005,333,,,,,-0.0274655,Mean of P. taeda and P. echinata
+4,Eastern white and red pines,Eastern,Softwood,,2/24/2005,333,,,,,0.0238055,Mean of P. sylvestris and P. nigra (no close relatives in dataset)
+5,Jack pine,Eastern,Softwood,,2/24/2005,333,,,,,0.012737,Value from P. contorta
+6,Spruce and balsam fir,Eastern,Softwood,,2/24/2005,333,,,,,0.02344,Picea pungens
+7,Eastern hemlock,Eastern,Softwood,,2/24/2005,333,,,,,0.0101,mean of several species
+8,Cypress,Eastern,Softwood,,2/24/2005,333,,,,,0.0101,mean of several species
+9,Other eastern softwoods,Eastern,Softwood,,2/24/2005,333,,,,,0.0101,mean of several species
+10,Douglas-fir,Western,Softwood,,2/24/2005,333,,,,,-0.017942,Pseudotsuga menziesii
+11,Ponderosa and Jeffrey pines,Western,Softwood,,2/24/2005,333,,,,,0.040393,P. ponderosa
+12,True fir,Western,Softwood,,2/24/2005,333,,,,,0.02344,Picea pungens
+13,Western hemlock,Western,Softwood,,2/24/2005,333,,,,,0.0101,mean of several species
+14,Sugar pine,Western,Softwood,,2/24/2005,333,,,,,0.0238055,Mean of P. sylvestris and P. nigra (no close relatives in dataset)
+15,Western white pine,Western,Softwood,,2/24/2005,333,,,,,0.0238055,Mean of P. sylvestris and P. nigra (no close relatives in dataset)
+16,Redwood,Western,Softwood,,2/24/2005,333,,,,,0.003386,Sequoia sempervirens
+17,Sitka spruce,Western,Softwood,,2/24/2005,333,,,,,0.02344,Picea pungens
+18,Engelmann and other spruces,Western,Softwood,,2/24/2005,333,,,,,0.02344,Picea pungens
+19,Western larch,Western,Softwood,,2/24/2005,333,,,,,0.0101,mean of several species
+20,Incense-cedar,Western,Softwood,,2/24/2005,333,,,,,0.030777,Calodecrus decurrens
+21,Lodgepole pine,Western,Softwood,,2/24/2005,333,,,,,0.012737,Pinus contorta
+22,Western redcedar,Western,Softwood,,2/24/2005,333,,,,,0.030798,Juniperus virginiana
+23,Woodland softwoods,All,Softwood,,2/24/2005,333,,8/24/2011,10945,,0.032428,Pinus edulis
+24,Other western softwoods,Western,Softwood,,2/24/2005,333,,,,,0.0101,mean of several species
+25,Select white oaks,Eastern,Hardwood,,2/24/2005,333,,,,0.75,0.018694,Quercus alba
+26,Select red oaks,Eastern,Hardwood,,2/24/2005,333,,,,0.81,0.022225,Q. rubra
+27,Other white oaks,Eastern,Hardwood,,2/24/2005,333,,,,0.74,-0.01608,Q. virginiana
+28,Other red oaks,Eastern,Hardwood,,2/24/2005,333,,,,0.77,-0.0093435,Mean of Q. nigra and Q. palustris
+29,Hickory,Eastern,Hardwood,,2/24/2005,333,,,,0.77,-0.015547,Carya illinoiensis
+30,Yellow birch,Eastern,Hardwood,,2/24/2005,333,,,,0.83,0.018711,Betula nigra
+31,Hard maple,Eastern,Hardwood,,2/24/2005,333,,,,0.86,0.024004,Acer saccharum
+32,Soft maple,Eastern,Hardwood,,2/24/2005,333,,,,0.83,0.009591,Acer rubrum
+33,Beech,Eastern,Hardwood,,2/24/2005,333,,,,0.88,0.007078,Fagus sylvatica
+34,Sweetgum,Eastern,Hardwood,,2/24/2005,333,,,,0.82,0.021253,Liquidambar styraciflua
+35,Tupelo and blackgum,Eastern,Hardwood,,2/24/2005,333,,,,0.83,0.040826,Fraxinus americana
+36,Ash,Eastern,Hardwood,,2/24/2005,333,,,,0.82,0.040826,Fraxinus americana
+37,Cottonwood and aspen,Eastern,Hardwood,,2/24/2005,333,,,,0.74,0.011781,Populus fremontii
+38,Basswood,Eastern,Hardwood,,2/24/2005,333,,,,0.88,0.043399,Tilia americana
+39,Yellow-poplar,Eastern,Hardwood,,2/24/2005,333,,,,0.9,0.027576,Liriodendron tulipifera
+40,Black walnut,Eastern,Hardwood,,2/24/2005,333,,,,0.91,0.003086,Juglans nigra
+41,Other eastern soft hardwoods,Eastern,Hardwood,,2/24/2005,333,,,,0.861,0.009591,Acer rubrum
+42,Other eastern hard hardwoods,Eastern,Hardwood,,2/24/2005,333,,,,0.78,0.018694,Quercus alba
+43,Eastern noncommercial hardwoods,Eastern,Hardwood,,2/24/2005,333,,,,0.833,-0.041082,Cornus florida
+44,Cottonwood and aspen,Western,Hardwood,,2/24/2005,333,,,,0.74,0.011781,Populus fremontii
+45,Red alder,Western,Hardwood,,2/24/2005,333,,,,0.833,0.018599,Celtis occidentalis
+46,Oak,Western,Hardwood,,2/24/2005,333,,,,0.74,0.000927,Quercus lobata
+47,Other western hardwoods,Western,Hardwood,,2/24/2005,333,,,,0.833,0.00733,Acer macrophyllum
+48,Woodland hardwoods,All,Hardwood,,2/24/2005,333,,8/24/2011,10945,0.75,0.018599,Celtis occidentalis
+51,Tropical and subtropical pines,Tropical/Subtropical,Softwood,,9/17/2010,10854,,3/3/2018,126144,,,
+52,Other tropical and subtropical softwoods,Tropical/Subtropical,Softwood,,9/17/2010,10854,,3/3/2018,126144,,,
+53,Tropical and subtropical palms,Tropical/Subtropical,Hardwood,,9/17/2010,10854,,3/3/2018,126144,,,
+54,Tropical and subtropical hardwoods,Tropical/Subtropical,Hardwood,,9/17/2010,10854,,3/3/2018,126144,,,
+55,Urban-specific hardwoods,All,Hardwood,,5/1/2014,440,,,,,,
+56,Urban-specific softwoods,All,Softwood,,5/1/2014,440,,,,,,

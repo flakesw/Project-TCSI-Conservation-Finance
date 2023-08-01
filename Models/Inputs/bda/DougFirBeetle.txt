@@ -1,0 +1,69 @@
+LandisData "BDA Agent"
+
+BDAAgentName		DouglasFirBeetle
+BDPCalibrator		1
+SRDMode			mean
+
+>>----------------------------------
+>> BDA DISTURBANE REGIME PARAMETERS
+>>----------------------------------
+
+>>-------- Regional Outbreak Inputs -------------
+>> Powers et al. 1999 has some info
+OutbreakPattern Climate << CyclicNormal or CyclicUniform, or ClimateLibrary 
+VariableName "CWD+WinterT"
+Threshold1 620
+Threshold2 2
+OutbreakLag 2
+TimeSinceLastClimate 10
+
+>>MaxInterval        25
+>>MinInterval        10
+>>TimeSinceLastEpidemic 5 << years
+TemporalType variablepulse << pulse or variablepulse
+MinROS             0
+MaxROS             3
+
+
+
+>>-------- Dispersal Inputs ----------------------
+Dispersal		yes <<yes or no
+DispersalRate		400	<<meters/year CFS Synthesis. This is an approximation
+EpidemicThresh		0.3   <<was 0.05
+InitialEpicenterNum	5      <<
+OutbreakEpicenterCoeff	0.01    << increasing this param decreases # of new epicenters
+OutbreakEpicenterThresh 0.0
+SeedEpicenter		yes	<<yes or no
+SeedEpicenterCoeff	0.01
+DispersalTemplate	12N	<<MaxRadius, 4N,
+				<<8N, 12N, or 24N
+
+>>-------- Neighborhood Resource Inputs -----------
+NeighborFlag	yes	<<yes or no  
+NeighborSpeedUp	none	<<none, 2x, 3x, *should apply neighborhood function, as mpb dont use aggregation pheremone and are more generalist. CFS synthesis 2006
+			<<or 4x
+NeighborRadius	1000	<<meters  Power et al. 1999
+NeighborShape	uniform	<<uniform, linear, 
+			<<or gaussian
+NeighborWeight	20
+
+>>-- Intensity Class Thresholds --
+>>IntensityClass1_BDP 	0.0 -- Hardwired value
+IntensityClass2_BDP 	0.05
+IntensityClass3_BDP 	0.1
+
+>>EcoregionModifiers
+>>Ecoregion	Modifier
+>>eco1		0.16
+>>eco2		-0.16
+
+DisturbanceModifiers
+>>Modifier	Duration	Type
+0.75		5		Fire
+
+BDASpeciesParameters                     Susceptibility  
+>>Species 	MinorHost 	2ndHost 	MajorHost   | 	Class3		 Class2 	Class1 	     | Dead
+>>Name 		Age SRDProb 	Age SRDProb 	Age SRDProb | 	Age MortProb 	Age MortProb 	Age MortProb | Fuel?
+>> -------------------------------------------------------------------------------------------------
+
+PseuMenz	20   0.01        80 0.02	 160 0.08        20 0.001	80 0.14          160  0.16 	yes

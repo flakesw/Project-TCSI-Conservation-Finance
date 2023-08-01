@@ -1,0 +1,26 @@
+LandisData "Biomass BDA"
+
+Timestep	1
+
+MapNames	bda/{agentName}-{timestep}.img
+
+>>SRDMapNames	bda/{agentName}-SRD-{timestep}.img
+
+>>NRDMapNames	bda/{agentName}-NRD-{timestep}.img
+
+>>BDPMapNames     bda/{agentName}-BDP-{timestep}.img
+
+LogFile		bda_log.csv
+
+BDAInputFiles	"../../Inputs/bda/JeffreyPineBeetle.txt"
+		"../../Inputs/bda/JeffreyPineBeetle_Peak.txt"	
+                "../../Inputs/bda/MtnPineBeetle.txt"	
+                "../../Inputs/bda/MtnPineBeetle_Peak.txt"
+		"../../Inputs/bda/FirEngraver_Dominant.txt"
+		"../../Inputs/bda/FirEngraver_Peak.txt"
+		"../../Inputs/bda/WPBR_chronic.txt"
+		"../../Inputs/bda/WPBR_high.txt"
+		"../../Inputs/bda/WPBR_low.txt"
+		"../../Inputs/bda/WPineBeetle.txt"
+		"../../Inputs/bda/WPineBeetle_peak.txt"
+		"../../Inputs/bda/DougFirBeetle.txt"
