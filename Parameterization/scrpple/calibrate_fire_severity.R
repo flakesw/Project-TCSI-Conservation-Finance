@@ -4,7 +4,8 @@
 
 library("geoknife")
 library("sf")
-library("raster")
+library("terra")
+# library("raster")
 library("tidyverse")
 library("FedData") #for downloading SSURGO data
 library("stars")# using stars is so much faster, since the whole files aren't loaded into RAM, just the subsets
@@ -120,6 +121,84 @@ mtbs_shape <- subset(mtbs_shape, shape_firenumbers %in% raster_firenumbers)
 # DEFINE FUNCTIONS TO ACCESS DATA
 #*******************************************************************************
 
+i <- 601
+
+fire_perimeters <- sf::st_read("D:/Data/geomac_daily/Historic_Geomac_Perimeters_All_Years_2000_2018.gdb")
+summary(fire_perimeters)
+
+boundary <- sf::st_read(mtbs_shape[i])
+dnbr_raster <- terra::rast(mtbs_dnbr[i]) %>%
+  terra::mask(vect(boundary))
+plot(dnbr_raster)
+
+
+
+#-------------------------------------------------------------------------------
+# get relative wind direction
+
+get_raster_cell_date <- function(dnbr_raster, severity_raster, wind_speed, wind_direction){ 
+  
+  dnbr_raster <- dnbr_raster
+  severity_raster <- sev_raster
+  dnbr_val <- raster::values(dnbr_raster)
+  
+  aspect_val <- get_slope_or_aspect(boundary, dnbr_raster, aspect_full)
+  slope_val <- get_slope_or_aspect(boundary, dnbr_raster, slope_full)
+  
+  #find what cell is upwind of the potential fire cell
+  rose_breaks <- c(0, 45, 135, 225, 315, 360)
+  rose_labs <- c(
+    "North", "East", "South", "West", "North"
+  )
+  
+  wind_cut <- cut(
+    wind_direction,
+    breaks = rose_breaks,
+    labels = rose_labs,
+    right = FALSE,
+    include.lowest = TRUE
+  )
+  
+  
+  #find which cell is upwind of each cell
+  # there's probably an easier way to do this? Like, since we only have one 
+  # wind direction here, we can just "slide" the raster over. Simpler than
+  # the way we did it for fire spread
+  rowcols <- rowColFromCell(dnbr_raster, c(1:ncell(dnbr_raster)))
+  
+  rowcol_new <- rowcols
+  
+  rowcol_new[, 1] <- rowcols[, 1] + ifelse(wind_cut =="North",
+                                           -1,
+                                           ifelse(wind_cut =="South",
+                                                  1, 0))
+  rowcol_new[, 2] <- rowcols[, 2] + ifelse(wind_cut =="East",
+                                           -1,
+                                           ifelse(wind_cut == "West",
+                                                  1, 0))
+  
+  upwind_cells <- cellFromRowCol(dnbr_raster, rowcol_new[, 1], rowcol_new[, 2])
+  
+  # This changes based on fire severity. Combustion buoyancy.
+  #severity of 4 = 50; severity of 3 = 25; severity of 2 = 10; severity of 1 = 5; unburned or increased greenness = 1
+  sev_values <- raster::values(sev_raster)
+  U_b <- ifelse(sev_values %in% c(0, 5), 1,
+                ifelse(sev_values > 3 & sev_values < 5, 50,
+                       ifelse(sev_values > 2 & sev_values <= 3, 25,
+                              ifelse(sev_values > 1 & sev_values <= 2, 10,
+                                     0))))
+  U_b_upwind <- U_b[upwind_cells]
+  
+  U_b_raster <- dnbr_raster
+  raster::values(U_b_raster) <- U_b_upwind
+  
+  ### Caculating windspeed in direction of spread 
+  relative_wd <- wind_direction - aspect_val
+  Ua_Ub <- wind_speed / U_b
+  ### Calculating effective wind speed. 
+  eff_wind <- U_b * ((Ua_Ub^2) + 2*(Ua_Ub) * sin(slope_val * (pi/180)) * 
+                       cos(relative_wd * (pi/180)) + sin(slope_val * (pi/180))^2)^0.5
+}
 
 #-------------------------------------------------------------------------------
 # Trim LANDFIRE fuels
@@ -870,33 +949,33 @@ data_all$ndvi_normal <- data_all$ndvi + data_all$ndvi_anomaly
 data_with_fuel <- data_all %>%
   dplyr::filter(!is.na(fine_fuel))
 
-plot(dnbr ~ fine_fuel, data = data_with_fuel[sample(x = nrow(data_with_fuel), size = 1000), ])
-
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = fine_fuel, y = dnbr)) + 
-  geom_jitter(width = 0.02) + 
-  geom_smooth(method = "lm", formula = y ~ exp(x))
-ggplot(data = sample_frac(data_with_fuel[!is.na(data_with_fuel$ladder_fuel), ], 0.01), mapping = aes(x = ladder_fuel, y = dnbr)) + 
-  geom_jitter() + 
-  geom_smooth(method = "lm", formula = y ~ x)
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ews, y = dnbr)) + 
-  geom_jitter() + 
-  geom_smooth(method = "lm", formula = y ~ x) + 
-  xlab("Effective windspeed")
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ladder_fuel, y = dnbr)) + 
-  geom_jitter() + 
-  geom_smooth(method = "lm", formula = y ~ x)
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = cwd, y = dnbr)) + 
-  geom_jitter() + 
-  geom_smooth(method = "lm")
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = pet, y = dnbr)) + 
-  geom_jitter() + 
-  geom_smooth(method = "lm")
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ndvi_anomaly, y = dnbr)) + 
-  geom_jitter() + 
-  geom_smooth(method = "lm")
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ndvi_normal, y = dnbr)) + 
-  geom_jitter() + 
-  geom_smooth(method = "lm")
+# plot(dnbr ~ fine_fuel, data = data_with_fuel[sample(x = nrow(data_with_fuel), size = 1000), ])
+# 
+# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = fine_fuel, y = dnbr)) + 
+#   geom_jitter(width = 0.02) + 
+#   geom_smooth(method = "lm", formula = y ~ exp(x))
+# ggplot(data = sample_frac(data_with_fuel[!is.na(data_with_fuel$ladder_fuel), ], 0.01), mapping = aes(x = ladder_fuel, y = dnbr)) + 
+#   geom_jitter() + 
+#   geom_smooth(method = "lm", formula = y ~ x)
+# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ews, y = dnbr)) + 
+#   geom_jitter() + 
+#   geom_smooth(method = "lm", formula = y ~ x) + 
+#   xlab("Effective windspeed")
+# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ladder_fuel, y = dnbr)) + 
+#   geom_jitter() + 
+#   geom_smooth(method = "lm", formula = y ~ x)
+# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = cwd, y = dnbr)) + 
+#   geom_jitter() + 
+#   geom_smooth(method = "lm")
+# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = pet, y = dnbr)) + 
+#   geom_jitter() + 
+#   geom_smooth(method = "lm")
+# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ndvi_anomaly, y = dnbr)) + 
+#   geom_jitter() + 
+#   geom_smooth(method = "lm")
+# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ndvi_normal, y = dnbr)) + 
+#   geom_jitter() + 
+#   geom_smooth(method = "lm")
 
 
 test <- lm(dnbr ~ scale(cwd) + scale(ews) + scale(fine_fuel) + 
@@ -930,16 +1009,17 @@ test_gamma <- spaMM::fitme(dnbr ~ clay + cwd + fine_fuel + ews,
                   family = Gamma(link = "inverse"))
 summary(test_gamma)
 
-test_gamma2 <- spaMM::fitme(dnbr ~ clay + cwd + fine_fuel + ews + (1|fire_name), 
+test_gamma2 <- spaMM::fitme(dnbr ~ clay + cwd + pet + fine_fuel + ews + (1|fire_name), 
                    data = data_all,
                    family = Gamma(link = "inverse"))
 summary(test_gamma2)
 
-test_gamma_lmer <- glmer(dnbr ~ clay + cwd + pet + fine_fuel + ews + (1|fire_name), 
-                   data = data_all,
-                   start = coef(lm(I(1/dnbr) ~ clay + cwd + pet + fine_fuel + ews, data = data_all)),
-                   family = Gamma(link = "inverse"))
-summary(test_gamma_lmer)
+#this crashes R
+# test_gamma_lmer <- glmer(dnbr ~ clay + cwd + pet + fine_fuel + ews + (1|fire_name), 
+#                    data = data_all,
+#                    start = coef(lm(I(1/dnbr) ~ clay + cwd + pet + fine_fuel + ews, data = data_all)),
+#                    family = Gamma(link = "inverse"))
+# summary(test_gamma_lmer)
 
 #make effects plots
 newdata <- expand.grid(clay = mean(data_all$clay, na.rm = TRUE), 

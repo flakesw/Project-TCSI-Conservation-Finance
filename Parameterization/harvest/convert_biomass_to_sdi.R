@@ -3,6 +3,16 @@ library(sf)
 library(terra)
 library(lme4)
 
+theme_set(theme_bw())
+
+logit <- function(x){
+  log(x/(1-x))
+}
+
+invlogit <- function(x){
+  exp(x)/(1 + exp(x))
+}
+
 # crosswalk biomass/age to SDI
 ca_fia_plot <- read.csv("D:/data/fia/rFIA_downloads/CA_PLOT.csv") %>%
   dplyr::filter(!is.na(LAT) & !is.na(LON)) %>%
@@ -69,7 +79,11 @@ bps <- terra::rast("D:/Data/landfire vegetation/BPS/landfire_bps_200_sierra/LF20
 bps_shape <- sierra_shape %>%
   sf::st_transform(crs= st_crs(bps))
 sierra_bps <- terra::crop(x = bps, y = terra::vect(bps_shape))
+tcsi_bps <- terra::crop(x = bps, y = terra::vect(tcsi_shape))
+# test <- catalyze(sierra_bps) #catalyze isn't working
 plot(sierra_bps$BPS_CODE)
+#replace values with the factor levels
+sierra_bps_unfactor <- terra::classify(sierra_bps, rcl = levels(sierra_bps)[[1]])
 
 sierra_fia_plot <- sierra_fia_plot %>%
   sf::st_transform(crs= st_crs(bps))
@@ -95,21 +109,21 @@ breaks <- seq(0, max(sierra_trees$TOTAGE, na.rm = TRUE) + (10 - max(sierra_trees
 
 sierra_trees <- sierra_trees%>%
   filter(STATUSCD == 1) %>%
-  mutate(DRYBIO_TOTAL = CARBON_AG * 2,
+  mutate(DRYBIO_AG = CARBON_AG * 2,
          AGE_BIN = as.numeric(base::cut(TOTAGE, breaks)),
          SPCD = as.character(SPCD))
 
 plot(log(TPA_UNADJ) ~ log(AGE_BIN), data = sierra_trees) #sort of linear, but really variable
-plot(log(TPA_UNADJ) ~ log(DRYBIO_TOTAL), data = sierra_trees) #nice linear relationship!
+plot(log(TPA_UNADJ) ~ log(DRYBIO_AG), data = sierra_trees) #nice linear relationship!
 
-test_mod <- lm(log(TPA_UNADJ) ~ log(AGE_BIN)*log(DRYBIO_TOTAL), data = sierra_trees)
+test_mod <- lm(log(TPA_UNADJ) ~ log(AGE_BIN)*log(DRYBIO_AG), data = sierra_trees)
 summary(test_mod)
 
 ## MAke plot-level summary variables
 
 tree_summary <- sierra_trees %>% 
   dplyr::group_by(PLT_CN) %>%
-  dplyr::filter(DIA >5) %>%
+  dplyr::filter(DIA >1) %>%
   # dplyr::filter(n() > 10) %>%
   dplyr::filter(STATUSCD == 1) %>%
   dplyr::summarise(total_trees = n(),
@@ -119,14 +133,14 @@ tree_summary <- sierra_trees %>%
                    plot_qmd = sqrt((plot_bapa/plot_tpa)/0.005454),
                    plot_sdi = plot_tpa * ((plot_qmd/10)^(-1.605)),
                    sum_sdi = sum(TPA_UNADJ * ((DIA/10)^(-1.605))),
-                   biomass = sum(DRYBIO_TOTAL * TPA_UNADJ) / 892, #convert to megagrams per ha
+                   biomass = sum(DRYBIO_AG * TPA_UNADJ) / 892 * 100, #convert to grams per meter squared
                    mean_age = mean(TOTAGE, na.rm = TRUE),
                    high_age = quantile(TOTAGE, 0.9, na.rm = TRUE),
                    .groups = "keep") %>%
   # filter(!is.na(high_age)) %>%
   droplevels() %>%
   left_join(., sierra_fia_plot, by = c("PLT_CN" = "CN")) %>%
-  left_join(., sierra_fia_cond, by = c("PLT_CN" = "PLT_CN"))# %>%
+  left_join(., sierra_fia_cond, by = c("PLT_CN" = "PLT_CN")) #%>%
   # filter(cc > 0)  %>%
   # group_by(forest_group) %>%
   # filter(n() >= 20)
@@ -139,6 +153,7 @@ summary(lm(log10(tree_summary$sum_sdi) ~ log10(tree_summary$biomass)))
 abline(coef(lm(log10(tree_summary$sum_sdi) ~ log10(tree_summary$biomass))))
 
 plot(log(tree_summary$sum_sdi) ~ tree_summary$mean_age)
+plot(tree_summary$sum_sdi ~ tree_summary$mean_age)
 plot(log(tree_summary$sum_sdi) ~ tree_summary$high_age)
 plot(biomass ~ log(plot_tpa), data = tree_summary)
 plot(log(plot_qmd) ~ log(plot_tpa), data = tree_summary)
@@ -149,31 +164,45 @@ bps_enough <- names(which(table(tree_summary$bps_code) > 50))
 
 #stand management diagram
 ggplot(tree_summary[as.character(tree_summary$FORTYPCD) %in% fortypcd_enough, ]) + 
-  geom_point(aes(y = plot_tpa, x = plot_qmd, col = as.factor(FORTYPCD))) + 
+  geom_point(aes(x = plot_tpa, y = plot_qmd, col = as.factor(FORTYPCD))) + 
   scale_x_log10() + 
-  scale_y_log10() + 
-  geom_quantile(aes(y = plot_tpa, x = plot_qmd, col = as.factor(FORTYPCD)),
-              stat = "quantile", 
-              quantiles = 0.9)
+  scale_y_log10() 
+  # geom_quantile(aes(x = plot_tpa, y = plot_qmd, col = as.factor(FORTYPCD)),
+  #             stat = "quantile", 
+  #             quantiles = 0.9)
 
 bps_codes <- read.csv("D:/Data/landfire vegetation/BPS/LF16_BPS_200.csv")
 tree_summary$bps_name <- bps_codes[match(tree_summary$bps_code, bps_codes$BPS_CODE), ]$BPS_NAME
 
-ggplot(tree_summary[as.character(tree_summary$bps_code) %in% bps_enough, ]) + 
-  geom_point(aes(y = plot_tpa, x = plot_qmd, col = as.factor(bps_name))) + 
-  scale_x_log10() + 
-  scale_y_log10() + 
+overall_density_mgmt_lines = quantreg::rq(log10(plot_tpa) ~ log10(plot_qmd), tau = 0.95, 
+                                          data = tree_summary)
+overall_density_mgmt_lines
+
+#-------------------
+#make figure for density-managemet diagram with maxSDI lines (self-thinning lines)
+
+breaks <- rep(c(1,2,5), 21)*(10^rep(-10:10, each=3))
+minor_breaks <- rep(1:9, 21)*(10^rep(-10:10, each=9))
+
+#change the threshold for bps_enough before plotting to remove noise
+ggplot(tree_summary[as.character(tree_summary$bps_code) %in% bps_enough, ]) +
+  geom_point(aes(y = plot_tpa, x = plot_qmd, col = as.factor(bps_name)), alpha = 0.3) + 
+  scale_x_log10(breaks = breaks, minor_breaks = minor_breaks) + 
+  scale_y_log10(breaks = breaks, minor_breaks = minor_breaks) + 
   geom_quantile(aes(y = plot_tpa, x = plot_qmd, col = as.factor(bps_name)),
                 stat = "quantile",
                 method = "rq",
-                quantiles = 0.95) + 
+                quantiles = 0.95, size = 1.2) + 
   geom_vline(xintercept = 10) +
-  geom_abline(intercept= log10(10^4.2),
-              slope=-1.54, colour="blue", size = 1.5)+
-  geom_abline(intercept= log10(10^4.2 * 0.65),
-            slope=-1.54, colour="blue", size = 1.5)+
-  geom_abline(intercept= log10(10^4.2 * 0.35),
-              slope=-1.54, colour="blue", size = 1.5)
+  geom_abline(aes(fill = "test"),
+              slope = rep(overall_density_mgmt_lines$coefficients[2], 3),
+              intercept = c(log10(10^overall_density_mgmt_lines$coefficients[1]),
+                                log10(10^overall_density_mgmt_lines$coefficients[1] * 0.6),
+                                log10(10^overall_density_mgmt_lines$coefficients[1] * 0.35))) +
+  xlab("Quadratic mean diameter (in)") +
+  ylab("Tree per acre") 
+
+
 
 max_sdi <- data.frame(bps_code = as.double(unique(bps_enough)),
                       sdi_max = NA,
@@ -192,9 +221,13 @@ for(i in c(1:nrow(max_sdi))){
   print(coef(model))
   
   # print(max_sdi)
+  #estimate SDI Max directly from the regression line for each BPS
   max_sdi$sdi_max[i] <- 10^((log10(10)*coef(model)[[2]] + coef(model)[[1]]))
-  max_sdi$k_mean[i] <- quantile(tree_summary[tree_summary$bps_code == max_sdi[i, "bps_code"], ]$plot_tpa /
-    ((tree_summary[tree_summary$bps_code == max_sdi[i, "bps_code"], ]$plot_qmd)^-1.605), 0.95, na.rm = TRUE)
+  
+  #Use Reineke's allometric coefficient (-1.605) and solve for k
+  # K = tpa/(qmd^-1.605)
+  max_sdi$k_mean[i] <- quantile(tree_summary[tree_summary$bps_code == max_sdi[i, "bps_code"], ]$plot_tpa *
+    ((tree_summary[tree_summary$bps_code == max_sdi[i, "bps_code"], ]$plot_qmd)^1.605), 0.95, na.rm = TRUE)
   
   max_sdi$sdi_max_reineke[i] <- 10^(log10(10)*-1.605 + log10(max_sdi$k_mean[i]))
 }
@@ -202,70 +235,42 @@ for(i in c(1:nrow(max_sdi))){
 max_sdi$sdi_max
 max_sdi$sdi_max_reineke
 max_sdi[max_sdi$bps_code %in% c(11, 31), c("sdi_max", "sdi_max_reineke")] <- 0
+plot(max_sdi$sdi_max ~ max_sdi$sdi_max_reineke,
+     xlab = "SDI (Reineke method)",
+     ylab = "SDI (quantile regression)")
+abline(0,1)
 
 #map of max SDI
 
-bps_max_sdi <- sierra_bps %>% terra::crop(terra::vect(tcsi_shape)) %>% as.factor() %>%
-  terra::classify(rcl = bps_data[, c("VALUE", "BPS_CODE")])
-plot(bps_max_sdi)
+bps_max_sdi <- sierra_bps %>% 
+  terra::crop(terra::vect(tcsi_shape)) %>% 
+  as.factor() %>%
+  terra::classify(rcl = bps_codes[, c("VALUE", "BPS_CODE")])
+# plot(bps_max_sdi)
 # click(bps_max_sdi)
-
 bps_max_sdi <- terra::classify(bps_max_sdi, rcl = max_sdi[, c("bps_code", "sdi_max")], others = NA)
+plot(terra::vect(tcsi_shape), add = TRUE)
+
+terra::writeRaster(bps_max_sdi, "./Parameterization/management scenario data/max_sdi_bps.tif")
+
 plot(bps_max_sdi)
-
-
-
-
-#--------------------------------------------------------------------------
-#Fit models to calculate SDI from biomass and age information
-mod <- (lmer(log(sum_sdi) ~ log(biomass)*mean_age + (1|bps_code), data = tree_summary[!is.na(tree_summary$bps_code) & !is.na(tree_summary$mean_age), ]))
-summary(mod)
-plot((predict(mod)) ~ log(tree_summary[!is.na(tree_summary$bps_code)& !is.na(tree_summary$mean_age), ]$sum_sdi),
-     xlab = "observed SDI",
-     ylab = "Predicted SDI")
-abline(0,1)
-plot(exp(predict(mod)) ~ (tree_summary[!is.na(tree_summary$bps_code)& !is.na(tree_summary$mean_age), ]$sum_sdi))
-abline(0,1)
-MuMIn::r.squaredGLMM(mod)
-
-mod <- (lmer(log(sum_sdi) ~ log(biomass) + log(mean_age) + (1|bps_code), data = tree_summary[!is.na(tree_summary$bps_code) & !is.na(tree_summary$mean_age), ]))
-summary(mod)
-plot((predict(mod)) ~ log(tree_summary[!is.na(tree_summary$bps_code)& !is.na(tree_summary$mean_age), ]$sum_sdi),
-     xlab = "observed SDI",
-     ylab = "Predicted SDI")
-abline(0,1)
-plot(exp(predict(mod)) ~ (tree_summary[!is.na(tree_summary$bps_code)& !is.na(tree_summary$mean_age), ]$sum_sdi))
-abline(0,1)
-MuMIn::r.squaredGLMM(mod)
-
-# mod <- (lm(log(sum_sdi) ~ log(biomass) + log(high_age) + bps_code, data = tree_summary[!is.na(tree_summary$bps_code) & !is.na(tree_summary$mean_age), ]))
-# summary(mod)
-# plot((predict(mod)) ~ log(tree_summary[!is.na(tree_summary$bps_code)& !is.na(tree_summary$mean_age), ]$sum_sdi),
-#      xlab = "observed SDI",
-#      ylab = "Predicted SDI")
-# abline(0,1)
-# plot(exp(predict(mod)) ~ (tree_summary[!is.na(tree_summary$bps_code)& !is.na(tree_summary$mean_age), ]$sum_sdi))
-# abline(0,1)
-# MuMIn::r.squaredGLMM(mod)
-
-tree_summary$Plot_level_pred <- predict(mod, newdata = tree_summary)
-
 
 #------------------------------------------------------------------------------
 #cohort-level data analysis
 
 age_cohort_summary <- sierra_trees %>%
   dplyr::filter(DIA > 1) %>%
+  dplyr::filter(STATUSCD == 1) %>%
   dplyr::group_by(PLT_CN, SPCD, AGE_BIN) %>%
-  dplyr::reframe(cohort_biomass = sum(DRYBIO_TOTAL * TPA_UNADJ),
+  dplyr::reframe(cohort_biomass = sum(DRYBIO_AG * TPA_UNADJ),
                    cohort_tpa = sum(TPA_UNADJ),
                    cohort_ba = sum(0.005454*(DIA^2)*TPA_UNADJ),
                    # cohort_ba2 = pi*sum((DIA/2/12)^2 * TPA_UNADJ), #equivalent
                    cohort_d = sqrt((cohort_ba/cohort_tpa)/0.005454),
-                   cohort_sdi = TPA_UNADJ*(DIA/10)^1.6)  %>%
+                   cohort_sdi = TPA_UNADJ*((DIA/10)^1.6))  %>%
   # dplyr::filter(cohort_biomass > 3000) %>%
   group_by(SPCD) %>%
-  filter(n() > 100) %>%
+  # filter(n() > 50) %>%
   dplyr::mutate(SPCD = as.factor(SPCD),
                 AGE_BIN = as.numeric(AGE_BIN)) %>%
   dplyr::left_join(tree_summary %>% filter(!duplicated(PLT_CN)) %>% dplyr::select(PLT_CN, biomass),
@@ -282,82 +287,150 @@ plot(log(cohort_sdi) ~ log(cohort_biomass), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(AGE_BIN), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(cohort_d), data = age_cohort_summary)
 
+sdi_cohort_model <- (lm(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN), 3), data = age_cohort_summary))
 
-sdi_cohort_model <- (lmer(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN), 3) + (1|SPCD), data = age_cohort_summary))
 summary(sdi_cohort_model)
-r.squaredGLMM(sdi_cohort_model)
+# ranef(sdi_cohort_model)
+MuMIn::r.squaredGLMM(sdi_cohort_model)
 plot(residuals(sdi_cohort_model) ~ fitted(sdi_cohort_model))
 plot(predict(sdi_cohort_model) ~ log(age_cohort_summary$cohort_sdi))
 abline(0,1)
 plot(effects::allEffects(sdi_cohort_model))
+
+saveRDS(sdi_cohort_model, "./Parameterization/management scenario data/sdi_cohort_model.RDS")
 
 age_cohort_summary$preds <- exp(predict(sdi_cohort_model, newdata = age_cohort_summary))
 age_cohort_plot <- age_cohort_summary %>%
   group_by(PLT_CN) %>%
   reframe(SDI = sum(cohort_sdi),
           SDI_pred = sum(preds))
+hist(age_cohort_plot$SDI)
 
-sdi_plot_correction <- lm(log(SDI) ~ log(SDI_pred), data = age_cohort_plot)
+# sdi_plot_correction <- lm(log(SDI) ~ log(SDI_pred), data = age_cohort_plot)
+sdi_plot_correction <- lm(log(SDI) ~ log(SDI_pred) + 0, data = age_cohort_plot)
 summary(sdi_plot_correction)
-plot(log(age_cohort_plot$SDI) ~ log(age_cohort_plot$SDI_pred))
+plot(log(age_cohort_plot$SDI) ~ log(age_cohort_plot$SDI_pred),
+     xlab = "Predicted SDI", 
+     ylab = "Observed SDI")
 abline(0,1)
-abline(coef(sdi_plot_correction))
-abline(0, coef(lm(log(SDI) ~ log(SDI_pred) + 0, data = age_cohort_plot)))
+abline(0, coef(sdi_plot_correction))
+
+saveRDS(sdi_plot_correction, "./Parameterization/management scenario data/sdi_plot_correction_model.RDS")
 
 
-#---------------------------------------------
-# Bring in LANDIS layers
-sp_ref <- read.csv("D:/Data/fia/FIADB_REFERENCE/REF_SPECIES.csv") %>%
-  mutate(SpeciesLandis = paste0(substr(GENUS, 1, 4), stringr::str_to_title(substr(SPECIES, 1, 4)))) %>%
-  filter(SPCD != 143) #subspecies we don't want
+#-------------------------------------------------------------------------------
+#get biomass targets for each age/SDI zone
+#--------------------------------------------------------------------------
+#Fit models to calculate SDI from biomass and age information
+#These are used to generate biomass targets for harvest, but not for 
+#estimating SDI
+tree_summary2 <- tree_summary %>%
+  mutate(bps_code = as.integer(as.character(bps_code))) %>%
+  filter(plot_sdi < 800) %>%
+  left_join(max_sdi, by = "bps_code") %>%
+  mutate(percent_max_sdi = plot_sdi / sdi_max) %>% 
+  filter(percent_max_sdi < 1) 
+hist(tree_summary2$percent_max_sdi)
 
-comm_input <- read.csv("./Parameterization/management scenario data/community-input-file-80.csv")
+#instead let's estimate %maxSDI
+# mod_biomass_age_mixed <- (lmer(log10(sum_sdi) ~ log10(biomass) + log10(high_age) + (1|bps_code), data = tree_summary[!is.na(tree_summary$bps_code) & !is.na(tree_summary$mean_age), ]))
+mod_biomass_age_mixed <- lmer(logit(percent_max_sdi) ~ log10(biomass) + 
+                                log10(high_age) + (1|bps_code), 
+                              data = tree_summary2[!is.na(tree_summary2$bps_code) & 
+                                                     !is.na(tree_summary2$mean_age), ])
 
-comm_input = left_join(comm_input, sp_ref %>% select(SPCD, SpeciesLandis),
-                       by = c("SpeciesName" = "SpeciesLandis"))
+summary(mod_biomass_age_mixed)
+plot((predict(mod_biomass_age_mixed) ~ mod_biomass_age_mixed@frame$`logit(percent_max_sdi)`),
+     xlab = "observed SDI",
+     ylab = "Predicted SDI")
+abline(0,1)
+plot(I(10^(predict(mod_biomass_age_mixed))) ~ I(10^(mod_biomass_age_mixed@frame$`log10(percent_max_sdi)`)))
+abline(0,1)
+MuMIn::r.squaredGLMM(mod_biomass_age_mixed)
+plot(effects::allEffects(mod_biomass_age_mixed))
+ranef(mod_biomass_age_mixed)
 
-comm_input <- comm_input %>%
-  dplyr::rename(cohort_biomass = CohortBiomass,
-                AGE_BIN = CohortAge)
-
-#this takes a very long time, since there are about 10 million rows
-comm_input$SDI_cohort = exp(predict(sdi_cohort_model, 
-                             newdata = comm_input, 
-                             allow.new.levels = TRUE))
-
-plot_comm <- comm_input %>%
-  group_by(MapCode) %>%
-  summarise(SDI_pred = sum(SDI_cohort, na.rm = TRUE))
-plot_comm$SDI_plot = exp(predict(sdi_plot_correction, newdata = plot_comm))
-
-hist(plot_comm$SDI_plot)
-
-#link to map
-comm_map <- terra::rast("./Parameterization/management scenario data/output-community-80.img")
-table(values(comm_map) %in% plot_comm$MapCode)
-table(values(comm_map)[!(values(comm_map) %in% comm_input$MapCode)])
-
-comm_map <- terra::classify(comm_map, 
-                            rcl = dplyr::select(plot_comm, MapCode, SDI_plot),
-                            others = 0)
-
-plot(comm_map)
+#Get SDI for combination of biomass and age
+tree_summary$bps_code[tree_summary$bps_name == "Mediterranean California Mixed Oak Woodland"]
+test <- invlogit(predict(mod_biomass_age_mixed, 
+                         newdata = data.frame(biomass = 8000, high_age = 50, bps_code = unique())))
 
 
-comm_map2 <- terra::rast("./Models/Inputs/masks_boundaries/mask_9311.tif")
-values(comm_map2) <- values(comm_map)
-bps_max_sdi2 <- bps_max_sdi %>% 
-  terra::project(comm_map2) %>%
-  terra::crop(comm_map2) %>%
-  terra::mask(comm_map2, maskvalues = c(NA, 0), updatevalue = NA)
+newdat = expand.grid(biomass = seq(0, 40000, 100),
+                     high_age = c(20, 50, 100),
+                     bps_code = unique(tree_summary2$bps_code))
+newdat$percent_max_sdi <- invlogit(predict(mod_biomass_age_mixed, 
+                                           newdata = newdat,
+                                           allow.new.levels = TRUE))
+newdat$bps_code <- as.factor(newdat$bps_code)
 
-plot(bps_max_sdi2)
+ggplot(data = newdat, aes(x = biomass, y = percent_max_sdi)) + 
+  geom_line(aes(color = bps_code, group = bps_code)) +
+  geom_hline(yintercept = c(0.35, 0.6)) +
+  facet_wrap(facets = ~ high_age)
 
-percent_max_sdi <- comm_map2 / bps_max_sdi2 * 100 %>%
-  terra::clamp(., lower = 0, upper = 100, values = TRUE) #why isn't clamp working?
-values(percent_max_sdi)[values(percent_max_sdi)>100] <- 100
-plot(percent_max_sdi)
-hist(percent_max_sdi)
+biomass_vals_by_bps_35 <- newdat %>%
+  group_by(bps_code, high_age) %>%
+  slice(which.min(abs(percent_max_sdi - 0.35)))%>%
+  mutate(bps_code = as.integer(as.character(bps_code)))
+hist(biomass_vals_by_bps_35$biomass)
 
-terra::writeRaster(percent_max_sdi, "percent_max_sdi_initial.tif")
+biomass_vals_by_bps_60 <- newdat %>%
+  group_by(bps_code, high_age) %>%
+  slice(which.min(abs(percent_max_sdi - 0.6))) %>%
+  mutate(bps_code = as.integer(as.character(bps_code)))
+hist(biomass_vals_by_bps_60$biomass)
 
+biomass_vals_by_bps_60 <- left_join(biomass_vals_by_bps_60, 
+                                    bps_codes %>% select(BPS_CODE, BPS_NAME) %>%
+                                      group_by(BPS_CODE) %>%
+                                      slice(1),
+                                    by = c("bps_code" = "BPS_CODE"))
+
+#-------
+#make a map for biomass targets for 35% SDI
+unique(values(sierra_bps)) %in% biomass_vals_by_bps_35$bps_code
+
+biomass_target_rast_35_20 <- sierra_bps_unfactor %>% 
+  terra::crop(terra::vect(tcsi_shape)) %>% 
+  terra::classify(rcl = biomass_vals_by_bps_35[biomass_vals_by_bps_35$high_age == 20,
+                                               c("bps_code", "biomass")], 
+                  others = 2000)
+plot(biomass_target_rast_35_20)
+
+biomass_target_rast_35_50 <- sierra_bps_unfactor %>% 
+  terra::crop(terra::vect(tcsi_shape)) %>% 
+  terra::classify(rcl = biomass_vals_by_bps_35[biomass_vals_by_bps_35$high_age == 50,
+                                               c("bps_code", "biomass")])
+plot(biomass_target_rast_35_50)
+
+biomass_target_rast_35_100 <- sierra_bps_unfactor %>% 
+  terra::crop(terra::vect(tcsi_shape)) %>% 
+  terra::mask(terra::vect(tcsi_shape)) %>% 
+  terra::classify(rcl = biomass_vals_by_bps_35[biomass_vals_by_bps_35$high_age == 100,
+                                               c("bps_code", "biomass")])
+plot(biomass_target_rast_35_100)
+
+#-------
+#make a map for biomass targets for 0% SDI
+unique(values(sierra_bps)) %in% biomass_vals_by_bps_60$bps_code
+
+biomass_target_rast_60_20 <- sierra_bps_unfactor %>% 
+  terra::crop(terra::vect(tcsi_shape)) %>% 
+  terra::classify(rcl = biomass_vals_by_bps_60[biomass_vals_by_bps_60$high_age == 20,
+                                               c("bps_code", "biomass")], 
+                  others = 2000)
+plot(biomass_target_rast_60_20)
+
+biomass_target_rast_60_50 <- sierra_bps_unfactor %>% 
+  terra::crop(terra::vect(tcsi_shape)) %>% 
+  terra::classify(rcl = biomass_vals_by_bps_60[biomass_vals_by_bps_60$high_age == 50,
+                                               c("bps_code", "biomass")])
+plot(biomass_target_rast_60_50)
+
+biomass_target_rast_60_100 <- sierra_bps_unfactor %>% 
+  terra::crop(terra::vect(tcsi_shape)) %>% 
+  terra::mask(terra::vect(tcsi_shape)) %>% 
+  terra::classify(rcl = biomass_vals_by_bps_60[biomass_vals_by_bps_60$high_age == 100,
+                                               c("bps_code", "biomass")])
+plot(biomass_target_rast_60_100)
