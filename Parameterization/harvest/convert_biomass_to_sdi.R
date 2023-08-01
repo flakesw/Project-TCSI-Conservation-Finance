@@ -412,7 +412,7 @@ biomass_target_rast_35_100 <- sierra_bps_unfactor %>%
 plot(biomass_target_rast_35_100)
 
 #-------
-#make a map for biomass targets for 0% SDI
+#make a map for biomass targets for 60% SDI
 unique(values(sierra_bps)) %in% biomass_vals_by_bps_60$bps_code
 
 biomass_target_rast_60_20 <- sierra_bps_unfactor %>% 
