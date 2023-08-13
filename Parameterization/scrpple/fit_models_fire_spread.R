@@ -80,7 +80,7 @@ daily_perims_all <- daily_perims_all %>%
 # fit model to fire spread
 
 #original data from may 2022, used for SCRPPLE parameterization
-spread_data <- read.csv("./Parameterization/calibration data/processed_fire_spread_data_new_days_between.csv")
+spread_data <- read.csv("./Parameterization/calibration data/processed_fire_spread_data_new_days_between_2023-8-8.csv")
 
 library("lme4")
 model <- glm(success ~ scale(fwi) + scale(fuel) + scale(eff_wspd),
@@ -183,7 +183,14 @@ fire_centers  <- daily_perims_all %>%
 
 spread_data_loc <- spread_data %>%
   left_join(fire_centers, by = c("fire_name" = "incidentna")) %>%
-  sf::st_sf()
+  sf::st_as_sf() %>%
+  filter(days_between == 1) %>%
+  dplyr::select(c(fire_name, success, eff_wspd, fwi, fuel)) %>%
+  tidyr::drop_na() %>%
+  group_by(fire_name) %>%
+  dplyr::slice_sample(n = 300) %>%
+  ungroup() %>%
+  sf::st_cast("POINT")
 
 spread_data_sp <- sf::st_cast(spread_data_loc, "POINT") %>%
   as(., "Spatial")
@@ -215,19 +222,67 @@ MuMIn::r.squaredGLMM(random_model)
 
 #GWR
 #this takes a really long time
+library("spgwr")
+library("parallel")
 
 GWRbandwidth <- gwr.sel(success ~ scale(fwi) + scale(fuel)+ scale(eff_wspd),
                         data = spread_data_sp,
                         adapt = T)
 
-test_model <- gwr(success ~ scale(fwi) + scale(fuel)+ scale(eff_wspd),
-                  data = as_Spatial(st_as_sf(spread_data_loc)),
-                  adapt=GWRbandwidth,
-                  hatmatrix=TRUE,
-                  se.fit=TRUE) 
+cl <- makeCluster(detectCores())
+xx_no_fit <- ggwr(success ~ scale(fwi) + scale(fuel)+ scale(eff_wspd), 
+                 family = binomial(link = "logit"),
+                 data = spread_data_loc,
+                 coords = sf::st_coordinates(spread_data_loc),
+                 # adapt = abw, 
+                 bandwidth = 20000,
+                 gweight = gwr.Gauss,
+                 longlat = FALSE)
+stopCluster(cl)
 
+results_sp <- xx_no_fit$SDF %>%
+  st_as_sf() %>%
+  st_cast("POINT") %>%
+  st_set_crs(st_crs(spread_data_loc))
 
+ggplot(results_sp) +
+  # geom_sf(aes(col = scale.fwi.)) +
+  # geom_sf(aes(col = scale.fuel.)) + 
+  # geom_sf(aes(col = scale.eff_wspd.)) +
+  geom_sf(aes(col = X.Intercept.))
 
+sierra_poly2 <- sierra_poly %>%
+  sf::st_transform(crs = st_crs(results_sp))
+sierra_grid <- sierra_poly2 %>%
+  sf::st_make_grid(square = F, cellsize = c(50 * 1000, 50 * 1000)) %>%
+  st_as_sf()
+sierra_grid$ID <- 1:nrow(sierra_grid)
+plot(sierra_grid)
+plot(st_geometry(sierra_poly2), add = TRUE)
+
+st_intersects(results_sp, sierra_poly2)
+
+results_agg <-  st_join(sierra_grid, results_sp) %>%
+  group_by(ID) %>%
+  summarise(fwi = mean(scale.fwi.),
+            fuel = mean(scale.fuel.),
+            eff_wspd = mean(scale.eff_wspd.)) %>%
+  sf::st_intersection(sierra_poly2)
+ggplot(results_agg) +
+  geom_sf(aes(fill = fuel)) + 
+  scale_fill_distiller(
+    type = "div",
+    palette = 1,
+    direction = 1,
+    values = NULL,
+    space = "Lab",
+    na.value = "grey50",
+    guide = "colourbar",
+    aesthetics = "fill"
+  )
+
+  scale_fill_continuous(low="thistle2", high="darkred", 
+                        guide="colorbar",na.value=NA)
 
 #-----------------------------------------------------------------------------
 # Effects plot

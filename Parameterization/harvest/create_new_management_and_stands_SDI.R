@@ -225,10 +225,10 @@ plot(slope_percent)
   #--6: private nonindustrial
   #--7: wilderness
 #second digit: fire and carbon strategy
-  #--1: conserve carbon
-  #--2: high fire transform or adapt
-  #--3: high fire adapt, not used
-  #--4: low fire transform and adapt not used
+  #--0: conserve carbon
+  #--1: high fire transform or adapt
+  #--2: high fire adapt, not used
+  #--3: low fire transform and adapt not used
 #third digit: sdi band
   #--0:
   #--1:

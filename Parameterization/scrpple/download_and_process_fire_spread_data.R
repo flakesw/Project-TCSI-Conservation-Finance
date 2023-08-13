@@ -13,12 +13,13 @@ sf::sf_use_s2(FALSE)
 #https://opendap.cr.usgs.gov/opendap/hyrax/MOD13A2.061/contents.html
 #TODO: add climate normals
 #could use gridmet
-#TODO: calculate FWI from gridmet
+
+
 
 
 setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance/")
 
-template <- raster("./Models/Inputs/masks_boundaries/mask.tif")
+template <- raster("./Models/Inputs/masks_boundaries/mask_9311.tif")
 raster::values(template) <- 1
 sierra_poly <- sf::st_read("./Models/Inputs/masks_boundaries/WIP_Capacity_V1Draft/WIP_Capacity_V1Draft.shp") %>%
   sf::st_zm() %>%
@@ -83,18 +84,21 @@ daily_perims_all <- daily_perims_all %>%
 
 #explore data
 #396 fires with more than 10 daily perimeters!
-# reduced to only 33 after removing duplicates :(
+# reduced to 139 after removing duplicates :(
 length(table(daily_perims_all$incidentna)[table(daily_perims_all$incidentna) > 2])
 
-test <- daily_perims_all %>% 
-  group_by(incidentna) %>%
-  slice_max(gisacres) %>%
-  group_by(fireyear) %>%
-  summarise(area_burned = sum(gisacres), .groups = "keep")
-
-plot(test$area_burned ~ test$fireyear)
+# test <- daily_perims_all %>% 
+#   group_by(incidentna) %>%
+#   slice_max(gisacres) %>%
+#   group_by(fireyear) %>%
+#   summarise(area_burned = sum(gisacres), .groups = "keep")
+# 
+# plot(test$area_burned ~ test$fireyear)
 
 ##write example data for figure
+
+
+
 # 
 # test2 <- daily_perims_all %>%
 #   group_by(incidentna) %>%
@@ -138,9 +142,9 @@ landfire_2021_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_20
 # MTBS severity mosaics
 #-------------------------------------------------------------------------------
 #used for combustion buoyancy. We'll import them one year at a time as needed
-mtbs_folder <- "C:/Users/Sam/Documents/Research/TCSI conservation finance/Parameterization/calibration data/mtbs/severity_mosaic/composite_data/MTBS_BSmosaics"
+mtbs_folder <- "D:/Data/mtbs_mosaic/mtbs_mosaic/composite_data/MTBS_BSmosaics"
 mtbs_list <- list.files(mtbs_folder, pattern = "*.tif", recursive = TRUE, full.names = TRUE)
-mtbs_stack <- stack(mtbs_list)
+# mtbs_stack <- stack(mtbs_list)
 
 #-------------------------------------------------------------------------------
 # Function to download windspeed data
@@ -200,23 +204,24 @@ download_windspeed <- function(boundary){
     
     job <- geoknife(stencil, fabric, knife, wait = TRUE, OUTPUT_TYPE = "geotiff")
     
-    file <- geoknife::download(job, destination = paste0("./Parameterization/calibration data/climate/downloaded/", vars_url[i],'/temp.zip'), overwrite=TRUE)
+    # file <- geoknife::download(job, destination = paste0("./Parameterization/calibration data/climate/downloaded/", vars_url[i],'/temp.zip'), overwrite=TRUE)
     
-    newdir <- paste0("./Parameterization/calibration data/climate/downloaded/",vars_url[i], "/",
-                               boundary$incidentna, boundary$perimeterd)
+    # newdir <- paste0("./Parameterization/calibration data/climate/downloaded/",vars_url[i], "/",
+    #                            boundary$incidentna, boundary$perimeterd)
     
-    if(!dir.exists(newdir)){
-      dir.create(newdir)
-    }
+    dest <- file.path(tempdir(), paste0(vars_long[i], '_data.zip'))
+    file <- download(job, destination = dest, overwrite = TRUE)
+    tiff.dir <- file.path(tempdir(), vars_long[i])
+    #delete contents from previous fire
+    unlink(tiff.dir, recursive = TRUE)
     
-    #there's something wrong with the zip files, so unzip() doesn't work. Archive does it though!
-    archive_extract(file, dir = newdir)
+    archive::archive_extract(archive = file, dir = tiff.dir)
     
     #this is a weird file; stars doesn't like it. The metadata is all messed up. raster still works okay though!
-    layers[i] <- raster(list.files(newdir, full.names = TRUE)[1])
-    print(boundary$incidentna)
-    print(boundary$perimeterd)
-    print(newdir)
+    layers[i] <- raster(list.files(file.path(tempdir(), vars_long[i]), full.names = TRUE))
+    # print(boundary$incidentna)
+    # print(boundary$perimeterd)
+    # print(newdir)
   }
   
   
@@ -252,11 +257,11 @@ error_flag <- FALSE
 # The loop extracts the identity of potential fire cells and whether or not 
 # fire spread successfully to those cells
 
-#START HERE load fire_spread_initial_data_loaded.RData
-
 
 for(k in 1:length(years)){
   year <- years[k]
+  
+  message("Processing fire spread for year ", year)
 
   daily_perims <- daily_perims_all %>%
     filter(fireyear == year)
@@ -300,10 +305,10 @@ for(k in 1:length(years)){
     )
     if(error_flag) next()
     
-    print(fire)
-    plot(st_geometry(current_fire))
-    plot(current_fire$gisacres ~ as.Date(current_fire$perimeterd))
-    plot(current_fire$spread ~ as.Date(current_fire$perimeterd)) #all spread is > 0
+    # print(fire)
+    # plot(st_geometry(current_fire))
+    # plot(current_fire$gisacres ~ as.Date(current_fire$perimeterd))
+    # plot(current_fire$spread ~ as.Date(current_fire$perimeterd)) #all spread is > 0
     
     if(sum(current_fire$days_between == 1, na.rm = TRUE) < 1){
       message("Skipping fire due to lack of successive daily perimeters")
@@ -325,11 +330,16 @@ for(k in 1:length(years)){
       if(i == 1){
         burning <- raster::mask(sierra_template, current_fire[i, ], updatevalue = NA) # 1 means "burning"
         burned <- burning
+        # plot(burning, ext = st_bbox(current_fire), main = paste("Burned on Day ", i))
+        # writeRaster(burning, paste0("burning_day", i, ".tif"), overwrite = TRUE)
       }else{
         # cells within the polygon this timestep, minus the ones that were burned as of
         # the previous timestep
         burning <- raster::mask(sierra_template, current_fire[i, ], updatevalue = NA) %>%
           mask(previous_burned, inverse = TRUE) #burned from last timestep
+        # plot(burning, ext = st_bbox(current_fire), main = paste("Burned on Day ", i))
+        # writeRaster(burning, paste0("burning_day", i, ".tif"), overwrite = TRUE)
+        
         burned <- raster::mask(sierra_template, current_fire[i, ], updatevalue = NA)
         
         
@@ -344,11 +354,13 @@ for(k in 1:length(years)){
       potential_burn <- adjacent(burning, cells = which(raster::values(burning) == 1),
                                  directions = 4, pairs = FALSE, include = FALSE) %>%
         `[`(!(. %in% which(raster::values(burned) == 1))) #remove cells that already burned
-      
+      potential_burn_map <- burning %>% setValues(0)
+      potential_burn_map[potential_burn] <- 1
+      # plot(potential_burn_map, ext = st_bbox(current_fire), 
+      #      main = paste0("Potential to burn on Day", i+1))
+      # writeRaster(potential_burn_map, paste0("potential_burn_day", i+1, ".tif"), overwrite = TRUE)
       
       previous_burned <- burned #update for next timestep
-      
-      plot(burned, ext = st_bbox(current_fire))
       
       n_potential <- length(potential_burn)
       if(n_potential == 0) next()
@@ -489,6 +501,8 @@ for(yearday in unique_year_days){
   
 }
 
+spread_data_back2 <- spread_data
+
 #-------------------------------------------------------------------------------
 # Get wind speed and wind direction
 #-------------------------------------------------------------------------------
@@ -514,7 +528,7 @@ for(fire_name_ws in unique(spread_data$fire_name)){
     #download and process the wind data
     wind_data <- tryCatch(
       {
-      download_windspeed(boundary)
+      download_windspeed(boundary) #TODO fix this!! We can get multiple days in one go!
     }, 
     error = function(cond) {
       message(paste("Error downloading wind data data for ", fwi_date))
@@ -579,8 +593,7 @@ rowcol_new[, 2] <- rowcols[, 2] + ifelse(spread_data$rose =="East",
 
 spread_data$cell_mtbs <- cellFromRowCol(sierra_template, rowcol_new[, 1], rowcol_new[, 2])
 
-mtbs_mosaics <- list.files("./Parameterization/calibration data/mtbs/severity_mosaic/composite_data",
-                           patter = ".tif", full.names = TRUE, recursive = TRUE)[17:37]
+mtbs_mosaics <- mtbs_list[17:37]
 
 sierra_poly_mtbs <- sierra_poly %>% 
   sf::st_transform(crs = "ESRI:102039")
@@ -648,16 +661,6 @@ spread_data <- spread_data %>%
            U_b * ((Ua_Ub^2) + 2*(Ua_Ub) * sin(slope * (pi/180)) * cos(relative_wd * (pi/180)) + sin(slope * (pi/180))^2)^0.5
   )
                   
-library("vioplot")
-boxplot(spread_data$fwi ~ spread_data$success)
-vioplot(spread_data$fwi ~ spread_data$success)
-t.test(spread_data$fwi ~ spread_data$success)
-boxplot(spread_data$fuel ~ spread_data$success)
-t.test(spread_data$fuel ~ spread_data$success)
-boxplot(spread_data$fire_severity ~ spread_data$success)
-t.test(spread_data$fire_severity ~ spread_data$success)
-boxplot(spread_data$eff_wspd ~ spread_data$success)
-t.test(spread_data$eff_wspd ~ spread_data$success)
 
 
 #relativize fuels
@@ -667,4 +670,43 @@ spread_data$fuel <- ifelse(spread_data$fuel < max_fuel,
                            1)
 
 
-# write.csv(spread_data, "./Parameterization/calibration data/processed_fire_spread_data_new_days_between.csv")
+#------------------------------------------------------
+# get NDVI
+
+#START HERE
+spread_data <- read.csv("./Parameterization/calibration data/processed_fire_spread_data_new_days_between.csv")
+
+modis_list <- list.files("D:/Data/modis/downloaded_appEARS", full.names = TRUE)
+modis_rasters <- data.frame(file = modis_list[grep("NDVI", modis_list)])
+
+modis_rasters$date <- str_match(modis_rasters$file, "(?:_doy)(\\d+)")[, 2] %>%
+  as.Date("%Y%j")
+
+get_ndvi_before <- function(firename){
+  
+  first_date <- spread_data %>% 
+    filter(fire_name == firename) %>% 
+    summarise(min(year_days)) 
+  first_date <- as.Date(as.character(first_date$`min(year_days)`), format = "%Y%j")
+  
+  year <- substr(first_date, 1, 4)
+  
+  modis_rasters$distance_ig <- (first_date - modis_rasters$date) 
+  modis_file <- modis_rasters[which.min(modis_rasters[modis_rasters$distance_ig>0, "distance_ig"]), "file"]
+  
+  modis_before <- stars::read_stars(modis_file) %>%
+    stars::st_warp(dest = stars::st_as_stars(sierra_template))
+  
+  modis_vals <- modis_before[[1]][spread_data[spread_data$year == year & spread_data$fire_name == firename,
+                           "cell"]]
+  
+  return(modis_vals)
+}
+
+for(fire_name_modis in unique(spread_data$fire_name)){
+  message(fire_name_modis)
+  spread_data[spread_data$fire_name == fire_name_modis,"ndvi"] <- get_ndvi_before(fire_name_modis)
+}
+
+
+write.csv(spread_data, "./Parameterization/calibration data/processed_fire_spread_data_new_days_between_2023-8-8.csv")
