@@ -46,8 +46,8 @@ TCSI_IC6.csv
 */calibration data/mtbs/*
 */Inputs/climate_IC/*
 */original TCSI inputs/climate_IC/*
-!Models/Inputs/original TCSI inputs/climate_IC/180m_IC5.csv
-!Models/Inputs/original TCSI inputs/climate_IC/TCSI_cnrm85_3.csv
+Models/Inputs/original TCSI inputs/climate_IC/180m_IC5.csv
+Models/Inputs/original TCSI inputs/climate_IC/TCSI_cnrm85_3.csv
 Models/Inputs/original TCSI inputs/climate_IC/TCSI_hadgem_85_3.csv
 Models/Inputs/original TCSI inputs/climate_IC/tcsi_idaho_v5.csv
 Models/Inputs/original TCSI inputs/climate_IC/TCSI_miroc5_85_3.csv
@@ -95,7 +95,7 @@ Parameterization/calibration data/topography/sierra_dem.tif
 Parameterization/calibration data/topography/sierra_slope.tif
 Parameterization/calibration data/landuse/
 Parameterization/calibration data/landuse/*
-Parameterization/management scenario data/*
+Parameterization/management scenario data/
 Models/Model run templates/Scenario1 - no disturbance - oneyear/community-input-file-0.csv
 Parameterization/calibration data/geomac_all_years/perims_2000_2022.shx
 Parameterization/calibration data/geomac_all_years/perims_2000_2022.shp
