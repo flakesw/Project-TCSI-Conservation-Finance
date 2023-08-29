@@ -95,7 +95,6 @@ Parameterization/calibration data/topography/sierra_dem.tif
 Parameterization/calibration data/topography/sierra_slope.tif
 Parameterization/calibration data/landuse/
 Parameterization/calibration data/landuse/*
-Parameterization/management scenario data/
 Models/Model run templates/Scenario1 - no disturbance - oneyear/community-input-file-0.csv
 Parameterization/calibration data/geomac_all_years/perims_2000_2022.shx
 Parameterization/calibration data/geomac_all_years/perims_2000_2022.shp
@@ -106,3 +105,94 @@ Parameterization/calibration data/geomac_all_years/2022_perimeters_clean.shp
 Parameterization/calibration data/geomac_all_years/2022_perimeters_clean.prj
 Parameterization/calibration data/geomac_all_years/2022_perimeters_clean.dbf
 Parameterization/calibration data/daily_climate
+Parameterization/management scenario data/cced_2022a/CCED_2022a/CCED Manual 2022a.pdf
+Parameterization/management scenario data/cced_2022a/CCED_2022a/CCED_2022a_Release.CPG
+Parameterization/management scenario data/cced_2022a/CCED_2022a/CCED_2022a_Release.dbf
+Parameterization/management scenario data/cced_2022a/CCED_2022a/CCED_2022a_Release.prj
+Parameterization/management scenario data/cced_2022a/CCED_2022a/CCED_2022a_Release.sbn
+Parameterization/management scenario data/cced_2022a/CCED_2022a/CCED_2022a_Release.sbx
+Parameterization/management scenario data/cced_2022a/CCED_2022a/CCED_2022a_Release.shp
+Parameterization/management scenario data/cced_2022a/CCED_2022a/CCED_2022a_Release.shp.xml
+Parameterization/management scenario data/cced_2022a/CCED_2022a/CCED_2022a_Release.shx
+Parameterization/management scenario data/community-input-file-0.csv
+Parameterization/management scenario data/community-input-file-80.csv
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD 2022a Database Manual.pdf
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Holdings.CPG
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Holdings.dbf
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Holdings.HOLDING_ID.atx
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Holdings.prj
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Holdings.sbn
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Holdings.sbx
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Holdings.shp
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Holdings.shp.xml
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Holdings.shx
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_SuperUnits.CPG
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_SuperUnits.dbf
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_SuperUnits.prj
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_SuperUnits.sbn
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_SuperUnits.sbx
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_SuperUnits.shp
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_SuperUnits.shp.xml
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_SuperUnits.shx
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Units.CPG
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Units.dbf
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Units.prj
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Units.sbn
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Units.sbx
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Units.shp
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Units.shp.xml
+Parameterization/management scenario data/cpad_2022a/CPAD_2022a/CPAD_2022a_Units.shx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/_gdb.AFSLTHPL6322H4Y.12800.34500.sr.lock
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/_gdb.AFSLTHPL6322H4Y.15144.26116.sr.lock
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/_gdb.AFSLTHPL6322H4Y.23368.19864.sr.lock
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/_gdb.AFSLTHPL6322H4Y.29176.29620.sr.lock
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000001.freelist
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000001.gdbindexes
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000001.gdbtable
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000001.gdbtablx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000001.TablesByName.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000002.gdbtable
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000002.gdbtablx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000003.gdbindexes
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000003.gdbtable
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000003.gdbtablx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000004.CatItemsByPhysicalName.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000004.CatItemsByType.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000004.FDO_UUID.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000004.freelist
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000004.gdbindexes
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000004.gdbtable
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000004.gdbtablx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000004.spx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000005.CatItemTypesByName.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000005.CatItemTypesByParentTypeID.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000005.CatItemTypesByUUID.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000005.gdbindexes
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000005.gdbtable
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000005.gdbtablx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000006.CatRelsByDestinationID.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000006.CatRelsByOriginID.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000006.CatRelsByType.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000006.FDO_UUID.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000006.freelist
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000006.gdbindexes
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000006.gdbtable
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000006.gdbtablx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000007.CatRelTypesByBackwardLabel.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000007.CatRelTypesByDestItemTypeID.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000007.CatRelTypesByForwardLabel.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000007.CatRelTypesByName.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000007.CatRelTypesByOriginItemTypeID.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000007.CatRelTypesByUUID.atx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000007.gdbindexes
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000007.gdbtable
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a00000007.gdbtablx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a0000000d.freelist
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a0000000d.gdbindexes
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a0000000d.gdbtable
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a0000000d.gdbtablx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/a0000000d.spx
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/gdb
+Parameterization/management scenario data/ownership18_2.gdb/ownership18_2.gdb/timestamps
+Parameterization/management scenario data/test_comm_data/scen7/community-input-file-80.csv
+Parameterization/management scenario data/test_comm_data/scen7/output-community-80.img
