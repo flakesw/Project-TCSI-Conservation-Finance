@@ -17,26 +17,27 @@ project_to_template <- function(input_raster, template){
 tcsi_mask_terra <- rast("./Models/Inputs/masks_boundaries/mask_9311.tif") 
 
 
-stands <- terra::rast("./Models/Inputs/input_rasters_reproject/stands_ssp2_20_180_v5.tif") %>%
-  project_to_template(tcsi_mask_terra)
+stands <- terra::rast("./Models/Inputs/input_rasters_reproject/stands180_yr20.tif") %>%
+  project_to_template(tcsi_mask_terra) %>%
+  terra::project("EPSG:5070")
 
 stands_nad83 <- stands %>% project("EPSG:26910", method = "near")
 
 tcsi_shape <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_area_shapefile/TCSI_v2.shp") %>%
-  st_transform(crs = "EPSG:9311")
+  st_transform(crs = "EPSG:5070")
 
 test <- mask(stands, vect(tcsi_shape))
 plot(test) #check alignment
 
 
 
-terra::writeRaster(stands, "stands_equal_area_scenario2.tif", overwrite = TRUE)
-terra::writeRaster(stands_nad83, "stands_nad83_scenario2.tif", overwrite = TRUE)
+terra::writeRaster(stands, "stands_equal_area_s1.tif", overwrite = TRUE)
+terra::writeRaster(stands_nad83, "stands_nad83_s1.tif", overwrite = TRUE)
 
 stands_shape <- terra::as.polygons(stands, dissolve = TRUE) %>%
   sf::st_as_sf()
 # plot(stands_shape)
 
-sf::write_sf(stands_shape, "stands_poly_equal_area_scenario2.shp")
+sf::write_sf(stands_shape, "stands_poly_equal_area_s1.shp")
 
 

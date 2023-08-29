@@ -12,6 +12,8 @@ sf::sf_use_s2(FALSE)
 #https://lpdaac.usgs.gov/products/mod13a2v061/
 #https://opendap.cr.usgs.gov/opendap/hyrax/MOD13A2.061/contents.html
 #TODO: add climate normals
+#TODO: add EVI or other fuel proxy
+#TODO: corrolate fuels with LANDIS fuel layer
 #could use gridmet
 
 
@@ -456,24 +458,30 @@ for(yearday in unique_year_days){
     dir.create(paste0("./parameterization/calibration data/fwi/", fwi_year))
   }
   
-  #download FWI raster, ~16 mb
-  tryCatch(
-    {
-      download.file(url = paste0("https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.MERRA2/Default/MERRA2.CORRECTED/",fwi_year,"/",file), 
-                destfile = paste0("./parameterization/calibration data/fwi/", fwi_year,"/", tail), method = "curl", quiet = FALSE,
-                cacheOK = TRUE)
-     },
-     error=function(cond) {
-       
-       message(paste("Error downloading climate data for ", fwi_date))
-       message("Here's the original error message:")
-       message(cond)
-       error_flag <<- TRUE
-       
-     }
-   )
-   if(error_flag) next()
-           
+  #check if we've already got that raster, otherwise download it
+  if(paste0("./parameterization/calibration data/fwi/", fwi_year) %in% 
+     list.dirs("./parameterization/calibration data/fwi")){
+    message("FWI data already downloaded. Loading from disk.")
+  } else{
+    #download FWI raster, ~16 mb
+    tryCatch(
+      {
+        download.file(url = paste0("https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.MERRA2/Default/MERRA2.CORRECTED/",fwi_year,"/",file), 
+                      destfile = paste0("./parameterization/calibration data/fwi/", fwi_year,"/", tail), method = "curl", quiet = FALSE,
+                      cacheOK = TRUE)
+      },
+      error=function(cond) {
+        
+        message(paste("Error downloading climate data for ", fwi_date))
+        message("Here's the original error message:")
+        message(cond)
+        error_flag <<- TRUE
+        
+      }
+    )
+  }
+  
+  if(error_flag) next()
   
   # TODO figure out how to suppress messages on loading
   fwi <- tryCatch(

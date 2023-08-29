@@ -13,6 +13,7 @@ library("stars")# using stars is so much faster, since the whole files aren't lo
 # library("MODIStsp") # for downloading MODIS data
 library("archive")
 library("lubridate")
+terraOptions(datatype="FLT8S")
 
 
 setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance")
@@ -43,7 +44,8 @@ setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance")
 sierra_shape <- sf::st_read("./Models/Inputs/masks_boundaries/WIP_Capacity_V1Draft/WIP_Capacity_V1Draft.shp") %>%
   sf::st_transform("EPSG:5070") %>%
   sf::st_union()
-
+sierra_poly_wgs <- sierra_shape %>%
+  sf::st_transform(crs = "+proj=longlat +datum=WGS84 +no_defs")
 
 short_all <- read.csv("./Parameterization/calibration data/short_ignitions/short_drop_geometry.csv")
 short <- readRDS("./Parameterization/calibration data/short_ignitions/short_sierra.RDS") %>%
@@ -261,7 +263,7 @@ get_landfire_fuel <- function(boundary, dnbr_raster){
     }else if(fire_year == 2020){
       fine_fuel <- landfire_2019_fine[boundary]
       ladder_fuel <- landfire_2019_ladder[boundary]
-    }else if(fire_year == 2021){
+    }else if(fire_year >= 2021){
       fine_fuel <- landfire_2020_fine[boundary]
       ladder_fuel <- landfire_2020_ladder[boundary]
     }
@@ -270,7 +272,7 @@ get_landfire_fuel <- function(boundary, dnbr_raster){
       terra::project(dnbr_raster) %>%
       terra::values()
     ladder_fuel <- as(ladder_fuel, "SpatRaster") %>%
-      terra::project(dnbr_raster) %>%
+      terra::project(dnbr_raster)%>%
       terra::values()
     
     combined <- data.frame(fine_fuel = fine_fuel,
@@ -416,6 +418,26 @@ download_pet_cwd <- function(boundary){
 
 download_daily_climate_rasters <- function(boundary, dates_of_fire){  
   
+  if(any(grepl(boundary$Event_ID, list.files("./Parameterization/calibration data/daily_climate/")))){
+    message("    Climate data already exists! Reading local data.")
+    #This is potentially unsafe if there aren't all six variables present for a fire. TODO
+    
+    var_urls <- c("vs", "th", "vpd", "pet", "eddi30d", "pdsi")
+    
+    files <- list.files(paste0("./Parameterization/calibration data/daily_climate/"), 
+                        pattern = boundary$Event_ID, full.names = TRUE)
+    
+    #match up variables with their file
+    fileorder <- sapply(var_urls, grepl, files) %>% 
+      as.data.frame() %>% 
+      apply(., 2, FUN = which) %>%
+      unlist()
+    
+    clim_stack <- lapply(files[fileorder], terra::readRDS)
+    
+    return(clim_stack)
+    }
+  
   #shapefile for fire
   fire_boundary <- boundary %>%
     sf::st_transform(crs = "+proj=longlat +datum=WGS84") #reproject to CRS that geoknife needs
@@ -480,7 +502,8 @@ download_daily_climate_rasters <- function(boundary, dates_of_fire){
     
     job_results[j] <- stack
   }
-  
+
+  for(i in 1:length(job_results)) terra::saveRDS(job_results[[i]], paste0("./Parameterization/calibration data/daily_climate/", boundary$Event_ID, vars_url[i], ".rds"))
   
   return(job_results)
 }
@@ -488,12 +511,10 @@ download_daily_climate_rasters <- function(boundary, dates_of_fire){
 
 
 #-------------------------------------------------------------------------------
-# get relative windspeed 
+# get relative windspeed and other daily climate data, extracted to the right
+# location
 
-#TODO add other climate variables to fire spread component!
-#TODO add FWI to fire severity calculation
-
-get_daily_climate_mosaic <- function(dnbr_raster, date_raster, severity_raster, wind){ 
+get_daily_climate_mosaic <- function(dnbr_raster, date_raster, severity_raster, wind, fwi){ 
   terraOptions(datatype="FLT8S")
   
    for(i in 1:length(wind)){
@@ -526,24 +547,30 @@ get_daily_climate_mosaic <- function(dnbr_raster, date_raster, severity_raster, 
   pdsi <- wind[6][[1]]%>%
     terra::project(dnbr_raster, method = "bilinear")
   
+  fwi2 <- fwi %>% 
+    terra::project(dnbr_raster)
+  
   wind_speed_raster <- dnbr_raster
-  values(wind_speed_raster) <- NA
+  terra::values(wind_speed_raster) <- NA
   wind_dir_raster <- dnbr_raster
-  values(wind_dir_raster) <- NA
+  terra::values(wind_dir_raster) <- NA
   vpd_raster <- dnbr_raster
-  values(vpd_raster) <- NA
+  terra::values(vpd_raster) <- NA
   pet_raster <- dnbr_raster
-  values(pet_raster) <- NA
+  terra::values(pet_raster) <- NA
   eddi_raster <- dnbr_raster
-  values(eddi_raster) <- NA
+  terra::values(eddi_raster) <- NA
   pdsi_raster <- dnbr_raster
-  values(pdsi_raster) <- NA
+  terra::values(pdsi_raster) <- NA
+  fwi_raster <- dnbr_raster
+  terra::values(fwi_raster) <- NA
   
   
   fire_dates <- unique(terra::values(date_raster)) %>%
     `[`(!is.na(.))
   for(date in fire_dates){
-date <- fire_dates[1]
+    
+    # date <- fire_dates[1]
     #get cells burned on a particular day
     date_rast_temp <- terra::mask(date_raster, mask = date_raster, maskvalues = date, inverse = TRUE)
     
@@ -573,6 +600,11 @@ date <- fire_dates[1]
     pdsi_mask <- terra::mask(pdsi_temp, date_rast_temp)
     pdsi_raster <- sum(pdsi_raster, pdsi_mask, na.rm = TRUE)
     
+    fwi_temp <- fwi2[[which.min(abs(as.numeric((as.Date(sub("X", "", names(fwi2)), format = "%Y%j") - 
+                                                  as.Date(as.character(date), format = "%Y%m%d")))))]]
+    fwi_mask <- terra::mask(fwi_temp, date_rast_temp)
+    fwi_raster <- sum(fwi_raster, fwi_mask, na.rm = TRUE)
+    
   }
   
 
@@ -590,7 +622,7 @@ date <- fire_dates[1]
   )
 
   wind_cut <- cut(
-    values(wind_dir_raster),
+    terra::values(wind_dir_raster),
     breaks = rose_breaks,
     labels = rose_labs,
     right = FALSE,
@@ -631,24 +663,119 @@ date <- fire_dates[1]
   terra::values(U_b_raster) <- U_b_upwind
   
   ### Caculating windspeed in direction of spread 
-  relative_wd <- values(wind_dir_raster) - aspect_val
-  Ua_Ub <- values(wind_speed_raster) / U_b
+  relative_wd <- terra::values(wind_dir_raster) - aspect_val
+  Ua_Ub <- terra::values(wind_speed_raster) / U_b
   ### Calculating effective wind speed. 
   eff_wind <- U_b * ((Ua_Ub^2) + 2*(Ua_Ub) * sin(slope_val * (pi/180)) * 
                        cos(relative_wd * (pi/180)) + sin(slope_val * (pi/180))^2)^0.5
   
   
   eff_wind_raster <- dnbr_raster
-  values(eff_wind_raster) <- eff_wind
+  terra::values(eff_wind_raster) <- eff_wind
   
-  return(list(eff_wind_raster, wind_speed_raster, vpd_raster, pet_raster, eddi_raster, pdsi_raster))
+  return(list(eff_wind_raster, wind_speed_raster, vpd_raster, pet_raster, eddi_raster, pdsi_raster, fwi_raster))
 
   
   }
 
 
+#-------------------------------------------------------------------------------
+# Get Merra2 FWI
+#-------------------------------------------------------------------------------
 
-
+download_daily_fwi <- function(boundary, dates_of_fire){
+  boundary_wgs <- boundary %>% sf::st_transform("+proj=longlat +datum=WGS84 +no_defs")
+  
+  for(i in 1:length(dates_of_fire)){
+    
+    firedate <- dates_of_fire[i]
+    
+    
+    error_flag <- FALSE
+    yearday <- format(as.Date(paste(firedate), format = "%Y-%m-%d"),
+                      format = "%Y%j")
+    fwi_date <- format(as.Date(paste(firedate), format = "%Y-%m-%d"),
+                       format = "%Y%m%d")
+    fwi_year <- as.numeric(substr(yearday, 1, 4))
+    fwi_day <- as.numeric(substr(yearday, 5, 7))
+    tail <- paste0(fwi_date, ".nc")
+    file <- paste0("FWI.MERRA2.CORRECTED.Daily.Default.", tail)
+    
+    print(paste("Year = ", fwi_year))
+    print(paste("Day = ", fwi_day))
+    
+    fwi_raster_name <- paste0("./Parameterization/calibration data/fwi/", fwi_year,"/", tail)
+    
+    # day_data <- spread_data %>% dplyr::filter(year_days == yearday)
+    
+    if(file.exists(fwi_raster_name)){
+      message("FWI data already downloaded. Loading from disk.")
+    } else{
+      
+      #create a directory if needed
+      if(!(paste0("./Parameterization/calibration data/fwi/", fwi_year) %in% 
+           list.dirs("./Parameterization/calibration data/fwi"))){
+        dir.create(paste0("./Parameterization/calibration data/fwi/", fwi_year))
+      }
+      
+      #download FWI raster, ~16 mb
+      tryCatch(
+        {
+          download.file(url = paste0("https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.MERRA2/Default/MERRA2.CORRECTED/",fwi_year,"/",file), 
+                        destfile = paste0("./Parameterization/calibration data/fwi/", fwi_year,"/", tail), method = "curl", quiet = FALSE,
+                        cacheOK = TRUE)
+        },
+        error=function(cond) {
+          
+          message(paste("Error downloading climate data for ", fwi_date))
+          message("Here's the original error message:")
+          message(cond)
+          error_flag <<- TRUE
+          
+        }
+      )
+    }
+    # 
+    # if(error_flag) next()
+    # 
+    # # TODO figure out how to suppress messages on loading
+    # fwi <- tryCatch(
+    #   {stars::read_stars(paste0("./parameterization/calibration data/fwi/", fwi_year,"/", tail)) %>%
+    #       dplyr::select("MERRA2.CORRECTED_FWI") %>%
+    #       sf::st_set_crs(st_crs(sierra_poly_wgs)) %>%
+    #       `[`(sierra_poly_wgs) %>%
+    #       stars::st_warp(crs = st_crs(sierra_poly)) %>%
+    #       stars::st_warp(dest = stars::st_as_stars(sierra_template))
+    #   }, 
+    #   error=function(cond) {
+    #     
+    #     message(paste("Error downloading process FWI data for ", fwi_date))
+    #     message("Here's the original error message:")
+    #     message(cond)
+    #     error_flag <<- TRUE
+    #     
+    #   }
+    # )
+    # 
+    # if(error_flag) next() 
+    # 
+    # fwi_vals <- fwi[[1]][day_data$cell]
+    # 
+    # spread_data[spread_data$year_days == yearday, "fwi"] <- fwi_vals
+    
+    fwi_raster <- terra::rast(fwi_raster_name)[["MERRA2.CORRECTED_FWI"]]
+    terra::set.crs(fwi_raster, "+proj=longlat +datum=WGS84")
+    fwi_raster <- fwi_raster %>%
+      terra::crop(vect(st_buffer(boundary_wgs, 100000))) %>%
+      terra::project(crs(vect(boundary)))
+    names(fwi_raster) <- yearday #I should use the "time" band but I couldn't figure it out
+    plot(fwi_raster)
+    
+    if(i == 1){ fwi_stack <- fwi_raster} else fwi_stack <- c(fwi_stack, fwi_raster)
+    
+  }
+  return(fwi_stack)
+}
 #-------------------------------------------------------------------------------
 # Import MODIS NDVI data
 #-------------------------------------------------------------------------------
@@ -730,6 +857,7 @@ create_data_catcher <- function(data_length){
                     vpd = numeric(data_length),
                     eddi = numeric(data_length),
                     pdsi = numeric(data_length),
+                    fwi = numeric(data_length),
                     fine_fuel = numeric(data_length),
                     ladder_fuel = numeric(data_length),
                     ndvi = numeric(data_length),
@@ -945,8 +1073,21 @@ for(i in 550:length(mtbs_shape)){
       )
     }
 
+  fwi <- download_daily_fwi(boundary, dates_of_fire)
+  
   clim <- NA
-  clim <- download_pet_cwd(boundary) #monthly
+  clim <- tryCatch(
+    {
+      download_pet_cwd(boundary) #monthly
+    },
+    error=function(cond) {
+      message(paste("Error downloading wind data for:", label))
+      message("Here's the original error message:")
+      message(cond)
+      
+      return(NA)
+    }
+  )
     
   dailyclim <- NA
   dailyclim <- tryCatch(
@@ -963,11 +1104,11 @@ for(i in 550:length(mtbs_shape)){
   )
 
   if(!anyNA(dailyclim)){
-    message("Processing effective windspeed")
+    message("Processing effective windspeed and weather mosaic")
     
     clim_mosaic <- tryCatch(
       {
-        get_daily_climate_mosaic(dnbr_raster, date_raster, sev_raster, dailyclim)
+        get_daily_climate_mosaic(dnbr_raster, date_raster, sev_raster, dailyclim, fwi)
       },
       error=function(cond) {
         message(paste("Error processing daily climate data for:", label))
@@ -979,7 +1120,7 @@ for(i in 550:length(mtbs_shape)){
     )
   } else{
     message("No wind data; setting effective windspeed to NA")
-    eff_ws <- NA
+    clim_mosaic <- NA
   }
   
   
@@ -1044,6 +1185,7 @@ for(i in 550:length(mtbs_shape)){
                      vpd = terra::values(clim_mosaic[[3]])[cells_burned],
                      eddi = terra::values(clim_mosaic[[5]])[cells_burned],
                      pdsi = terra::values(clim_mosaic[[6]])[cells_burned],
+                     fwi = terra::values(clim_mosaic[[7]])[cells_burned],
                      fine_fuel = ifelse(is.null(nrow(fuel)), NA, fuel$fine_fuel[cells_burned]),
                      ladder_fuel = ifelse(is.null(nrow(fuel)), NA, fuel$ladder_fuel[cells_burned]),
                      ndvi = ifelse(is.null(nrow(ndvi)), NA, ndvi[[1]][cells_burned]),

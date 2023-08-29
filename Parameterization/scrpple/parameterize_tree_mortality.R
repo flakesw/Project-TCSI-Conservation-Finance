@@ -176,18 +176,21 @@ for(i in 1:nrow(bark_growth_params)){
     d <- bark_growth_params$maxBark[i] * ages/(ages + bark_growth_params$alpha[i])
     # plot(d ~ ages)
     
-    p <- predict(dnbr_mod, 
-               newdata = data.frame(mean_dnbr = dnbr, 
-                                    bark_thickness = d),
-               re.form = ~0,
-               allow.new.levels = TRUE)
+    # p <- predict(dnbr_mod,
+    #            newdata = data.frame(mean_dnbr = dnbr,
+    #                                 bark_thickness = d),
+    #            re.form = ~0,
+    #            allow.new.levels = TRUE)
+    
+    
+    p <- -0.73 + -0.9 * d + 0.008 * dnbr
+      
     prob_mort <- boot::inv.logit(p)
     plot(prob_mort ~ ages,
        xlab = "Age",
        ylab = "P(mort)",
        main = paste(bark_growth_params$SpeciesLandis[i], ", DNBR = ", dnbr))
     graphics::text(x = 0, y = min(prob_mort), pos = 4, labels = paste0("Prob of mortality at age 100 = ", round(prob_mort[101], 2)))
-    
 }
 
 
