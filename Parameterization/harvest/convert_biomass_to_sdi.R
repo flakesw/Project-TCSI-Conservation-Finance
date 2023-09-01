@@ -105,7 +105,7 @@ sierra_trees <- rbind(ca_trees, nv_trees)
 
 sierra_trees <- filter(sierra_trees, PLT_CN %in% sierra_fia_plot$CN)
 
-breaks <- seq(0, max(sierra_trees$TOTAGE, na.rm = TRUE) + (10 - max(sierra_trees$TOTAGE, na.rm = TRUE) %% 10), by = 5)
+breaks <- seq(0, max(sierra_trees$TOTAGE, na.rm = TRUE) + (10 - max(sierra_trees$TOTAGE, na.rm = TRUE) %% 10), by = 10)
 
 sierra_trees <- sierra_trees%>%
   filter(STATUSCD == 1) %>%
@@ -259,44 +259,40 @@ plot(bps_max_sdi)
 #cohort-level data analysis
 
 age_cohort_summary <- sierra_trees %>%
-  dplyr::filter(DIA > 5) %>%
+  dplyr::filter(DIA > 1) %>%
   dplyr::filter(STATUSCD == 1) %>%
   dplyr::group_by(PLT_CN, SPCD, AGE_BIN) %>%
-  dplyr::reframe(cohort_biomass = sum(DRYBIO_AG * TPA_UNADJ),
+  dplyr::reframe(cohort_biomass = sum(DRYBIO_AG * TPA_UNADJ) / 892 * 100,
                    cohort_tpa = sum(TPA_UNADJ),
                    cohort_ba = sum(0.005454*(DIA^2)*TPA_UNADJ),
                    # cohort_ba2 = pi*sum((DIA/2/12)^2 * TPA_UNADJ), #equivalent
                    cohort_d = sqrt((cohort_ba/cohort_tpa)/0.005454),
                    cohort_sdi = TPA_UNADJ*((DIA/10)^1.6))  %>%
   group_by(SPCD) %>%
-  filter(n() > 1000) %>%
+  filter(n() > 50) %>%
   dplyr::mutate(SPCD = as.factor(SPCD),
                 AGE_BIN = as.numeric(AGE_BIN)) %>%
   dplyr::left_join(tree_summary %>% filter(!duplicated(PLT_CN)) %>% dplyr::select(PLT_CN, biomass),
-                   by = "PLT_CN", relationship = "many-to-one") 
+                   by = "PLT_CN", relationship = "many-to-one") %>%
+  drop_na()
 
 age_cohort_summary <- age_cohort_summary %>%
   left_join(sierra_fia_plot, by = c("PLT_CN" = "CN")) %>%
   left_join(., sierra_fia_cond[!duplicated(sierra_fia_cond$PLT_CN), ], by = c("PLT_CN" = "PLT_CN")) %>%
   # dplyr::filter(!is.na(FORTYPCD)) %>%
   mutate(FORTYPCD = as.factor(FORTYPCD)) %>%
-  filter(!is.na(cohort_biomass),
-         !is.na(AGE_BIN),
-         AGE_BIN < 300,
-         cohort_biomass < 10000) 
+  filter(cohort_biomass < 3000)
 
 #fit cohort SDI model
 plot(log(cohort_sdi) ~ log(cohort_biomass), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(AGE_BIN), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(cohort_d), data = age_cohort_summary)
 
-sdi_cohort_model <- lmer(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN),3) + 
-                           (1|SPCD), 
-                         data = age_cohort_summary)
-library("gam")
-sdi_cohort_model <- gam::gam(log(cohort_sdi) ~ (AGE_BIN)*(log(cohort_biomass)), 
+sdi_cohort_model <- lmer(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + (1|SPCD),
                          data = age_cohort_summary)
 
+# sdi_cohort_model <- gam(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) * log(AGE_BIN),
+#                          data = age_cohort_summary)
 
 summary(sdi_cohort_model)
 # ranef(sdi_cohort_model)

@@ -12,11 +12,12 @@ bps_max_sdi[bps_max_sdi == 0] <- NA
 
 #---------------------------------------------
 # Bring in LANDIS layers
-# comm_input <- read.csv("./Parameterization/management scenario data/test_comm_data/scen7/community-input-file-80.csv")
-comm_input <- read.csv("./Parameterization/management scenario data/community-input-file-0.csv")
+comm_input <- read.csv("./Parameterization/management scenario data/test_comm_data/scen7/community-input-file-80.csv")
+# comm_input <- read.csv("./Parameterization/management scenario data/community-input-file-0.csv")
 
 comm_input = left_join(comm_input, sp_ref %>% dplyr::select(SPCD, SpeciesLandis),
                        by = c("SpeciesName" = "SpeciesLandis"))
+
 
 comm_input <- comm_input %>%
   dplyr::rename(cohort_biomass = CohortBiomass,
@@ -35,8 +36,8 @@ plot_comm$SDI_plot = exp(predict(sdi_plot_correction, newdata = plot_comm))
 hist(plot_comm$SDI_plot)
 
 #link to map
-# comm_map <- terra::rast("./Parameterization/management scenario data/test_comm_data/scen7/output-community-80.img")
-comm_map <- terra::rast("./Parameterization/management scenario data/output-community-0.img")
+comm_map <- terra::rast("./Parameterization/management scenario data/test_comm_data/scen7/output-community-80.img")
+# comm_map <- terra::rast("./Parameterization/management scenario data/output-community-0.img")
 
 # comm_map <- terra::rast("./Models/Model runs/Scenario7 - sdi35/output-community-0.img")
 
