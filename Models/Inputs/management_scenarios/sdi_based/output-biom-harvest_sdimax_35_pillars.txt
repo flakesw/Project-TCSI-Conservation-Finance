@@ -1,9 +1,6 @@
 LandisData "Biomass Harvest"  <<edited 7-31-2023
 
->>This scenario treats the entire landscape, except for wilderness and roadless areas. 
->>Steep slopes receive hand thinning only, private industrial forests are managed with
->>clearcuts, and general forest, WUI, and private nonindustiral forest are managed
->>with mechanical fuel treatments.  
+>>No treatment with carbon pillar; less treatment where no pillar score (no heavy thin, 3% area treated otherwise)
 
 Timestep 1
 ManagementAreas "../../Inputs/input_rasters_reproject/management_zones_sdi.tif"
@@ -1486,9 +1483,7 @@ TsugMert	1-60	(66%)	61-71	(39%)
 
 Prescription    Below1000Age20
 StandRanking Random		
-MinimumBiomass 1000
-MinimumAge 10
-MaximumAge 30		
+MinimumBiomass 1000	
 >>MinimumTimeSinceLastHarvest 40		
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1511,8 +1506,6 @@ TsugMert	1-60	(66%)	61-71	(39%)
 Prescription    Below2400Age20
 StandRanking Random		
 MinimumBiomass 2400
-MinimumAge 10
-MaximumAge 30		
 >>MinimumTimeSinceLastHarvest 40		
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1534,9 +1527,7 @@ TsugMert	1-60	(66%)	61-71	(39%)
 
 Prescription    Below3100Age20
 StandRanking Random		
-MinimumBiomass 3100
-MinimumAge 10
-MaximumAge 30		
+MinimumBiomass 3100	
 >>MinimumTimeSinceLastHarvest 40		
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1558,9 +1549,7 @@ TsugMert	1-60	(66%)	61-71	(39%)
 
 Prescription    Below1500Age50
 StandRanking Random		
-MinimumBiomass 1500
-MinimumAge 31
-MaximumAge 70		
+MinimumBiomass 1500	
 >>MinimumTimeSinceLastHarvest 40		
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1582,9 +1571,7 @@ TsugMert	1-60	(66%)	61-71	(39%)
 
 Prescription    Below3100Age50
 StandRanking Random		
-MinimumBiomass 3100
-MinimumAge 31
-MaximumAge 70		
+MinimumBiomass 3100	
 >>MinimumTimeSinceLastHarvest 40		
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1606,9 +1593,7 @@ TsugMert	1-60	(66%)	61-71	(39%)
 
 Prescription    Below5700Age50
 StandRanking Random		
-MinimumBiomass 5700
-MinimumAge 31
-MaximumAge 70		
+MinimumBiomass 5700	
 >>MinimumTimeSinceLastHarvest 40		
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1628,9 +1613,9 @@ PinuWash	1-52	(66%)	53-60	(39%)
 PseuMenz	1-52	(66%)	53-56	(39%)
 TsugMert	1-60	(66%)	61-71	(39%)
 
-Prescription    Below15900Age100
+Prescription    Below2400Age100
 StandRanking Random		
-MinimumBiomass 15900	
+MinimumBiomass 2400	
 >>MinimumTimeSinceLastHarvest 40		
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1650,9 +1635,9 @@ PinuWash	1-52	(66%)	53-60	(39%)
 PseuMenz	1-52	(66%)	53-56	(39%)
 TsugMert	1-60	(66%)	61-71	(39%)	
 
-Prescription    Below28400Age100
+Prescription    Below4500Age100
 StandRanking Random		
-MinimumBiomass 28400
+MinimumBiomass 4500
 >>MinimumTimeSinceLastHarvest 40		
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1672,9 +1657,9 @@ PinuWash	1-52	(66%)	53-60	(39%)
 PseuMenz	1-52	(66%)	53-56	(39%)
 TsugMert	1-60	(66%)	61-71	(39%)
 
-Prescription    Below35200Age100
+Prescription    Below9100Age100
 StandRanking Random		
-MinimumBiomass 35200
+MinimumBiomass 9100
 >>MinimumTimeSinceLastHarvest 40		
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1700,8 +1685,6 @@ TsugMert	1-60	(66%)	61-71	(39%)
 Prescription    Below1000Age20Mech
 StandRanking Random		
 MinimumBiomass 1000
-MinimumAge 10
-MaximumAge 30		
 MinimumTimeSinceLastHarvest 10		
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1723,9 +1706,7 @@ TsugMert	All
 
 Prescription    Below2400Age20Mech
 StandRanking Random		
-MinimumBiomass 2400
-MinimumAge 10
-MaximumAge 30		
+MinimumBiomass 2400	
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1748,8 +1729,6 @@ TsugMert	All
 Prescription    Below3100Age20Mech
 StandRanking Random		
 MinimumBiomass 3100
-MinimumAge 10
-MaximumAge 30		
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1772,8 +1751,6 @@ TsugMert	All
 Prescription    Below1500Age50Mech
 StandRanking Random		
 MinimumBiomass 1500
-MinimumAge 31
-MaximumAge 70		
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1795,9 +1772,7 @@ TsugMert	All
 
 Prescription    Below3100Age50Mech
 StandRanking Random		
-MinimumBiomass 3100
-MinimumAge 31
-MaximumAge 70		
+MinimumBiomass 3100	
 MinimumTimeSinceLastHarvest 10		
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1819,9 +1794,7 @@ TsugMert	All
 
 Prescription    Below5700Age50Mech
 StandRanking Random		
-MinimumBiomass 5700
-MinimumAge 31
-MaximumAge 70		
+MinimumBiomass 5700	
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1841,9 +1814,9 @@ PinuWash	1-59	(95%)	60-70	(85%)	71-85	(60%)	86-95	(50%)	96-110	(25%)	111-125	(10
 PseuMenz	All	
 TsugMert	All
 
-Prescription    Below15900Age100Mech
+Prescription    Below2400Age100Mech
 StandRanking Random		
-MinimumBiomass 15900
+MinimumBiomass 2400	
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1863,9 +1836,9 @@ PinuWash	1-59	(95%)	60-70	(85%)	71-85	(60%)	86-95	(50%)	96-110	(25%)	111-125	(10
 PseuMenz	All	
 TsugMert	All	
 
-Prescription    Below28400Age100Mech
+Prescription    Below4500Age100Mech
 StandRanking Random		
-MinimumBiomass 28400
+MinimumBiomass 4500	
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1885,9 +1858,9 @@ PinuWash	1-59	(95%)	60-70	(85%)	71-85	(60%)	86-95	(50%)	96-110	(25%)	111-125	(10
 PseuMenz	All	
 TsugMert	All
 
-Prescription    Below35200Age100Mech
+Prescription    Below9100Age100Mech
 StandRanking Random		
-MinimumBiomass 35200	
+MinimumBiomass 9100	
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1912,9 +1885,7 @@ TsugMert	All
 
 Prescription    Below1000Age20Heavy
 StandRanking Random		
-MinimumBiomass 1000
-MinimumAge 10
-MaximumAge 30		
+MinimumBiomass 1000	
 MinimumTimeSinceLastHarvest 10		
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1937,8 +1908,6 @@ TsugMert	All
 Prescription    Below2400Age20Heavy
 StandRanking Random		
 MinimumBiomass 2400
-MinimumAge 10
-MaximumAge 30		
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1961,8 +1930,6 @@ TsugMert	All
 Prescription    Below3100Age20Heavy
 StandRanking Random		
 MinimumBiomass 3100
-MinimumAge 10
-MaximumAge 30		
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -1984,9 +1951,7 @@ TsugMert	All
 
 Prescription    Below1500Age50Heavy
 StandRanking Random		
-MinimumBiomass 1500
-MinimumAge 31
-MaximumAge 70		
+MinimumBiomass 1500	
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -2008,9 +1973,7 @@ TsugMert	All
 
 Prescription    Below3100Age50Heavy
 StandRanking Random		
-MinimumBiomass 3100
-MinimumAge 31
-MaximumAge 70		
+MinimumBiomass 3100	
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -2032,9 +1995,7 @@ TsugMert	All
 
 Prescription    Below5700Age50Heavy
 StandRanking Random		
-MinimumBiomass 5700
-MinimumAge 31
-MaximumAge 70		
+MinimumBiomass 5700	
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -2054,9 +2015,9 @@ PinuWash	1-59	(97%)	60-70	(90%)	71-85	(65%)	86-95	(55%)	96-110	(35%)	111-125	(25
 PseuMenz	All	
 TsugMert	All	
 
-Prescription    Below15900Age100Heavy
+Prescription    Below2400Age100Heavy
 StandRanking Random		
-MinimumBiomass 15900
+MinimumBiomass 2400	
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -2076,9 +2037,9 @@ PinuWash	1-59	(97%)	60-70	(90%)	71-85	(65%)	86-95	(55%)	96-110	(35%)	111-125	(25
 PseuMenz	All	
 TsugMert	All	
 
-Prescription    Below28400Age100Heavy
+Prescription    Below4500Age100Heavy
 StandRanking Random		
-MinimumBiomass 28400
+MinimumBiomass 4500	
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -2098,9 +2059,9 @@ PinuWash	1-59	(97%)	60-70	(90%)	71-85	(65%)	86-95	(55%)	96-110	(35%)	111-125	(25
 PseuMenz	All	
 TsugMert	All	
 
-Prescription    Below35200Age100Heavy
+Prescription    Below9100Age100Heavy
 StandRanking Random		
-MinimumBiomass 35200
+MinimumBiomass 9100	
 MinimumTimeSinceLastHarvest 10			
 SiteSelection   CompleteStandSpread 9 36 		
 >>MinTimeSinceDamage 40		
@@ -2119,8 +2080,6 @@ PinuSabi	1-50	(97%)	51-65	(90%)	66-85	(65%)	86-95	(55%)	96-110	(35%)	111-125	(25
 PinuWash	1-59	(97%)	60-70	(90%)	71-85	(65%)	86-95	(55%)	96-110	(35%)	111-125	(25%)		
 PseuMenz	All	
 TsugMert	All	
-
-
 	
 >>-----------------------------------------------------------------		
 >> PRESCRIPTION IMPLEMENTATION 		
@@ -2150,78 +2109,57 @@ TsugMert	All
     HarvestImplementations		
 >>  Mgmt Area   Prescription    Harvest Area    Begin Time  End Time		
 >>  ---------   ------------    ------------    ----------  --------		
-2001	Below15900Age100	5%	0	80
-2011	Below28400Age100	5%	0	80
-2021	Below35200Age100	5%	0	80
-2121	Below35200Age100	5%	0	80
-2201	Below15900Age100	5%	0	80
-2211	Below28400Age100	5%	0	80
-2221	Below35200Age100	5%	0	80
-3001	Below15900Age100	5%	0	80
-3011	Below28400Age100	5%	0	80
-3021	Below35200Age100	5%	0	80
-3121	Below35200Age100	5%	0	80
-3201	Below15900Age100	5%	0	80
-3211	Below28400Age100	5%	0	80
-3221	Below35200Age100	5%	0	80
-4001	Below15900Age100	5%	0	80
-4011	Below28400Age100	5%	0	80
-4021	Below35200Age100	5%	0	80
-4121	Below35200Age100	5%	0	80
-4211	Below28400Age100	5%	0	80
-4221	Below35200Age100	5%	0	80
-6001	Below15900Age100	5%	0	80
-6011	Below28400Age100	5%	0	80
-6021	Below35200Age100	5%	0	80
-6121	Below35200Age100	5%	0	80
-6211	Below28400Age100	5%	0	80
-6221	Below35200Age100	5%	0	80
-2000	Below15900Age100Mech	5%	0	80
-2010	Below28400Age100Mech	5%	0	80
-2020	Below15900Age100Mech	5%	0	80
-2120	Below35200Age100Mech	5%	0	80
-2200	Below15900Age100Mech	5%	0	80
-2210	Below35200Age100Mech	5%	0	80
-2220	Below35200Age100Mech	5%	0	80
-3000	Below15900Age100Mech	5%	0	80
-3010	Below28400Age100Mech	5%	0	80
-3020	Below35200Age100Mech	5%	0	80
-3120	Below35200Age100Mech	5%	0	80
-3210	Below28400Age100Mech	5%	0	80
-3220	Below35200Age100Mech	5%	0	80
-4000	Below15900Age100Mech	5%	0	80
-4010	Below28400Age100Mech	5%	0	80
-4020	Below35200Age100Mech	5%	0	80
-4120	Below35200Age100Mech	5%	0	80
-4210	Below28400Age100Mech	5%	0	80
-4220	Below35200Age100Mech	5%	0	80
-2000	Below15900Age100Heavy	5%	0	80
-2010	Below28400Age100Heavy	5%	0	80
-2020	Below15900Age100Heavy	5%	0	80
-2120	Below35200Age100Heavy	5%	0	80
-2200	Below15900Age100Heavy	5%	0	80
-2210	Below35200Age100Heavy	5%	0	80
-2220	Below35200Age100Heavy	5%	0	80
-3000	Below15900Age100Heavy	5%	0	80
-3010	Below28400Age100Heavy	5%	0	80
-3020	Below35200Age100Heavy	5%	0	80
-3120	Below35200Age100Heavy	5%	0	80
-3210	Below28400Age100Heavy	5%	0	80
-3220	Below35200Age100Heavy	5%	0	80
-4000	Below15900Age100Heavy	5%	0	80
-4010	Below28400Age100Heavy	5%	0	80
-4020	Below35200Age100Heavy	5%	0	80
-4120	Below35200Age100Heavy	5%	0	80
-4210	Below28400Age100Heavy	5%	0	80
-4220	Below35200Age100Heavy	5%	0	80
+2001	Below2400Age100	3%	0	80
+2011	Below4500Age100	3%	0	80
+2021	Below9100Age100	3%	0	80
+2201	Below2400Age100	6%	0	80
+2211	Below4500Age100	6%	0	80
+2221	Below9100Age100	6%	0	80
+3001	Below2400Age100	3%	0	80
+3011	Below4500Age100	3%	0	80
+3021	Below9100Age100	3%	0	80
+3201	Below2400Age100	6%	0	80
+3211	Below4500Age100	6%	0	80
+3221	Below9100Age100	6%	0	80
+4001	Below2400Age100	3%	0	80
+4011	Below4500Age100	3%	0	80
+4021	Below9100Age100	3%	0	80
+4211	Below4500Age100	6%	0	80
+4221	Below9100Age100	6%	0	80
+6001	Below2400Age100	3%	0	80
+6011	Below4500Age100	3%	0	80
+6021	Below9100Age100	3%	0	80
+6211	Below4500Age100	6%	0	80
+6221	Below9100Age100	6%	0	80
+2000	Below2400Age100Mech	3%	0	80
+2010	Below4500Age100Mech	3%	0	80
+2020	Below2400Age100Mech	3%	0	80
+2200	Below2400Age100Mech	5%	0	80
+2210	Below9100Age100Mech	5%	0	80
+2220	Below9100Age100Mech	5%	0	80
+3000	Below2400Age100Mech	3%	0	80
+3010	Below4500Age100Mech	3%	0	80
+3020	Below9100Age100Mech	3%	0	80
+3210	Below4500Age100Mech	5%	0	80
+3220	Below9100Age100Mech	5%	0	80
+4000	Below2400Age100Mech	3%	0	80
+4010	Below4500Age100Mech	3%	0	80
+4020	Below9100Age100Mech	3%	0	80
+4210	Below4500Age100Mech	5%	0	80
+4220	Below9100Age100Mech	5%	0	80
+2200	Below2400Age100Heavy	1%	0	80
+2210	Below9100Age100Heavy	1%	0	80
+2220	Below9100Age100Heavy	1%	0	80
+3210	Below4500Age100Heavy	1%	0	80
+3220	Below9100Age100Heavy	1%	0	80
+4210	Below4500Age100Heavy	1%	0	80
+4220	Below9100Age100Heavy	1%	0	80
 5000	PIF_CC_28	4%	0	80
 5001	PIF_CC_28	4%	0	80
 5010	PIF_CC_28	4%	0	80
 5011	PIF_CC_28	4%	0	80
 5020	PIF_CC_28	4%	0	80
 5021	PIF_CC_28	4%	0	80
-5120	PIF_CC_28	4%	0	80
-5121	PIF_CC_28	4%	0	80
 5210	PIF_CC_28	4%	0	80
 5211	PIF_CC_28	4%	0	80
 5220	PIF_CC_28	4%	0	80
@@ -2232,15 +2170,10 @@ TsugMert	All
 5011	PIF_PCT_29	4%	0	80
 5020	PIF_PCT_29	4%	0	80
 5021	PIF_PCT_29	4%	0	80
-5120	PIF_PCT_29	4%	0	80
-5121	PIF_PCT_29	4%	0	80
 5210	PIF_PCT_29	4%	0	80
 5211	PIF_PCT_29	4%	0	80
 5220	PIF_PCT_29	4%	0	80
 5221	PIF_PCT_29	4%	0	80
-
-
-
 
 
 

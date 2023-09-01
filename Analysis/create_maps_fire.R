@@ -58,7 +58,7 @@ scenario_type <- scenario_type %>%
 
 # scenario_type$fire_model <- rep(c("fixed", "mixed"), each = 3)
 
-scenarios <- scenarios[grep("miroc", scenarios)]
+scenarios <- scenarios[!grepl("miroc|cnrm", scenarios)]
 
 fire_summaries <- paste0(scenarios, "/scrapple-summary-log.csv")  %>%
   purrr::map_df(~read_plus(.)) %>%

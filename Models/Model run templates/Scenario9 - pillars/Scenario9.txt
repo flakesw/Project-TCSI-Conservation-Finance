@@ -11,13 +11,13 @@ CellLength 180 << meters, so cell area = 3.24 ha
 >> Succession Extension Initialization File
 >> -------------------- -------------------
 
-"NECN Succession"	"../../Inputs/necn/NECN_Succession_historical_test_new_mgmt.txt" 					
+"NECN Succession"	"../../Inputs/necn/NECN_Succession_historical_sdi.txt" 					
 
 
 >> Disturbance Extensions Initialization File
 >> ---------------------- -------------------
 	"SCRAPPLE"		"../../Inputs/scrpple/scrpple_scenario6.txt"					
-	"Biomass Harvest Biomass Rank"	"../../Inputs/management_scenarios/output-biom-harvest_prioritize_pillars.txt"	
+	"Biomass Harvest Biomass Rank"	"../../Inputs/management_scenarios/output-biom-harvest_sdimax_35_pillars.txt"	
     	"Biomass BDA"           "../../Inputs/bda/biomass-BDA-input.txt"
 
 DisturbancesRandomOrder no

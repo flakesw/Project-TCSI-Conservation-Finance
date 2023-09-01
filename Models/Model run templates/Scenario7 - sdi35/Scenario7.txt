@@ -11,7 +11,7 @@ CellLength 180 << meters, so cell area = 3.24 ha
 >> Succession Extension Initialization File
 >> -------------------- -------------------
 
-"NECN Succession"	"../../Inputs/necn/NECN_Succession_historical_test_new_mgmt.txt" 					
+"NECN Succession"	"../../Inputs/necn/NECN_Succession_historical_sdi.txt" 					
 
 
 >> Disturbance Extensions Initialization File
