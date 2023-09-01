@@ -123,7 +123,7 @@ summary(test_mod)
 
 tree_summary <- sierra_trees %>% 
   dplyr::group_by(PLT_CN) %>%
-  dplyr::filter(DIA >1) %>%
+  dplyr::filter(DIA > 5) %>%
   # dplyr::filter(n() > 10) %>%
   dplyr::filter(STATUSCD == 1) %>%
   dplyr::summarise(total_trees = n(),
@@ -269,24 +269,32 @@ age_cohort_summary <- sierra_trees %>%
                    cohort_d = sqrt((cohort_ba/cohort_tpa)/0.005454),
                    cohort_sdi = TPA_UNADJ*((DIA/10)^1.6))  %>%
   group_by(SPCD) %>%
-  # filter(n() > 50) %>%
+  filter(n() > 1000) %>%
   dplyr::mutate(SPCD = as.factor(SPCD),
                 AGE_BIN = as.numeric(AGE_BIN)) %>%
   dplyr::left_join(tree_summary %>% filter(!duplicated(PLT_CN)) %>% dplyr::select(PLT_CN, biomass),
-                   by = "PLT_CN", relationship = "many-to-one") %>%
-  drop_na() 
+                   by = "PLT_CN", relationship = "many-to-one") 
 
 age_cohort_summary <- age_cohort_summary %>%
   left_join(sierra_fia_plot, by = c("PLT_CN" = "CN")) %>%
-  left_join(., sierra_fia_cond, by = c("PLT_CN" = "PLT_CN")) %>%
-  dplyr::filter(!is.na(FORTYPCD))
+  left_join(., sierra_fia_cond[!duplicated(sierra_fia_cond$PLT_CN), ], by = c("PLT_CN" = "PLT_CN")) %>%
+  # dplyr::filter(!is.na(FORTYPCD)) %>%
+  mutate(FORTYPCD = as.factor(FORTYPCD)) %>%
+  filter(!is.na(cohort_biomass),
+         !is.na(AGE_BIN),
+         AGE_BIN < 300,
+         cohort_biomass < 10000) 
 
 #fit cohort SDI model
 plot(log(cohort_sdi) ~ log(cohort_biomass), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(AGE_BIN), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(cohort_d), data = age_cohort_summary)
 
-sdi_cohort_model <- lm(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN), 3), 
+sdi_cohort_model <- lmer(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN),3) + 
+                           (1|SPCD), 
+                         data = age_cohort_summary)
+library("gam")
+sdi_cohort_model <- gam::gam(log(cohort_sdi) ~ (AGE_BIN)*(log(cohort_biomass)), 
                          data = age_cohort_summary)
 
 
