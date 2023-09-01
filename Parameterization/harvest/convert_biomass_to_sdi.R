@@ -251,7 +251,7 @@ bps_max_sdi <- sierra_bps %>%
 bps_max_sdi <- terra::classify(bps_max_sdi, rcl = max_sdi[, c("bps_code", "sdi_max")], others = NA)
 plot(terra::vect(tcsi_shape), add = TRUE)
 
-terra::writeRaster(bps_max_sdi, "./Parameterization/management scenario data/max_sdi_bps.tif")
+terra::writeRaster(bps_max_sdi, "./Parameterization/management scenario data/max_sdi_bps.tif", overwrite = TRUE)
 
 plot(bps_max_sdi)
 
@@ -287,7 +287,7 @@ plot(log(cohort_sdi) ~ log(cohort_biomass), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(AGE_BIN), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(cohort_d), data = age_cohort_summary)
 
-sdi_cohort_model <- (lm(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN), 3), data = age_cohort_summary))
+sdi_cohort_model <- (lm(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN), 2), data = age_cohort_summary))
 
 summary(sdi_cohort_model)
 # ranef(sdi_cohort_model)
@@ -382,7 +382,7 @@ biomass_vals_by_bps_60 <- newdat %>%
 hist(biomass_vals_by_bps_60$biomass)
 
 biomass_vals_by_bps_60 <- left_join(biomass_vals_by_bps_60, 
-                                    bps_codes %>% select(BPS_CODE, BPS_NAME) %>%
+                                    bps_codes %>% dplyr::select(BPS_CODE, BPS_NAME) %>%
                                       group_by(BPS_CODE) %>%
                                       slice(1),
                                     by = c("bps_code" = "BPS_CODE"))

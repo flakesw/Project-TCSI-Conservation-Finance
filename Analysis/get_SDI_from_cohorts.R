@@ -7,11 +7,13 @@ sp_ref <- read.csv("D:/Data/fia/FIADB_REFERENCE/REF_SPECIES.csv") %>%
   mutate(SpeciesLandis = paste0(substr(GENUS, 1, 4), stringr::str_to_title(substr(SPECIES, 1, 4)))) %>%
   filter(SPCD != 143) #subspecies we don't want
 
+bps_max_sdi <- rast("./Parameterization/management scenario data/max_sdi_bps.tif")
+
 #---------------------------------------------
 # Bring in LANDIS layers
-comm_input <- read.csv("C:/Users/Sam/Documents/GlobusEndpoint/community-input-file-80.csv")
+comm_input <- read.csv("C:/Users/Sam/Documents/GlobusEndpoint/community-input-file-0.csv")
 
-comm_input = left_join(comm_input, sp_ref %>% select(SPCD, SpeciesLandis),
+comm_input = left_join(comm_input, sp_ref %>% dplyr::select(SPCD, SpeciesLandis),
                        by = c("SpeciesName" = "SpeciesLandis"))
 
 comm_input <- comm_input %>%
@@ -32,7 +34,7 @@ hist(plot_comm$SDI_plot)
 
 #link to map
 # comm_map <- terra::rast("./Parameterization/management scenario data/test_comm_data/scen7/output-community-80.img")
-comm_map <- terra::rast("C:/Users/Sam/Documents/GlobusEndpoint/output-community-80.img")
+comm_map <- terra::rast("C:/Users/Sam/Documents/GlobusEndpoint/output-community-0.img")
 
 # table(values(comm_map) %in% plot_comm$MapCode)
 # table(values(comm_map)[!(values(comm_map) %in% comm_input$MapCode)])
@@ -79,7 +81,7 @@ mean(values(percent_max_sdi), na.rm = TRUE)
 # Bring in LANDIS layers
 comm_input <- read.csv("./Parameterization/management scenario data/community-input-file-0.csv")
 
-comm_input = left_join(comm_input, sp_ref %>% select(SPCD, SpeciesLandis),
+comm_input = left_join(comm_input, sp_ref %>% dplyr::select(SPCD, SpeciesLandis),
                        by = c("SpeciesName" = "SpeciesLandis"))
 
 comm_input <- comm_input %>%

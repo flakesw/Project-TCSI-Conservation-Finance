@@ -25,10 +25,11 @@ col_types <- list(
   vpd = col_double(),
   eddi = col_double(),
   pdsi = col_double(),
+  fwi = col_double(),
   fine_fuel = col_double(),
   ladder_fuel = col_double(),
-  ndvi = col_double()
-  # ndvi_anomaly = col_double()
+  ndvi = col_double(),
+  ndvi_anomaly = col_double()
 )
 
 
@@ -42,7 +43,7 @@ data_all <- fire_severity_data %>%
   # dplyr::mutate(dnbr = ifelse(dnbr > 1000, 1000, dnbr)) %>%
   dplyr::filter(!is.na(dnbr)) %>%
   group_by(fire_name) %>%
-  slice_sample(n = 300)
+  slice_sample(n = 5000)
 
 data_all_with_loc <- data_all %>%
   mutate(fire_name = toupper(fire_name)) %>%
@@ -140,7 +141,7 @@ test_gamma <- spaMM::fitme(dnbr ~ scale(cwd) + scale(fine_fuel) + scale(ews),
                            family = Gamma(link = "log"))
 summary(test_gamma)
 
-test_gamma2 <- spaMM::fitme(dnbr ~ clay + cwd + pet + fine_fuel + ews + (1|fire_name), 
+test_gamma2 <- spaMM::fitme(dnbr ~ clay + cwd + pet + fine_fuel + ews + fwi + (1|fire_name), 
                             data = data_all,
                             family = Gamma(link = "inverse"))
 summary(test_gamma2)
@@ -185,15 +186,15 @@ nrow(data_all)
 #boosted regression tree
 library("dismo")
 
-data_all <- data_all[, c(3:13)]
+data_all <- data_all[, c(2:14)]
 data_all <- as.data.frame(data_all[complete.cases(data_all), ]) #dismo needs data frames
-data_all$dnbr <- data_all$dnbr #dismo needs small values for response variable
+data_all$dnbr <- data_all$dnbr/1000 #dismo needs small values for response variable
 gbm_mod <- gbm.step(data = data_all,
-                    gbm.x = c(3,5,6,7,8,9,11),
-                    gbm.y = 1,
+                    gbm.x = c(4,5,6,7,8,9,10,13),
+                    gbm.y = 2,
                     family = "gaussian",
-                    learning.rate = 0.01,
-                    tree.complexity = 10)
+                    learning.rate = 0.05,
+                    max.trees = 20000)
 
 plot(gbm_mod, 1)
 plot(gbm_mod, 2)
@@ -206,9 +207,7 @@ plot(gbm_mod, 8)
 plot(gbm_mod, 9)
 
 gbm_simp <- gbm.simplify(gbm_mod)
-
-
-
+gbm.plot(gbm_simp)
 
 #----------------------------------------------------------------------------
 # GWR

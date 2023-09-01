@@ -871,7 +871,7 @@ row_tracker <- 1
 start_time <- Sys.time()
 
 #fires with fuels and daily progressions (year 2001) start at 314
-for(i in 550:length(mtbs_shape)){
+for(i in 741:length(mtbs_shape)){
   
   error_flag <- FALSE
   try_again <- FALSE
