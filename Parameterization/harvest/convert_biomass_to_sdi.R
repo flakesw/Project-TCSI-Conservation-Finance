@@ -110,7 +110,7 @@ breaks <- seq(0, max(sierra_trees$TOTAGE, na.rm = TRUE) + (10 - max(sierra_trees
 sierra_trees <- sierra_trees%>%
   filter(STATUSCD == 1) %>%
   mutate(DRYBIO_AG = CARBON_AG * 2,
-         AGE_BIN = as.numeric(base::cut(TOTAGE, breaks)),
+         AGE_BIN = as.numeric(base::cut(TOTAGE, breaks)) * 5,
          SPCD = as.character(SPCD))
 
 plot(log(TPA_UNADJ) ~ log(AGE_BIN), data = sierra_trees) #sort of linear, but really variable
@@ -259,7 +259,7 @@ plot(bps_max_sdi)
 #cohort-level data analysis
 
 age_cohort_summary <- sierra_trees %>%
-  dplyr::filter(DIA > 1) %>%
+  dplyr::filter(DIA > 5) %>%
   dplyr::filter(STATUSCD == 1) %>%
   dplyr::group_by(PLT_CN, SPCD, AGE_BIN) %>%
   dplyr::reframe(cohort_biomass = sum(DRYBIO_AG * TPA_UNADJ),
@@ -268,7 +268,6 @@ age_cohort_summary <- sierra_trees %>%
                    # cohort_ba2 = pi*sum((DIA/2/12)^2 * TPA_UNADJ), #equivalent
                    cohort_d = sqrt((cohort_ba/cohort_tpa)/0.005454),
                    cohort_sdi = TPA_UNADJ*((DIA/10)^1.6))  %>%
-  # dplyr::filter(cohort_biomass > 3000) %>%
   group_by(SPCD) %>%
   # filter(n() > 50) %>%
   dplyr::mutate(SPCD = as.factor(SPCD),
@@ -287,7 +286,9 @@ plot(log(cohort_sdi) ~ log(cohort_biomass), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(AGE_BIN), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(cohort_d), data = age_cohort_summary)
 
-sdi_cohort_model <- (lm(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN), 2), data = age_cohort_summary))
+sdi_cohort_model <- lm(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN), 3), 
+                         data = age_cohort_summary)
+
 
 summary(sdi_cohort_model)
 # ranef(sdi_cohort_model)
