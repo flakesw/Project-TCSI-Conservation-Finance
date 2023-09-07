@@ -1,6 +1,7 @@
 #use regressions to get SDI from LANDIS biomass cohorts
 
 sdi_cohort_model <- readRDS("./Parameterization/management scenario data/sdi_cohort_model.RDS")
+sdi_cohort_model <- readRDS("sdi_cohort_model.RDS")
 sdi_plot_correction <- readRDS("./Parameterization/management scenario data/sdi_plot_correction_model.RDS")
 
 sp_ref <- read.csv("./Parameterization/management scenario data/REF_SPECIES.csv") %>%
@@ -12,12 +13,11 @@ bps_max_sdi[bps_max_sdi == 0] <- NA
 
 #---------------------------------------------
 # Bring in LANDIS layers
-comm_input <- read.csv("./Parameterization/management scenario data/test_comm_data/scen7/community-input-file-80.csv")
-# comm_input <- read.csv("./Parameterization/management scenario data/community-input-file-0.csv")
+# comm_input <- read.csv("./Parameterization/management scenario data/test_comm_data/scen7/community-input-file-80.csv")
+comm_input <- read.csv("./Parameterization/management scenario data/community-input-file-0.csv")
 
 comm_input = left_join(comm_input, sp_ref %>% dplyr::select(SPCD, SpeciesLandis),
                        by = c("SpeciesName" = "SpeciesLandis"))
-
 
 comm_input <- comm_input %>%
   dplyr::rename(cohort_biomass = CohortBiomass,
@@ -74,7 +74,7 @@ hist(percent_max_sdi,
      main = "%MaxSDI")
 mean(values(percent_max_sdi), na.rm = TRUE)
 
-library("vioplot")
+ library("vioplot")
 vioplot(values(percent_max_sdi)[!is.na(values(percent_max_sdi))])
 mean(values(percent_max_sdi), na.rm = TRUE)
 # terra::writeRaster(percent_max_sdi, "percent_max_sdi_initial.tif")

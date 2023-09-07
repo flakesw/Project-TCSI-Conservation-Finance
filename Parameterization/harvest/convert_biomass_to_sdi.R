@@ -45,7 +45,9 @@ sierra_shape <- sf::st_read("./Models/Inputs/masks_boundaries/WIP_Capacity_V1Dra
 tcsi_shape <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_area_shapefile/TCSI_v2.shp") %>%
   st_transform("EPSG:5070")
 
-sierra_fia_plot <- sf::st_join(all_fia_plot, sierra_shape, join = st_within) %>%
+tcsi_fia_plot <- sf::st_join(all_fia_plot, tcsi_shape, join = st_within, left = FALSE)
+
+sierra_fia_plot <- sf::st_join(all_fia_plot, sierra_shape, join = st_within, left = FALSE) %>%
   filter(do.union == TRUE)
 
 plot(sf::st_geometry(sierra_shape))
@@ -110,8 +112,10 @@ breaks <- seq(0, max(sierra_trees$TOTAGE, na.rm = TRUE) + (10 - max(sierra_trees
 sierra_trees <- sierra_trees%>%
   filter(STATUSCD == 1) %>%
   mutate(DRYBIO_AG = CARBON_AG * 2,
-         AGE_BIN = as.numeric(base::cut(TOTAGE, breaks)) * 5,
+         AGE_BIN = as.numeric(base::cut(TOTAGE, breaks)) * 10,
          SPCD = as.character(SPCD))
+
+tcsi_trees <- sierra_trees %>% filter(PLT_CN %in% tcsi_fia_plot$CN)
 
 plot(log(TPA_UNADJ) ~ log(AGE_BIN), data = sierra_trees) #sort of linear, but really variable
 plot(log(TPA_UNADJ) ~ log(DRYBIO_AG), data = sierra_trees) #nice linear relationship!
@@ -123,7 +127,7 @@ summary(test_mod)
 
 tree_summary <- sierra_trees %>% 
   dplyr::group_by(PLT_CN) %>%
-  dplyr::filter(DIA > 5) %>%
+  # dplyr::filter(DIA > 5) %>%
   # dplyr::filter(n() > 10) %>%
   dplyr::filter(STATUSCD == 1) %>%
   dplyr::summarise(total_trees = n(),
@@ -249,7 +253,7 @@ bps_max_sdi <- sierra_bps %>%
 # plot(bps_max_sdi)
 # click(bps_max_sdi)
 bps_max_sdi <- terra::classify(bps_max_sdi, rcl = max_sdi[, c("bps_code", "sdi_max")], others = NA)
-plot(terra::vect(tcsi_shape), add = TRUE)
+# plot(terra::vect(tcsi_shape), add = TRUE)
 
 terra::writeRaster(bps_max_sdi, "./Parameterization/management scenario data/max_sdi_bps.tif", overwrite = TRUE)
 
@@ -257,42 +261,54 @@ plot(bps_max_sdi)
 
 #------------------------------------------------------------------------------
 #cohort-level data analysis
-
 age_cohort_summary <- sierra_trees %>%
-  dplyr::filter(DIA > 1) %>%
+  # dplyr::filter(DIA > 5) %>%
   dplyr::filter(STATUSCD == 1) %>%
   dplyr::group_by(PLT_CN, SPCD, AGE_BIN) %>%
   dplyr::reframe(cohort_biomass = sum(DRYBIO_AG * TPA_UNADJ) / 892 * 100,
-                   cohort_tpa = sum(TPA_UNADJ),
-                   cohort_ba = sum(0.005454*(DIA^2)*TPA_UNADJ),
-                   # cohort_ba2 = pi*sum((DIA/2/12)^2 * TPA_UNADJ), #equivalent
-                   cohort_d = sqrt((cohort_ba/cohort_tpa)/0.005454),
-                   cohort_sdi = TPA_UNADJ*((DIA/10)^1.6))  %>%
+                 cohort_tpa = sum(TPA_UNADJ),
+                 cohort_ba = sum(0.005454*(DIA^2)*TPA_UNADJ),
+                 # cohort_ba2 = pi*sum((DIA/2/12)^2 * TPA_UNADJ), #equivalent
+                 cohort_d = sqrt((cohort_ba/cohort_tpa)/0.005454),
+                 cohort_sdi = TPA_UNADJ*((DIA/10)^1.6))  %>%
   group_by(SPCD) %>%
   filter(n() > 50) %>%
   dplyr::mutate(SPCD = as.factor(SPCD),
                 AGE_BIN = as.numeric(AGE_BIN)) %>%
-  dplyr::left_join(tree_summary %>% filter(!duplicated(PLT_CN)) %>% dplyr::select(PLT_CN, biomass),
-                   by = "PLT_CN", relationship = "many-to-one") %>%
-  drop_na()
+  filter(cohort_d > 0,
+         cohort_sdi > 0)
+         cohort_biomass < 5000)
+         # AGE_BIN > 0,
+         # AGE_BIN < 300)
+
+
+# %>%
+  # dplyr::left_join(tree_summary %>% filter(!duplicated(PLT_CN)) %>% dplyr::select(PLT_CN, biomass),
+  #                  by = "PLT_CN", relationship = "many-to-one") %>%
+  # drop_na() 
 
 age_cohort_summary <- age_cohort_summary %>%
   left_join(sierra_fia_plot, by = c("PLT_CN" = "CN")) %>%
-  left_join(., sierra_fia_cond[!duplicated(sierra_fia_cond$PLT_CN), ], by = c("PLT_CN" = "PLT_CN")) %>%
-  # dplyr::filter(!is.na(FORTYPCD)) %>%
-  mutate(FORTYPCD = as.factor(FORTYPCD)) %>%
-  filter(cohort_biomass < 3000)
+  left_join(., sierra_fia_cond[!duplicated(sierra_fia_cond$PLT_CN), ], by = c("PLT_CN" = "PLT_CN"))
 
 #fit cohort SDI model
 plot(log(cohort_sdi) ~ log(cohort_biomass), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(AGE_BIN), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(cohort_d), data = age_cohort_summary)
 
-sdi_cohort_model <- lmer(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + (1|SPCD),
+sdi_cohort_model <- (lm(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN), 3), data = age_cohort_summary))
+sdi_cohort_model <- (lmer(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + log(AGE_BIN) + (1|SPCD), data = age_cohort_summary))
+sdi_cohort_model <- (lmer(log(cohort_sdi) ~ log(cohort_biomass)*log(AGE_BIN) + (1|SPCD), data = age_cohort_summary))
+sdi_cohort_model <- gam(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) * poly(log(AGE_BIN),3),
                          data = age_cohort_summary)
+sdi_cohort_model <- gam(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN),3),
+                        data = age_cohort_summary)
+sdi_cohort_model <- gam(log(cohort_sdi) ~ log(cohort_biomass) + log(AGE_BIN),
+                         data = age_cohort_summary)
+sdi_cohort_model <- gam(log(cohort_sdi) ~ log(cohort_biomass) * log(AGE_BIN),
+                        data = age_cohort_summary)
 
-# sdi_cohort_model <- gam(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) * log(AGE_BIN),
-#                          data = age_cohort_summary)
+plot(effects::allEffects(sdi_cohort_model))
 
 summary(sdi_cohort_model)
 # ranef(sdi_cohort_model)
@@ -301,6 +317,28 @@ plot(residuals(sdi_cohort_model) ~ fitted(sdi_cohort_model))
 plot(predict(sdi_cohort_model) ~ log(age_cohort_summary$cohort_sdi))
 abline(0,1)
 plot(effects::allEffects(sdi_cohort_model))
+
+
+# sdi_cohort_model <- earth::earth(log(cohort_sdi) ~ log(cohort_biomass) * log(AGE_BIN),
+#                                  data = age_cohort_summary)
+# 
+# sdi_cohort_model <- dismo::gbm.step(data = as.data.frame(age_cohort_summary),
+#                                     gbm.x = c("cohort_biomass", "AGE_BIN"),
+#                                     gbm.y = "cohort_sdi",
+#                                     family = "gaussian",
+#                                     var.monotone = c(1,-1),
+#                                     interaction.depth = 2)
+# 
+# newdata = expand.grid(cohort_biomass = c(100, 500, 1000, 2000),
+#                       AGE_BIN = seq(0, 400))
+# preds <- predict(sdi_cohort_model, newdata = newdata, type = "response")
+# plot(preds ~ newdata$AGE_BIN)
+# 
+# 
+# 
+# gbm.plot(sdi_cohort_model)
+# gbm.perspec(sdi_cohort_model, 1,2, z.range = c(-3,10))
+
 
 saveRDS(sdi_cohort_model, "./Parameterization/management scenario data/sdi_cohort_model.RDS")
 
