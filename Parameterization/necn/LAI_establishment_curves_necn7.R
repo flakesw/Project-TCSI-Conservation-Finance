@@ -310,11 +310,11 @@ fit_weibull <- function(dat) {
   
   #sometimes c will be negative, which would allow seedlings to sometimes be negative. 
   #If that happens, refit the model with c = 0
-  # if(coef(res1)[3] < 0) {
-  #   res1 <- nlsLM(prop_present ~ ((a/b) * ((lai/b)^(a-1)) * exp(- (lai/b)^a)), 
-  #                 data=dat,
-  #                 start=as.list(coef(res)[c(1,2)]))
-  # }
+  if(coef(res1)[3] < 0) {
+    res1 <- nlsLM(prop_present ~ ((a/b) * ((lai/b)^(a-1)) * exp(- (lai/b)^a)),
+                  data=dat,
+                  start=as.list(coef(res)[c(1,2)]))
+  }
   
   
   return(res1)
