@@ -296,7 +296,7 @@ plot(log(cohort_sdi) ~ log(cohort_biomass), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(AGE_BIN), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(cohort_d), data = age_cohort_summary)
 
-sdi_cohort_model <- (lm(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN), 3), data = age_cohort_summary)) # (BHAGE) too low, correction 1.23
+sdi_cohort_model <- (lmer(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN), 3) + (1|SPCD), data = age_cohort_summary)) # (BHAGE) too low, correction 1.22 #(BHAGE) too high, correction 0.53. xx what's the difference?
 sdi_cohort_model <- (lmer(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + log(AGE_BIN) + (1|SPCD), data = age_cohort_summary)) #(TOTAGE) SDI too high, correction factor 0.61
 sdi_cohort_model <- (lmer(log(cohort_sdi) ~ log(cohort_biomass)*log(AGE_BIN) + (1|SPCD), data = age_cohort_summary)) #(TOTAGE) SDI too high
 
