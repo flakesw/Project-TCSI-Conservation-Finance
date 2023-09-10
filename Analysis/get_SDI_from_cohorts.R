@@ -1,7 +1,7 @@
 #use regressions to get SDI from LANDIS biomass cohorts
 
 sdi_cohort_model <- readRDS("./Parameterization/management scenario data/sdi_cohort_model.RDS")
-sdi_cohort_model <- readRDS("sdi_cohort_model.RDS")
+# sdi_cohort_model <- readRDS("sdi_cohort_model.RDS")
 sdi_plot_correction <- readRDS("./Parameterization/management scenario data/sdi_plot_correction_model.RDS")
 
 sp_ref <- read.csv("./Parameterization/management scenario data/REF_SPECIES.csv") %>%
@@ -32,7 +32,7 @@ comm_input$SDI_cohort = exp(predict(sdi_cohort_model,
 plot_comm <- comm_input %>%
   group_by(MapCode) %>%
   summarise(SDI_pred = sum(SDI_cohort, na.rm = TRUE))
-plot_comm$SDI_plot = exp(predict(sdi_plot_correction, newdata = plot_comm)) *1.23 #correction to match treemap
+plot_comm$SDI_plot = exp(predict(sdi_plot_correction, newdata = plot_comm)) * 1.22 #correction to match treemap
 
 hist(plot_comm$SDI_plot)
 

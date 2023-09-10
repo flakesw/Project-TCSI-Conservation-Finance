@@ -31,6 +31,7 @@ treemap_area <- treemap %>%
 #                         resolution = 60,
 #                         crs = "EPSG:26917")
 
+template <- rast("./Models/Inputs/masks_boundaries/mask_9311.tif") 
 
 tl_plots <- read.csv("D:/Data/treemap/RDS-2019-0026_Data/Data/TL_CN_Lookup.txt") %>%
   filter(tl_id %in% values(treemap_area))
@@ -87,4 +88,13 @@ sdi_tcsi <- sdi_map %>%
 treemap_coarsen <- terra::aggregate(sdi_tcsi, 9, fun = mean, na.rm = TRUE)
 comm_map2[comm_map2[] == 0] <- NA
 landis_coarsen <- terra::aggregate(comm_map2, 9, fun = mean, na.rm = TRUE) #from convert_biomass_to_SDI.R
+plot(treemap_coarsen)
+plot(landis_coarsen)
 summary(lm(treemap_coarsen[] ~ landis_coarsen[] + 0)) #get correction factor
+
+test <- as.data.frame(cbind(treemap_coarsen[], landis_coarsen[]))
+names(test) <- c("treemap", "landis")
+
+ggplot(data = test, aes(x = treemap, y = landis * 1.22)) +
+  geom_hex() +
+  geom_abline(slope = 1, intercept = 0)
