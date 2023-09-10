@@ -107,12 +107,12 @@ sierra_trees <- rbind(ca_trees, nv_trees)
 
 sierra_trees <- filter(sierra_trees, PLT_CN %in% sierra_fia_plot$CN)
 
-breaks <- seq(0, max(sierra_trees$TOTAGE, na.rm = TRUE) + (10 - max(sierra_trees$TOTAGE, na.rm = TRUE) %% 10), by = 10)
+breaks <- seq(0, max(sierra_trees$BHAGE+10, na.rm = TRUE) + (10 - max(sierra_trees$BHAGE+10, na.rm = TRUE) %% 10), by = 10)
 
 sierra_trees <- sierra_trees%>%
   filter(STATUSCD == 1) %>%
   mutate(DRYBIO_AG = CARBON_AG * 2,
-         AGE_BIN = as.numeric(base::cut(TOTAGE, breaks)) * 10,
+         AGE_BIN = as.numeric(base::cut(BHAGE+10, breaks)) * 10,
          SPCD = as.character(SPCD))
 
 tcsi_trees <- sierra_trees %>% filter(PLT_CN %in% tcsi_fia_plot$CN)
@@ -127,19 +127,19 @@ summary(test_mod)
 
 tree_summary <- sierra_trees %>% 
   dplyr::group_by(PLT_CN) %>%
-  # dplyr::filter(DIA > 5) %>%
+  dplyr::filter(DIA > 5) %>% #use DIA>12.7 cm = 5 inches  to match North et al. 2022
   # dplyr::filter(n() > 10) %>%
   dplyr::filter(STATUSCD == 1) %>%
   dplyr::summarise(total_trees = n(),
-                   trees_with_age = sum(!is.na(TOTAGE)),
+                   trees_with_age = sum(!is.na(BHAGE+10)),
                    plot_bapa = sum(0.005454*(DIA^2)*TPA_UNADJ), 
                    plot_tpa = sum(TPA_UNADJ), 
                    plot_qmd = sqrt((plot_bapa/plot_tpa)/0.005454),
                    plot_sdi = plot_tpa * ((plot_qmd/10)^(-1.605)),
                    sum_sdi = sum(TPA_UNADJ * ((DIA/10)^(-1.605))),
                    biomass = sum(DRYBIO_AG * TPA_UNADJ) / 892 * 100, #convert to grams per meter squared
-                   mean_age = mean(TOTAGE, na.rm = TRUE),
-                   high_age = quantile(TOTAGE, 0.9, na.rm = TRUE),
+                   mean_age = mean(BHAGE+10, na.rm = TRUE),
+                   high_age = quantile(BHAGE+10, 0.9, na.rm = TRUE),
                    .groups = "keep") %>%
   # filter(!is.na(high_age)) %>%
   droplevels() %>%
@@ -178,7 +178,7 @@ ggplot(tree_summary[as.character(tree_summary$FORTYPCD) %in% fortypcd_enough, ])
 bps_codes <- read.csv("D:/Data/landfire vegetation/BPS/LF16_BPS_200.csv")
 tree_summary$bps_name <- bps_codes[match(tree_summary$bps_code, bps_codes$BPS_CODE), ]$BPS_NAME
 
-overall_density_mgmt_lines = quantreg::rq(log10(plot_tpa) ~ log10(plot_qmd), tau = 0.95, 
+overall_density_mgmt_lines = quantreg::rq(log10(plot_tpa) ~ log10(plot_qmd), tau = 0.99, 
                                           data = tree_summary)
 overall_density_mgmt_lines
 
@@ -196,7 +196,7 @@ ggplot(tree_summary[as.character(tree_summary$bps_code) %in% bps_enough, ]) +
   geom_quantile(aes(y = plot_tpa, x = plot_qmd, col = as.factor(bps_name)),
                 stat = "quantile",
                 method = "rq",
-                quantiles = 0.95, size = 1.2) + 
+                quantiles = 0.99, size = 1.2) + 
   geom_vline(xintercept = 10) +
   geom_abline(aes(fill = "test"),
               slope = rep(overall_density_mgmt_lines$coefficients[2], 3),
@@ -215,7 +215,7 @@ max_sdi <- data.frame(bps_code = as.double(unique(bps_enough)),
 for(i in c(1:nrow(max_sdi))){
   model <- tryCatch(
     {
-      quantreg::rq(log10(plot_tpa) ~ log10(plot_qmd), tau = 0.95, 
+      quantreg::rq(log10(plot_tpa) ~ log10(plot_qmd), tau = 0.99, 
          data = tree_summary[tree_summary$bps_code == max_sdi[i, "bps_code"], ])
     },
     error = function(cond) {
@@ -231,7 +231,7 @@ for(i in c(1:nrow(max_sdi))){
   #Use Reineke's allometric coefficient (-1.605) and solve for k
   # K = tpa/(qmd^-1.605)
   max_sdi$k_mean[i] <- quantile(tree_summary[tree_summary$bps_code == max_sdi[i, "bps_code"], ]$plot_tpa *
-    ((tree_summary[tree_summary$bps_code == max_sdi[i, "bps_code"], ]$plot_qmd)^1.605), 0.95, na.rm = TRUE)
+    ((tree_summary[tree_summary$bps_code == max_sdi[i, "bps_code"], ]$plot_qmd)^1.605), 0.99, na.rm = TRUE)
   
   max_sdi$sdi_max_reineke[i] <- 10^(log10(10)*-1.605 + log10(max_sdi$k_mean[i]))
 }
@@ -255,14 +255,14 @@ bps_max_sdi <- sierra_bps %>%
 bps_max_sdi <- terra::classify(bps_max_sdi, rcl = max_sdi[, c("bps_code", "sdi_max")], others = NA)
 # plot(terra::vect(tcsi_shape), add = TRUE)
 
-terra::writeRaster(bps_max_sdi, "./Parameterization/management scenario data/max_sdi_bps.tif", overwrite = TRUE)
-
+# terra::writeRaster(bps_max_sdi, "./Parameterization/management scenario data/max_sdi_bps_all_trees.tif", overwrite = TRUE)
+terra::writeRaster(bps_max_sdi, "./Parameterization/management scenario data/max_sdi_bps_dia5.tif", overwrite = TRUE)
 plot(bps_max_sdi)
 
 #------------------------------------------------------------------------------
 #cohort-level data analysis
 age_cohort_summary <- sierra_trees %>%
-  # dplyr::filter(DIA > 5) %>%
+  dplyr::filter(DIA > 5) %>% #minimum diameter from North et al. 2022
   dplyr::filter(STATUSCD == 1) %>%
   dplyr::group_by(PLT_CN, SPCD, AGE_BIN) %>%
   dplyr::reframe(cohort_biomass = sum(DRYBIO_AG * TPA_UNADJ) / 892 * 100,
@@ -276,10 +276,10 @@ age_cohort_summary <- sierra_trees %>%
   dplyr::mutate(SPCD = as.factor(SPCD),
                 AGE_BIN = as.numeric(AGE_BIN)) %>%
   filter(cohort_d > 0,
-         cohort_sdi > 0)
-         cohort_biomass < 5000)
-         # AGE_BIN > 0,
-         # AGE_BIN < 300)
+         cohort_sdi > 0,
+         cohort_biomass < 2000,
+         AGE_BIN > 0,
+         AGE_BIN < 300)
 
 
 # %>%
@@ -296,17 +296,9 @@ plot(log(cohort_sdi) ~ log(cohort_biomass), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(AGE_BIN), data = age_cohort_summary)
 plot(log(cohort_sdi) ~ log(cohort_d), data = age_cohort_summary)
 
-sdi_cohort_model <- (lm(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN), 3), data = age_cohort_summary))
-sdi_cohort_model <- (lmer(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + log(AGE_BIN) + (1|SPCD), data = age_cohort_summary))
-sdi_cohort_model <- (lmer(log(cohort_sdi) ~ log(cohort_biomass)*log(AGE_BIN) + (1|SPCD), data = age_cohort_summary))
-sdi_cohort_model <- gam(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) * poly(log(AGE_BIN),3),
-                         data = age_cohort_summary)
-sdi_cohort_model <- gam(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN),3),
-                        data = age_cohort_summary)
-sdi_cohort_model <- gam(log(cohort_sdi) ~ log(cohort_biomass) + log(AGE_BIN),
-                         data = age_cohort_summary)
-sdi_cohort_model <- gam(log(cohort_sdi) ~ log(cohort_biomass) * log(AGE_BIN),
-                        data = age_cohort_summary)
+sdi_cohort_model <- (lm(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + poly(log(AGE_BIN), 3), data = age_cohort_summary)) # (BHAGE) too low, correction 1.23
+sdi_cohort_model <- (lmer(log(cohort_sdi) ~ poly(log(cohort_biomass), 3) + log(AGE_BIN) + (1|SPCD), data = age_cohort_summary)) #(TOTAGE) SDI too high, correction factor 0.61
+sdi_cohort_model <- (lmer(log(cohort_sdi) ~ log(cohort_biomass)*log(AGE_BIN) + (1|SPCD), data = age_cohort_summary)) #(TOTAGE) SDI too high
 
 plot(effects::allEffects(sdi_cohort_model))
 
@@ -317,28 +309,6 @@ plot(residuals(sdi_cohort_model) ~ fitted(sdi_cohort_model))
 plot(predict(sdi_cohort_model) ~ log(age_cohort_summary$cohort_sdi))
 abline(0,1)
 plot(effects::allEffects(sdi_cohort_model))
-
-
-# sdi_cohort_model <- earth::earth(log(cohort_sdi) ~ log(cohort_biomass) * log(AGE_BIN),
-#                                  data = age_cohort_summary)
-# 
-# sdi_cohort_model <- dismo::gbm.step(data = as.data.frame(age_cohort_summary),
-#                                     gbm.x = c("cohort_biomass", "AGE_BIN"),
-#                                     gbm.y = "cohort_sdi",
-#                                     family = "gaussian",
-#                                     var.monotone = c(1,-1),
-#                                     interaction.depth = 2)
-# 
-# newdata = expand.grid(cohort_biomass = c(100, 500, 1000, 2000),
-#                       AGE_BIN = seq(0, 400))
-# preds <- predict(sdi_cohort_model, newdata = newdata, type = "response")
-# plot(preds ~ newdata$AGE_BIN)
-# 
-# 
-# 
-# gbm.plot(sdi_cohort_model)
-# gbm.perspec(sdi_cohort_model, 1,2, z.range = c(-3,10))
-
 
 saveRDS(sdi_cohort_model, "./Parameterization/management scenario data/sdi_cohort_model.RDS")
 

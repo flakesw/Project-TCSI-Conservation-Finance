@@ -8,16 +8,17 @@ sp_ref <- read.csv("./Parameterization/management scenario data/REF_SPECIES.csv"
   mutate(SpeciesLandis = paste0(substr(GENUS, 1, 4), stringr::str_to_title(substr(SPECIES, 1, 4)))) %>%
   filter(SPCD != 143) #subspecies we don't want
 
-bps_max_sdi <- terra::rast("./Parameterization/management scenario data/max_sdi_bps.tif")
+bps_max_sdi <- terra::rast("./Parameterization/management scenario data/max_sdi_bps_dia5.tif")
 bps_max_sdi[bps_max_sdi == 0] <- NA
 
 #---------------------------------------------
 # Bring in LANDIS layers
-# comm_input <- read.csv("./Parameterization/management scenario data/test_comm_data/scen7/community-input-file-80.csv")
-comm_input <- read.csv("./Parameterization/management scenario data/community-input-file-0.csv")
+comm_input <- read.csv("./Parameterization/management scenario data/test_comm_data/scen7/community-input-file-80.csv")
+# comm_input <- read.csv("./Parameterization/management scenario data/community-input-file-0.csv")
 
 comm_input = left_join(comm_input, sp_ref %>% dplyr::select(SPCD, SpeciesLandis),
-                       by = c("SpeciesName" = "SpeciesLandis"))
+                       by = c("SpeciesName" = "SpeciesLandis")) %>%
+  filter(CohortAge > 5) #this is all of the cohorts because of the LANDIS timestep, but I'm leaving this here out of principle
 
 comm_input <- comm_input %>%
   dplyr::rename(cohort_biomass = CohortBiomass,
@@ -31,7 +32,7 @@ comm_input$SDI_cohort = exp(predict(sdi_cohort_model,
 plot_comm <- comm_input %>%
   group_by(MapCode) %>%
   summarise(SDI_pred = sum(SDI_cohort, na.rm = TRUE))
-plot_comm$SDI_plot = exp(predict(sdi_plot_correction, newdata = plot_comm))
+plot_comm$SDI_plot = exp(predict(sdi_plot_correction, newdata = plot_comm)) *1.23 #correction to match treemap
 
 hist(plot_comm$SDI_plot)
 
@@ -74,7 +75,7 @@ hist(percent_max_sdi,
      main = "%MaxSDI")
 mean(values(percent_max_sdi), na.rm = TRUE)
 
- library("vioplot")
+library("vioplot")
 vioplot(values(percent_max_sdi)[!is.na(values(percent_max_sdi))])
 mean(values(percent_max_sdi), na.rm = TRUE)
 # terra::writeRaster(percent_max_sdi, "percent_max_sdi_initial.tif")

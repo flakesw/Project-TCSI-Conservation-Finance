@@ -4,6 +4,8 @@ library("sf")
 library("rFIA")
 library("tidyverse")
 
+#This is outdated!
+
 #TODO check the stocking equations here: https://www.fia.fs.fed.us/library/sampling/docs/supplement4_121704.pdf
 #For each ecoregion, calculate SDI following stocking equations
 
@@ -85,7 +87,7 @@ all_trees <- rbind(ca_trees, nv_trees)
 
 tree_summary <- all_trees %>%
   dplyr::group_by(PLT_CN) %>%
-  dplyr::filter(DIA > 6) %>%
+  # dplyr::filter(DIA > 6) %>% #TODO check here!!
   dplyr::summarise(plot_bapa = sum(0.005454*(DIA^2)*TPA_UNADJ), 
                    plot_tpa = sum(TPA_UNADJ), 
                    plot_qmd = sqrt((plot_bapa/plot_tpa)/0.005454),
@@ -152,7 +154,7 @@ max_sdi$sdi_max <- ifelse(max_sdi$sdi_max > 3000, 3000, max_sdi$sdi_max)
 max_sdi_map <- bps$BPS_CODE %>%
   terra::crop(tcsi_shape)
 max_sdi_map <- terra::classify(max_sdi_map, rcl = bps_data[, c("VALUE", "BPS_CODE")]) %>%
-  terra::classify(rcl = max_sdi, othersNA = TRUE)
+  terra::classify(rcl = max_sdi, others = NA)
 plot(max_sdi_map)
 
 
