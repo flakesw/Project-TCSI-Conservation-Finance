@@ -15,11 +15,13 @@ library("terra")
 # information.
 
 #what folder do all the runs to be analyze live in?
-# scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
-scenario_folder <- "./Models/Model runs"
+scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
+# scenario_folder <- "./Models/Model runs"
 
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
+scenarios <- scenarios[c(88:91)]
+scenarios <- c(scenarios, "C:/Users/swflake/Documents/TCSI-conservation-finance/Models/Model runs/Scenario6 - miroc - test necnv7")
 # scenarios <- scenarios[-c(97:103, 16, 17)]
 
 # scenarios <- scenarios[c(6:10, 16, 94:96)]
@@ -72,6 +74,8 @@ fire_summaries <- paste0(scenarios, "/scrapple-summary-log.csv")  %>%
     purrr::map_df(~read_plus(.)) %>%
     left_join(scenario_type, c("run_name" = "run_name"))
 
+fire_summaries[325:405, ]$mgmt <- "new"
+fire_summaries[325:405, ]$climate <- "miroc"
 #----------------------
 
 fire_summaries$TotalBurnedSites <- fire_summaries$TotalBurnedSitesAccidental + 
@@ -179,7 +183,7 @@ fire_summaries$Year <- fire_summaries$SimulationYear + 2020
 
 fire_summaries$TotalBurnedAcresRx <- fire_summaries$TotalBurnedSitesRx * 8
 
-ggplot(data = fire_summaries[fire_summaries$climate == "Historical", ], mapping = aes(x = Year, y = TotalBurnedAcresRx)) + 
+ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedAcresRx)) + 
   geom_point(color="steelblue") + 
   labs(title = "Prescribed burn area",
        subtitle = "by management scenario and climate scenario",
@@ -187,7 +191,7 @@ ggplot(data = fire_summaries[fire_summaries$climate == "Historical", ], mapping 
   geom_smooth( color = "black") + 
   facet_wrap(~ mgmt + climate)
 
-ggplot(data = fire_summaries[fire_summaries$climate == "Historical", ], mapping = aes(x = Year, y = TotalBurnedSitesAccidental * 8)) + 
+ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedSitesAccidental * 8)) + 
   geom_point(color="steelblue") + 
   labs(title = "Accidental burn area",
        subtitle = "by management scenario and climate scenario",
@@ -195,7 +199,7 @@ ggplot(data = fire_summaries[fire_summaries$climate == "Historical", ], mapping 
   geom_smooth( color = "black") + 
   facet_wrap(~ climate + mgmt)
 
-ggplot(data = fire_summaries[fire_summaries$climate == "Historical", ], mapping = aes(x = Year, y = TotalBurnedSitesLightning * 8)) + 
+ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBurnedSitesLightning * 8)) + 
   geom_point(color="steelblue") + 
   labs(title = "Lightning burn area",
        subtitle = "by management scenario and climate scenario",
