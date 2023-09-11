@@ -14,8 +14,9 @@ bps_max_sdi[bps_max_sdi == 0] <- NA
 #---------------------------------------------
 # Bring in LANDIS layers
 # comm_input <- read.csv("./Parameterization/management scenario data/test_comm_data/scen7/community-input-file-80.csv")
-comm_input <- read.csv("E:/TCSI LANDIS/LANDIS runs/Scenario1 - historical - Run 1/community-input-file-0.csv")
-P# comm_input <- read.csv("./Parameterization/management scenario data/community-input-file-0.csv")
+comm_input <- read.csv("E:/TCSI LANDIS/LANDIS runs/Scenario2 - historical - Run 1/community-input-file-80.csv")
+# comm_input <- read.csv("E:/TCSI LANDIS/LANDIS runs/Scenario5 - historical - Run 1/community-input-file-80.csv")
+# comm_input <- read.csv("./Parameterization/management scenario data/community-input-file-0.csv")
 
 comm_input = left_join(comm_input, sp_ref %>% dplyr::select(SPCD, SpeciesLandis),
                        by = c("SpeciesName" = "SpeciesLandis")) %>%
@@ -33,15 +34,15 @@ comm_input$SDI_cohort = exp(predict(sdi_cohort_model,
 plot_comm <- comm_input %>%
   group_by(MapCode) %>%
   summarise(SDI_pred = sum(SDI_cohort, na.rm = TRUE))
-plot_comm$SDI_plot = exp(predict(sdi_plot_correction, newdata = plot_comm)) * 1.22 #correction to match treemap
+plot_comm$SDI_plot = exp(predict(sdi_plot_correction, newdata = plot_comm)) * 0.52 #correction to match treemap
 
 hist(plot_comm$SDI_plot)
 
 #link to map
 # comm_map <- terra::rast("./Parameterization/management scenario data/test_comm_data/scen7/output-community-80.img")
 # comm_map <- terra::rast("./Parameterization/management scenario data/output-community-0.img")
-
-comm_map <- terra::rast("E:/TCSI LANDIS/LANDIS runs/Scenario1 - historical - Run 1/output-community-0.img")
+comm_map <- terra::rast("E:/TCSI LANDIS/LANDIS runs/Scenario2 - historical - Run 1/output-community-80.img")
+# comm_map <- terra::rast("E:/TCSI LANDIS/LANDIS runs/Scenario5 - historical - Run 1/output-community-80.img")
 
 # table(values(comm_map) %in% plot_comm$MapCode)
 # table(values(comm_map)[!(values(comm_map) %in% comm_input$MapCode)])
