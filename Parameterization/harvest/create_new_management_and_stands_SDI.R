@@ -6,9 +6,6 @@ library("terra")
 setGDALconfig("OSR_USE_NON_DEPRECATED", value="NO") #so we can still use EPSG:2163
 options(warn = 0)
 
-#TODO: download and use other no-disturbance model runs
-#Compare final biomass values to targets
-
 project_to_template <- function(input_raster, template){
     #function to project landis input rasters with no CRS to an input file
   
@@ -225,10 +222,9 @@ plot(slope_percent)
   #--6: private nonindustrial
   #--7: wilderness
 #second digit: fire and carbon strategy
-  #--0: conserve carbon
-  #--1: high fire transform or adapt
-  #--2: high fire adapt, not used
-  #--3: low fire transform and adapt not used
+  #--0: normal
+  #--1: high carbon protect
+  #--2: high fire adapt or fire transform
 #third digit: sdi band
   #--0:
   #--1:

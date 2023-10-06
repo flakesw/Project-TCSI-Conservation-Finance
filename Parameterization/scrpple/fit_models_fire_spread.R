@@ -101,6 +101,7 @@ MuMIn::r.squaredGLMM(model)
 model_reduced <- glm(success ~ fwi + fuel + eff_wspd,
                      data = spread_data[spread_data$days_between == 1, ],
                      family = "binomial")
+summary(model_reduced)
 
 model2 <- glm(success ~ scale(fwi)*scale(fuel)*scale(eff_wspd),
               data = spread_data,

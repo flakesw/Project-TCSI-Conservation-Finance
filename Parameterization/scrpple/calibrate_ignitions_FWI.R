@@ -8,6 +8,7 @@ library("cffdrs")
 library("lubridate")
 library("smoothr")
 library("progress")
+library("terra")
 # library("ncdf4")
 
 setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance")
@@ -18,7 +19,7 @@ setwd("C:/Users/Sam/Documents/Research/TCSI conservation finance")
 #                           layer = "Fires") %>%
 #               sf::st_transform(crs = "EPSG:2163")
 
-ecoregions <- raster("./Models/Inputs/input_rasters_tcsi/categorical/TCSI_ecoregions.tif")
+ecoregions <- rast("./Models/Inputs/input_rasters_reproject/TCSI_ecoregions.tif")
 ecoregion_size <- table(values(ecoregions))[-1]
 
 #short dataset already extracted for the whole sierra
@@ -178,6 +179,11 @@ plot(mean_ignitions ~ jday, data = average_year_lightning)
 lines(predict(lightning_model, newdata = data.frame(fwi = average_year_lightning$mean_fwi)) ~ average_year_lightning$jday)
 lines(predict(lightning_poisson, newdata = data.frame(fwi = average_year_lightning$mean_fwi), type = "response") ~ 
         average_year_lightning$jday)
+sum(average_year_lightning$mean_ignitions)
+sum(predict(lightning_model, newdata = data.frame(fwi = average_year_lightning$mean_fwi))) #scale number of ignitions?
+log(sum(average_year_lightning$mean_ignitions)/sum(predict(lightning_model, newdata = data.frame(fwi = average_year_lightning$mean_fwi))))
+#add 0.186 to intercept
+
 
 average_year_accidental <- all_fwi_data_merge_accidental %>%
   mutate(jday = format(date, "%j")) %>%
@@ -194,7 +200,8 @@ plot(mean_ignitions ~ jday, data = average_year_accidental)
 lines(predict(accidental_model, newdata = data.frame(fwi = average_year_accidental$mean_fwi)) ~ average_year_accidental$jday)
 lines(predict(accidental_poisson, newdata = data.frame(fwi = average_year_accidental$mean_fwi), type = "response") ~ 
         average_year_accidental$jday)
-
+sum(average_year_accidental$mean_ignitions)
+sum(predict(accidental_model, newdata = data.frame(fwi = average_year_accidental$mean_fwi))) #scale number of ignitions?
 
 #----------------
 # just for TCSI region
