@@ -33,7 +33,8 @@ get_climate <- function(scenario){
 scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
 # scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model runs"
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
-  `[`(grep("Scenario", .))
+  `[`(grep("Scenario", .)) %>%
+  `[`(!grepl("Scenario 11", .))
 
 
 
@@ -89,3 +90,10 @@ ggplot(filter(harvest_sum, climate == "MIROC")) +
   facet_wrap(facets = "mgmt")
 
 
+
+# test <- harvest_events %>%
+#   filter(climate == "Historical") %>%
+#   group_by(mgmt, run_name) %>%
+#   summarise(rx = sum(HarvestedSites) / 275414 / 80) %>%
+#   group_by(mgmt) %>%
+#   summarise(rx = mean(rx))

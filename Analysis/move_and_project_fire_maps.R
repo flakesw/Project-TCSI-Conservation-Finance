@@ -13,12 +13,12 @@ scenario_names_cwhr <- map(strsplit(cwhr_files, split = "_"), .f = function(x){p
 
 runs_folder <- "E:/TCSI LANDIS/LANDIS runs"
 runs <- list.files(runs_folder)
-# runs <- runs[-c(1, 95:97)]
+runs <- runs[38:52]
 
-run_names <- gsub(" - ", "_", runs)
-run_names <- gsub(" ", "", run_names)
+# run_names <- gsub(" - ", "_", runs)
+# run_names <- gsub(" ", "", run_names)
 
-scenario_names_cwhr[!(scenario_names_cwhr %in% run_names)]
+# scenario_names_cwhr[!(scenario_names_cwhr %in% run_names)]
 
 ### which runs should we copy over to the CWHR folder?
 
@@ -39,7 +39,8 @@ tcsi_shape <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_area_shapefile/
 st_crs(tcsi_shape) #automatically updated to 9311
 
 
-runs_to_copy <- runs[run_names %in% scenario_names_cwhr][39:40]
+# runs_to_copy <- runs[run_names %in% scenario_names_cwhr][39:40]
+runs_to_copy <- runs
 
 
 for(i in 1:length(runs_to_copy)){

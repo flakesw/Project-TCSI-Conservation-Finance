@@ -7,7 +7,9 @@ scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
 # scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model runs"
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
-scenarios <- scenarios[87:88]
+scenarios <- scenarios[38:52]
+
+years <- 1:81
 
 flaming_paths <- paste0(rep(paste0(scenarios, "/social-climate-fire/"), each = length(years)), "/flaming-consumptions-", years, ".img")
 smolder_paths <- paste0(rep(paste0(scenarios, "/social-climate-fire/"), each = length(years)), "/smolder-consumption-", years, ".img")
@@ -38,24 +40,8 @@ for(scen in scenarios){
 
 ##################################
 # fire severity maps
-
-
 #separate rx and wildfire
-library("terra")
-library("tidyverse")
 
-#what folder do all the runs to be analyze live in?
-scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
-# scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model runs"
-scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
-  `[`(grep("Scenario", .))
-# scenarios <- scenarios[-1]
-
-scenarios <- scenarios[c(87:88)]
-
-years <- 1:81
-#need to summarize fire data to 5-year chunks to compare with NECN data
-year_bins <- cut(years, breaks = seq(0,81, by = 5))
 
 intensity_paths <- paste0(rep(paste0(scenarios, "/social-climate-fire/"), each = length(years)), "/fire-intensity-", years, ".img")
 fire_type_paths <- paste0(rep(paste0(scenarios, "/social-climate-fire/"), each = length(years)), "/ignition-type-", years, ".img")

@@ -14,7 +14,7 @@ bps_max_sdi[bps_max_sdi == 0] <- NA
 #---------------------------------------------
 # Bring in LANDIS layers
 # comm_input <- read.csv("./Parameterization/management scenario data/test_comm_data/scen7/community-input-file-80.csv")
-comm_input <- read.csv("E:/TCSI LANDIS/LANDIS runs/Scenario2 - historical - Run 1/community-input-file-80.csv")
+comm_input <- read.csv("E:/TCSI LANDIS/LANDIS runs/Scenario2 - historical - Run 1/community-input-file-0.csv")
 # comm_input <- read.csv("E:/TCSI LANDIS/LANDIS runs/Scenario5 - historical - Run 1/community-input-file-80.csv")
 # comm_input <- read.csv("./Parameterization/management scenario data/community-input-file-0.csv")
 
@@ -41,7 +41,7 @@ hist(plot_comm$SDI_plot)
 #link to map
 # comm_map <- terra::rast("./Parameterization/management scenario data/test_comm_data/scen7/output-community-80.img")
 # comm_map <- terra::rast("./Parameterization/management scenario data/output-community-0.img")
-comm_map <- terra::rast("E:/TCSI LANDIS/LANDIS runs/Scenario2 - historical - Run 1/output-community-80.img")
+comm_map <- terra::rast("E:/TCSI LANDIS/LANDIS runs/Scenario2 - historical - Run 1/output-community-0.img")
 # comm_map <- terra::rast("E:/TCSI LANDIS/LANDIS runs/Scenario5 - historical - Run 1/output-community-80.img")
 
 # table(values(comm_map) %in% plot_comm$MapCode)

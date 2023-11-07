@@ -13,8 +13,8 @@ scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
 # scenario_folder <- "./Models/Model runs"
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
-scenarios <- scenarios[c(88:91)]
-scenarios <- c(scenarios, "C:/Users/swflake/Documents/TCSI-conservation-finance/Models/Model runs/Scenario6 - miroc - test necnv7")
+# scenarios <- scenarios[c(88:91)]
+# scenarios <- c(scenarios, "C:/Users/swflake/Documents/TCSI-conservation-finance/Models/Model runs/Scenario6 - miroc - test necnv7")
 # scenarios <- scenarios[-74]
 # scenarios <- scenarios[c(7,81,93,96,99)]
 
@@ -65,16 +65,17 @@ necn_summaries2 <- necn_summaries %>%
   summarise(TotalAGB = weighted.mean(AGB, NumSites),
             TotalC = weighted.mean(AGB + SOMTC, NumSites),
             SOMTC = weighted.mean(SOMTC, NumSites),
+            NPP = weighted.mean(AG_NPPC, NumSites),
             mgmt = mgmt[1],
             climate = climate[1])
-necn_summaries2[69:85, ]$mgmt <- "new"
+# necn_summaries2[69:85, ]$mgmt <- "new"
 #-------------------------------------------------------------------------------
 # Figures
 #-------------------------------------------------------------------------------
 
 #Biomass over time
 
-ggplot(data = necn_summaries2, 
+ggplot(data = necn_summaries2[necn_summaries2$climate == "CNRM", ], 
        mapping = aes(x = Time+2020, y = TotalAGB)) + 
   geom_point(color="steelblue") + 
   labs(title = "Aboveground biomass",
@@ -89,6 +90,14 @@ ggplot(data = necn_summaries2, mapping = aes(x = Time+2020, y = SOMTC)) +
   labs(title = "SOMTC",
        subtitle = "by management scenario and climate scenario",
        y = "Average SOM C (g m-2)", x = "Simulation Year") + 
+  geom_smooth( color = "black") + 
+  facet_wrap(~ mgmt + climate, ncol = 3, dir = "v")
+
+ggplot(data = necn_summaries2, mapping = aes(x = Time+2020, y = NPP)) + 
+  geom_point(color="steelblue") + 
+  labs(title = "NPP",
+       subtitle = "by management scenario and climate scenario",
+       y = "AG NPP (g m-2)", x = "Simulation Year") + 
   geom_smooth( color = "black") + 
   facet_wrap(~ mgmt + climate, ncol = 3, dir = "v")
 
