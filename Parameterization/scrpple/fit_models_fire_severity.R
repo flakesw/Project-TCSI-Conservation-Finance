@@ -32,7 +32,8 @@ col_types <- list(
   ndvi_anomaly = col_double()
 )
 
-
+short_ca <- readRDS("./Parameterization/calibration data/short_ignitions/short_sierra.RDS")%>%
+  filter(FIRE_SIZE >= 8)
 
 #readr is incredible
 data_all <- fire_severity_data %>%
@@ -55,9 +56,9 @@ data_all_with_loc <- data_all %>%
   sf::st_set_crs("EPSG:5070") %>%
   ungroup()
 
-head(data_all_with_loc)
+# head(data_all_with_loc)
 
-plot(sf::st_geometry(data_all_with_loc[which(!duplicated(data_all_with_loc$fire_name)), ]))
+# plot(sf::st_geometry(data_all_with_loc[which(!duplicated(data_all_with_loc$fire_name)), ]))
 
 # data_all$ndvi_normal <- data_all$ndvi + data_all$ndvi_anomaly
 
@@ -65,37 +66,37 @@ data_with_fuel <- data_all %>%
   dplyr::filter(!is.na(fine_fuel))
 
 # plot(dnbr ~ fine_fuel, data = data_with_fuel[sample(x = nrow(data_with_fuel), size = 1000), ])
-# 
-# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = fine_fuel, y = dnbr)) + 
-#   geom_jitter(width = 0.02) + 
-#   geom_smooth(method = "lm", formula = y ~ exp(x))
-# ggplot(data = sample_frac(data_with_fuel[!is.na(data_with_fuel$ladder_fuel), ], 0.01), mapping = aes(x = ladder_fuel, y = dnbr)) + 
-#   geom_jitter() + 
-#   geom_smooth(method = "lm", formula = y ~ x)
-# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ews, y = dnbr)) + 
-#   geom_jitter() + 
-#   geom_smooth(method = "lm", formula = y ~ x) + 
-#   xlab("Effective windspeed")
-# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ladder_fuel, y = dnbr)) + 
-#   geom_jitter() + 
-#   geom_smooth(method = "lm", formula = y ~ x)
-# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = cwd, y = dnbr)) + 
-#   geom_jitter() + 
-#   geom_smooth(method = "lm")
-# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = pet, y = dnbr)) + 
-#   geom_jitter() + 
-#   geom_smooth(method = "lm")
-# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ndvi_anomaly, y = dnbr)) + 
-#   geom_jitter() + 
-#   geom_smooth(method = "lm")
-# ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ndvi_normal, y = dnbr)) + 
-#   geom_jitter() + 
-#   geom_smooth(method = "lm")
+
+ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = fine_fuel, y = dnbr)) +
+  geom_jitter(width = 0.02) +
+  geom_smooth(method = "lm", formula = y ~ exp(x))
+ggplot(data = sample_frac(data_with_fuel[!is.na(data_with_fuel$ladder_fuel), ], 0.01), mapping = aes(x = ladder_fuel, y = dnbr)) +
+  geom_jitter() +
+  geom_smooth(method = "lm", formula = y ~ x)
+ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ews, y = dnbr)) +
+  geom_jitter() +
+  geom_smooth(method = "lm", formula = y ~ x) +
+  xlab("Effective windspeed")
+ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ladder_fuel, y = dnbr)) +
+  geom_jitter() +
+  geom_smooth(method = "lm", formula = y ~ x)
+ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = cwd, y = dnbr)) +
+  geom_jitter() +
+  geom_smooth(method = "lm")
+ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = pet, y = dnbr)) +
+  geom_jitter() +
+  geom_smooth(method = "lm")
+ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ndvi_anomaly, y = dnbr)) +
+  geom_jitter() +
+  geom_smooth(method = "lm")
+ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ndvi, y = dnbr)) +
+  geom_jitter() +
+  geom_smooth(method = "lm")
 
 hist(data_all$dnbr)
 
 test <- lm(dnbr ~ scale(cwd) + scale(ews)  +  
-             scale(ndvi) + scale(pet) +
+             scale(fine_fuel) + scale(pet) +
              scale(vpd) + scale(eddi) + scale(pdsi), data = data_all)
 summary(test)
 
@@ -125,7 +126,6 @@ nrow(data_all)
 length(unique(data_all$fire_name))
 
 plot(data_all$ladder_fuel ~ data_all$ndvi)
-
 
 #TODO: combine all shapefiles into one file for plotting, getting centroids
 

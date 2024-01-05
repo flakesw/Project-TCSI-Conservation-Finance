@@ -164,40 +164,40 @@ daily_perims_all <- daily_perims_all %>%
   slice_max(gisacres) %>%
   distinct(gisacres, .keep_all= TRUE) %>%
   filter(fireyear %in% c(2000:2021))
-
-king <- daily_perims_all[grep("King2014", daily_perims_all$incidentna), ] %>%
-  # sf::st_transform(crs = st_crs(boundary)) %>%
-  # dplyr::mutate(intersects = as.logical(sf::st_intersects(geometry, boundary, sparse = FALSE))) %>%
-  # filter(intersects) %>%
-  dplyr::arrange((perimeterd)) %>%
-  ungroup() %>%
-  mutate(growth = (gisacres-lag(gisacres, n = 1))/lag(gisacres, n = 1)) %>%
-  slice(c(which(growth > 0), 1)) %>% #include positive growth or the first day (which has no growth)
-  dplyr::arrange(desc(perimeterd)) %>%
-  dplyr::mutate(newdate = as.integer(format(perimeterd, "%Y%m%d"))) %>%
-  ungroup() %>%
-  dplyr::mutate(sequence = seq_len(n())) %>%
-  terra::rasterize(x = vect(.), y = rast(., res = 30), field = "sequence")
-  # terra::extend(dnbr_raster) %>% #no idea why I need to do all this finagling; crop(extend = TRUE) should do it on its own.
-  # terra::crop(dnbr_raster) %>%
-  # project(dnbr_raster, method = "near")
-diverging_color_ramp <- function(ras){
-  the_palette_fc <- leaflet::colorNumeric(palette = "RdBu", 
-                                          domain = c(-max(abs(ras[]), na.rm = TRUE), max(abs(ras[]), na.rm = TRUE)),
-                                          reverse = TRUE)
-  the_colors <- the_palette_fc(seq(min(ras[], na.rm = TRUE), max(ras[], na.rm = TRUE), length.out = 50))
-  
-}
-king[] <- 22-king[]
-
-terra::writeRaster(king, "king.tiff", overwrite = TRUE)
-
-#King fire code is CA3878212060420140913
-
-king_dnbr <- terra::rast(mtbs_dnbr[grep("3878212060420140913", mtbs_dnbr)])
-king_dnbr[king_dnbr < 0] <- 0
-plot(king_dnbr)
-terra::writeRaster(king_dnbr, "king_dnbr.tiff")
+# 
+# king <- daily_perims_all[grep("King2014", daily_perims_all$incidentna), ] %>%
+#   # sf::st_transform(crs = st_crs(boundary)) %>%
+#   # dplyr::mutate(intersects = as.logical(sf::st_intersects(geometry, boundary, sparse = FALSE))) %>%
+#   # filter(intersects) %>%
+#   dplyr::arrange((perimeterd)) %>%
+#   ungroup() %>%
+#   mutate(growth = (gisacres-lag(gisacres, n = 1))/lag(gisacres, n = 1)) %>%
+#   slice(c(which(growth > 0), 1)) %>% #include positive growth or the first day (which has no growth)
+#   dplyr::arrange(desc(perimeterd)) %>%
+#   dplyr::mutate(newdate = as.integer(format(perimeterd, "%Y%m%d"))) %>%
+#   ungroup() %>%
+#   dplyr::mutate(sequence = seq_len(n())) %>%
+#   terra::rasterize(x = vect(.), y = rast(., res = 30), field = "sequence")
+#   # terra::extend(dnbr_raster) %>% #no idea why I need to do all this finagling; crop(extend = TRUE) should do it on its own.
+#   # terra::crop(dnbr_raster) %>%
+#   # project(dnbr_raster, method = "near")
+# diverging_color_ramp <- function(ras){
+#   the_palette_fc <- leaflet::colorNumeric(palette = "RdBu",
+#                                           domain = c(-max(abs(ras[]), na.rm = TRUE), max(abs(ras[]), na.rm = TRUE)),
+#                                           reverse = TRUE)
+#   the_colors <- the_palette_fc(seq(min(ras[], na.rm = TRUE), max(ras[], na.rm = TRUE), length.out = 50))
+# 
+# }
+# king[] <- 22-king[]
+# 
+# terra::writeRaster(king, "king.tiff", overwrite = TRUE)
+# 
+# #King fire code is CA3878212060420140913
+# 
+# king_dnbr <- terra::rast(mtbs_dnbr[grep("3878212060420140913", mtbs_dnbr)])
+# king_dnbr[king_dnbr < 0] <- 0
+# plot(king_dnbr)
+# terra::writeRaster(king_dnbr, "king_dnbr.tiff")
 
 #*******************************************************************************
 # DEFINE FUNCTIONS TO ACCESS DATA
@@ -650,7 +650,8 @@ get_daily_climate_mosaic <- function(dnbr_raster, date_raster, severity_raster, 
   upwind_cells <- cellFromRowCol(dnbr_raster, rowcol_new[, 1], rowcol_new[, 2])
   
   # This changes based on fire severity. Combustion buoyancy.
-  #severity of 4 = 50; severity of 3 = 25; severity of 2 = 10; severity of 1 = 5; unburned or increased greenness = 1
+  # severity of 4 = 50; severity of 3 = 25; severity of 2 = 10; 
+  # severity of 1 = 5; unburned or increased greenness = 1
   sev_values <- raster::values(sev_raster)
   U_b <- ifelse(sev_values %in% c(0, 5), 1,
                 ifelse(sev_values > 3 & sev_values < 5, 50,
