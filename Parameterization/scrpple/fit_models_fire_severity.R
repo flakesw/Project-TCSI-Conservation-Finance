@@ -32,7 +32,7 @@ col_types <- list(
   ndvi_anomaly = col_double()
 )
 
-short_ca <- readRDS("./Parameterization/calibration data/short_ignitions/short_sierra.RDS")%>%
+short <- readRDS("./Parameterization/calibration data/short_ignitions/short_tcsi.RDS")%>%
   filter(FIRE_SIZE >= 8)
 
 #readr is incredible
@@ -116,7 +116,7 @@ plot(residuals(test_lmer) ~ fitted(test_lmer))
 # plot(Effect(test_lmer, focal.predictors = c("ndvi", "ews")))
 
 test_lmer <- lmer(I(1/dnbr) ~  ews + ladder_fuel + 
-                    ndvi_anomaly + ndvi + pet + clay +
+                    fwi + pet + clay +
                     (1|fire_name), data = data_all)
 test_lmer <- lmer(I(1/dnbr) ~  ews + 
                     (1|fire_name), data = data_all)
@@ -131,17 +131,17 @@ plot(data_all$ladder_fuel ~ data_all$ndvi)
 
 
 # 
-test_gamma <- spaMM::fitme(dnbr ~ clay + cwd + fine_fuel + ews, 
+test_gamma <- spaMM::fitme(dnbr ~ clay + cwd + pet + ladder_fuel + ews + fwi, 
                            data = data_all,
                            family = Gamma(link = "inverse"))
 summary(test_gamma)
 
-test_gamma <- spaMM::fitme(dnbr ~ scale(cwd) + scale(fine_fuel) + scale(ews), 
+test_gamma <- spaMM::fitme(dnbr ~ scale(cwd) + scale(ladder_fuel) + scale(ews), 
                            data = data_all,
                            family = Gamma(link = "log"))
 summary(test_gamma)
 
-test_gamma2 <- spaMM::fitme(dnbr ~ clay + cwd + pet + fine_fuel + ews + fwi + (1|fire_name), 
+test_gamma2 <- spaMM::fitme(dnbr ~clay + cwd + pet + ladder_fuel + ews + fwi + (1|fire_name), 
                             data = data_all,
                             family = Gamma(link = "inverse"))
 summary(test_gamma2)

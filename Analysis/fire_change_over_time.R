@@ -25,17 +25,17 @@ min(nifc_perims$FIRE_YEAR)
 yearly_area_burned <- nifc_perims %>%
   as.data.frame() %>%
   group_by(FIRE_YEAR) %>%
-  summarise(total_area = sum(GIS_ACRES/2.47, na.rm = TRUE)) %>%
+  summarise(total_area = sum(GIS_ACRES, na.rm = TRUE)) %>%
   filter(!is.na(total_area)) %>%
   mutate(FIRE_YEAR = as.numeric(FIRE_YEAR)) %>%
   filter(total_area > 0)
 
-ggplot(yearly_area_burned, aes(y = total_area, x = FIRE_YEAR)) +
+ggplot(yearly_area_burned[yearly_area_burned$FIRE_YEAR > 1999, ], aes(y = total_area, x = FIRE_YEAR)) +
   geom_point()+
   geom_smooth(method="glm",
               method.args=list(family=gaussian(link="log")))
   
-mean(yearly_area_burned[yearly_area_burned$FIRE_YEAR > 1999, ]$total_area)
+mean(yearly_area_burned[yearly_area_burned$FIRE_YEAR > 1999, ]$total_area/2.47) #hectares
 
 #fire severity
 mtbs_mosaics <- list.files("D:/Data/mtbs_mosaic/mtbs_mosaic/composite_data/MTBS_BSmosaics",
@@ -44,22 +44,22 @@ mtbs_mosaics <- list.files("D:/Data/mtbs_mosaic/mtbs_mosaic/composite_data/MTBS_
 sierra_poly_mtbs <- sierra_poly %>% 
   sf::st_transform(crs = "ESRI:102039")
 
-severity_data <- data.frame(year = 1984:2020,
-                            all_cells = numeric(37),
-                            high_severity_cells = numeric(37))
+severity_data <- data.frame(year = 2000:2020,
+                            all_cells = numeric(21),
+                            high_severity_cells = numeric(21))
 
 # assign a potential fire cell a value based on the severity of its upwind cell
 # loop over years with fire spread data
 
 #MTBS severity goes 0 = masked out; 1 = low intensity or unburned; 2 = low; 3 = moderate severity; 4 = high
 #; 5 = increased greenness, 6 = non-processing mask
-for(year in 1984:2020){
+for(year in 2000:2020){
   mtbs_year <- terra::rast(mtbs_mosaics[year - 1983]) %>%
     terra::crop(x = ., y = sierra_poly_mtbs) 
   
   # plot(mtbs_year)
   
-  severity_data[severity_data$year == year, "all_cells"] <- sum(values(mtbs_year) %in% c(1,2,3,4))
+  severity_data[severity_data$year == year, "all_cells"] <- sum(values(mtbs_year) %in% c(2,3,4))
   severity_data[severity_data$year == year, "high_severity_cells"] <- sum(values(mtbs_year) %in% c(4))
   
 }
