@@ -16,12 +16,12 @@ Timestep                            1
 
 Species_CSV_File	"../../Inputs/scrpple/SCRPPLE_spp_sierra.csv"
 
-AccidentalIgnitionsMap     	"../../Inputs/input_rasters_reproject/accidental_tcsi.tif"
-LightningIgnitionsMap  		"../../Inputs/input_rasters_reproject/lightning_tcsi.tif"
+AccidentalIgnitionsMap     	"../../Inputs/input_rasters_reproject/accidental_tcsi_v2.tif"
+LightningIgnitionsMap  		"../../Inputs/input_rasters_reproject/lightning_tcsi_v2.tif"
 RxIgnitionsMap  		"../../Inputs/input_rasters_reproject/rx_equal1.tif" 
 
-AccidentalSuppressionMap	"../../Inputs/input_rasters_reproject/suppression_accidentalv2.tif" <<updated sf 2023-10-4
-LightningSuppressionMap		"../../Inputs/input_rasters_reproject/suppression_lightningv2.tif" <<updated sf 2023-10-4
+AccidentalSuppressionMap	"../../Inputs/input_rasters_reproject/suppression_accidental.tif" <<updated sf 2023-10-4
+LightningSuppressionMap		"../../Inputs/input_rasters_reproject/suppression_lightning.tif" <<updated sf 2023-10-4
 RxSuppressionMap		"../../Inputs/input_rasters_reproject/full_suppression.tif" <<NEED
 
 GroundSlopeMap "../../Inputs/input_rasters_reproject/Slope2.tif"		

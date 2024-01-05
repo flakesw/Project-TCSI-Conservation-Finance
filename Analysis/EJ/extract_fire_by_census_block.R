@@ -105,22 +105,28 @@ for(scen in scenarios){
 sev_paths <- paste0(rep(paste0(scenarios, "/social-climate-fire/"), each = length(years)), "/fire-intensity-", years, ".img")
 
 high_sev_n_burned <- rast()
+med_sev_n_burned <- rast()
 
 for(scen in scenarios){
   sev_path <- sev_paths[grepl(scen, sev_paths)]
   sev_stack <- terra::rast(sev_path)
-  sev_class <- terra::classify(sev_stack, rcl = matrix(c(4, 100, 1), ncol = 3), other = 0, right = FALSE)
+  sev_class_high <- terra::classify(sev_stack, rcl = matrix(c(4, 100, 1), ncol = 3), other = 0, right = FALSE)
+  sev_class_med <- terra::classify(sev_stack, rcl = matrix(c(3, 100, 1), ncol = 3), other = 0, right = FALSE)
   
-  sev_sum <- sum(sev_class)
+  sev_sum_high <- sum(sev_class_high)
+  sev_sum_med <- sum(sev_class_med)
   
-  sev_sum2 <- tcsi_mask_9311
-  sev_sum2[] <- sev_sum[]
+  sev_sum_high2 <- tcsi_mask_9311
+  sev_sum_med2 <- tcsi_mask_9311
+  sev_sum_high2[] <- sev_sum_high[]
+  sev_sum_med2[] <- sev_sum_med[]
   
-  names(sev_sum2) <- basename(scen)%>% gsub(" ", "", .)
+  names(sev_sum_high2) <- basename(scen)%>% gsub(" ", "", .)
+  names(sev_sum_med2) <- basename(scen)%>% gsub(" ", "", .)
   
-  high_sev_n_burned <- c(high_sev_n_burned, sev_sum2)
+  high_sev_n_burned <- c(high_sev_n_burned, sev_sum_high2)
+  med_sev_n_burned <- c(med_sev_n_burned, sev_sum_med2)
 }
-
 
 
 #-----------------------
@@ -130,8 +136,9 @@ census_rx <- terra::extract(rx_n_burned, census, fun = function(x) mean(x, na.rm
 census_rx2 <- census_rx %>%
   pivot_longer(starts_with("Scenario"), values_drop_na=TRUE) %>% 
   separate(name, into=c("Scenario", "Climate", "Replicate"), "[.]", extra = "drop", fill = "right") %>%
-  group_by(Scenario, Climate, OBJECTID) %>%
-  summarise(n_rx_fires = mean(value))
+  group_by(Scenario, Climate, GEOID20) %>%
+  summarise(n_rx_fires = mean(value),
+            .groups = "keep")
 sf::st_write(census_rx2, "census_with_rx_fire.csv")
 
 
@@ -139,9 +146,20 @@ census_high_severity <- terra::extract(high_sev_n_burned, census, fun = function
   sf::st_as_sf() %>%
   pivot_longer(starts_with("Scenario"), values_drop_na=TRUE) %>% 
   separate(name, into=c("Scenario", "Climate", "Replicate"), "[.]", extra = "drop", fill = "right") %>%
-  group_by(Scenario, Climate, OBJECTID) %>%
-  summarise(n_severe_fires = mean(value))
+  group_by(Scenario, Climate, GEOID20) %>%
+  summarise(n_severe_fires = mean(value),
+            .groups = "keep")
 sf::st_write(census_high_severity, "census_with_high_severity_fire.csv")
 
+census_med_severity <- terra::extract(med_sev_n_burned, census, fun = function(x) mean(x, na.rm = TRUE), bind=T) %>%
+  sf::st_as_sf() %>%
+  pivot_longer(starts_with("Scenario"), values_drop_na=TRUE) %>% 
+  separate(name, into=c("Scenario", "Climate", "Replicate"), "[.]", extra = "drop", fill = "right") %>%
+  group_by(Scenario, Climate, GEOID20) %>%
+  summarise(n_severe_fires = mean(value),
+            .groups = "keep")
+sf::st_write(census_med_severity, "census_with_high_med_severity_fire.csv")
 
-
+high_sev_scen1 <- census_med_severity[census_med_severity$Scenario == "Scenario6" & census_med_severity$Climate == "miroc", ]
+plot(high_sev_scen1["n_severe_fires"])
+sf::st_write(high_sev_scen1, "scen6_test.shp", append = FALSE)

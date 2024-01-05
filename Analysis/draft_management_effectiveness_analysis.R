@@ -571,8 +571,6 @@ effectiveness_diagram <- ggplot(data = diff_data[diff_data$harvest >= 0, ],
   xlab("Biomass killed by harvest and Rx fire (Mg ha-1)") +
   ylab("Biomass killed by severe wildfire (Mg ha-1)")
 plot(effectiveness_diagram)
-plot(vect(tcsi_shape), add = TRUE)
-plot(vect(tahoe_shape), add = TRUE)
 
 #---------- Effectiveness map ------------------
 #TODO add a real mask instead of just setting NAflag = 0 (some might be real zeroes)
@@ -588,7 +586,44 @@ values(effective_sites) <- ifelse(values(severe_diff_sum2) > quantile(values(sev
 effective_sites <- project_to_template(effective_sites, tcsi_mask_terra)
 plot(effective_sites, col = data.frame(value = c(1,2),
                                        col = c('#1b9e77', '#d95f02')))
+plot(vect(tcsi_shape), add = TRUE)
+plot(vect(tahoe_shape), add = TRUE)
 
+
+#------- make hex ----------------
+effective_sites[][effective_sites[] == 2] <- -1
+plot(effective_sites)
+hexgrid <- sf::st_make_grid(tcsi_shape, cellsize = 5000, square = FALSE) %>%
+  st_as_sf()
+plot(hexgrid, add = TRUE)
+hexgrid$extract <- terra::extract(effective_sites, vect(hexgrid), fun = sum, na.rm = TRUE, ID = FALSE)$mask_old
+plot(hexgrid["extract"])
+
+hexgrid <- hexgrid %>%
+  sf::st_intersection(tcsi_shape)
+ggplot() +
+  geom_sf(data = hexgrid, aes(col = extract, fill = extract)) +
+  colorspace::scale_fill_continuous_divergingx(palette = 'RdBu', mid = 0)+
+  colorspace::scale_color_continuous_divergingx(palette = 'RdBu', mid = 0) +
+  geom_sf(data = tahoe_shape, fill = "white") +
+  geom_sf(data = tcsi_shape, fill = NA) +
+  labs(fill='Cost-effectiveness') +
+  guides(color = "none")
+
+#------ calculate effectiveness differently
+cont_eff <- -severe_diff_sum2/biomass_diff_mean62
+cont_eff2 <-  cont_eff %>%
+  terra::clamp(0, 1) %>%
+  project_to_template(tcsi_mask_terra) %>%
+  focal(w=matrix(1, 3, 3), mean, na.rm = TRUE) %>%
+  # focal(w=matrix(1, 13, 13), mean, na.rm = TRUE) %>%
+  # terra::aggregate(2, fun = mean, na.rm = TRUE) %>%
+  mask(tcsi_shape)
+plot(cont_eff2, col = color_ramp(0, 1, palette = "Greens"))
+plot(vect(tcsi_shape), add = TRUE)
+plot(vect(tahoe_shape), add = TRUE, col = "white")
+
+writeRaster(cont_eff2, "management_effectiveness_continuous.tif")
 
 # Trash can --------------------------------------------------------------------
 

@@ -2093,10 +2093,9 @@ TsugMert	All
   >>--6: private nonindustrial
   >>--7: wilderness
 >>second digit: fire and carbon strategy
-  >>--1: conserve carbon
-  >>--2: high fire transform
-  >>--3: high fire adapt
-  >>--4: low fire transform and adapt
+  >>--0: normal
+  >>--1: high carbon protect
+  >>--2: high fire adapt or fire transform
 >>third digit: max sdi band 
   >>--0: <325
   >>--1: 326-500
@@ -2109,28 +2108,28 @@ TsugMert	All
     HarvestImplementations		
 >>  Mgmt Area   Prescription    Harvest Area    Begin Time  End Time		
 >>  ---------   ------------    ------------    ----------  --------		
-2001	Below2400Age100	3%	0	80
-2011	Below4500Age100	3%	0	80
-2021	Below9100Age100	3%	0	80
-2201	Below2400Age100	6%	0	80
-2211	Below4500Age100	6%	0	80
-2221	Below9100Age100	6%	0	80
-3001	Below2400Age100	3%	0	80
-3011	Below4500Age100	3%	0	80
-3021	Below9100Age100	3%	0	80
-3201	Below2400Age100	6%	0	80
-3211	Below4500Age100	6%	0	80
-3221	Below9100Age100	6%	0	80
-4001	Below2400Age100	3%	0	80
-4011	Below4500Age100	3%	0	80
-4021	Below9100Age100	3%	0	80
-4211	Below4500Age100	6%	0	80
-4221	Below9100Age100	6%	0	80
-6001	Below2400Age100	3%	0	80
-6011	Below4500Age100	3%	0	80
-6021	Below9100Age100	3%	0	80
-6211	Below4500Age100	6%	0	80
-6221	Below9100Age100	6%	0	80
+2001	Below2400Age100		3%	0	80
+2011	Below4500Age100		3%	0	80
+2021	Below9100Age100		3%	0	80
+2201	Below2400Age100		6%	0	80
+2211	Below4500Age100		6%	0	80
+2221	Below9100Age100		6%	0	80
+3001	Below2400Age100		3%	0	80
+3011	Below4500Age100		3%	0	80
+3021	Below9100Age100		3%	0	80
+3201	Below2400Age100		6%	0	80
+3211	Below4500Age100		6%	0	80
+3221	Below9100Age100		6%	0	80
+4001	Below2400Age100		3%	0	80
+4011	Below4500Age100		3%	0	80
+4021	Below9100Age100		3%	0	80
+4211	Below4500Age100		6%	0	80
+4221	Below9100Age100		6%	0	80
+6001	Below2400Age100		3%	0	80
+6011	Below4500Age100		3%	0	80
+6021	Below9100Age100		3%	0	80
+6211	Below4500Age100		6%	0	80
+6221	Below9100Age100		6%	0	80
 2000	Below2400Age100Mech	3%	0	80
 2010	Below4500Age100Mech	3%	0	80
 2020	Below2400Age100Mech	3%	0	80
