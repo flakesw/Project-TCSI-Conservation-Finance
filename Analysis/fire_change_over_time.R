@@ -41,7 +41,7 @@ mean(yearly_area_burned[yearly_area_burned$FIRE_YEAR > 1999, ]$total_area/2.47) 
 mtbs_mosaics <- list.files("D:/Data/mtbs_mosaic/mtbs_mosaic/composite_data/MTBS_BSmosaics",
                            pattern = ".tif", full.names = TRUE, recursive = TRUE)
 
-sierra_poly_mtbs <- sierra_poly %>% 
+sierra_poly_mtbs <- tcsi_poly %>% 
   sf::st_transform(crs = "ESRI:102039")
 
 severity_data <- data.frame(year = 2000:2020,
@@ -76,7 +76,8 @@ yearly_area_burned <- left_join(yearly_area_burned, severity_data,
 yearly_area_burned$area_high_severity <- yearly_area_burned$total_area * yearly_area_burned$prop_high
 
 
-ggplot(filter(yearly_area_burned, FIRE_YEAR > 1984), aes(y = area_high_severity, x = FIRE_YEAR)) +
+ggplot(filter(yearly_area_burned, FIRE_YEAR > 2000), aes(y = area_high_severity, x = FIRE_YEAR)) +
   geom_point()+
   geom_smooth(method="glm",
               method.args=list(family=gaussian(link="log")))
+

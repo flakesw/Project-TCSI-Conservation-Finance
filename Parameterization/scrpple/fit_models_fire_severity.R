@@ -13,7 +13,7 @@ library("sp")
 #import data
 fire_severity_data <- list.files("./Parameterization/calibration data/fire severity/",
                                  pattern = "catcher",
-                                 full.names = TRUE)
+                                 full.names = TRUE)[1:9]
 
 col_types <- list(
   fire_name = col_character(),
@@ -40,11 +40,32 @@ data_all <- fire_severity_data %>%
   purrr::map_df(~read_csv(., col_types = col_types)) %>%
   dplyr::filter(dnbr > 0) %>%
   dplyr::mutate(fine_fuel = ifelse(fine_fuel > 1000, 1, fine_fuel/1000)) %>%
+  dplyr::mutate(fwi = fwi * 0.658, #calibration to move from MERRA2 to LANDIS internal calculation
+                ews = ews * 1.9409) %>% #calibration to match LANDIS internal calculations
   # dplyr::mutate(dnbr = ifelse(dnbr < 100, 100, dnbr)) %>%
   # dplyr::mutate(dnbr = ifelse(dnbr > 1000, 1000, dnbr)) %>%
-  dplyr::filter(!is.na(dnbr)) %>%
+  dplyr::filter(!is.na(dnbr)) #%>%
+  # dplyr::filter(Year>=2000) %>%
+  # group_by(fire_name) %>%
+  # slice_sample(n = 5000)
+
+
+test <- data_all %>%
   group_by(fire_name) %>%
-  slice_sample(n = 5000)
+  summarize(mean_dnbr = mean(dnbr, na.rm = TRUE),
+            mean_ews = mean(ews, na.rm = TRUE),
+            mean_fwi = mean(fwi, na.rm = TRUE),
+            mean_ladder = mean(ladder_fuel, na.rm = TRUE))
+mean(test$mean_dnbr)
+mean(data_all$dnbr)
+hist(test$mean_dnbr)
+hist(data_all$dnbr)
+plot(test$mean_dnbr ~ test$mean_ladder)
+summary(lm(test$mean_dnbr ~ test$mean_ladder))
+plot(test$mean_dnbr ~ test$mean_ews)
+summary(lm(test$mean_dnbr ~ test$mean_ews))
+plot(test$mean_dnbr ~ test$mean_fwi)
+summary(lm(test$mean_dnbr ~ test$mean_fwi))
 
 data_all_with_loc <- data_all %>%
   mutate(fire_name = toupper(fire_name)) %>%
@@ -86,7 +107,7 @@ ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = cwd, y = dnbr
 ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = pet, y = dnbr)) +
   geom_jitter() +
   geom_smooth(method = "lm")
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ndvi_anomaly, y = dnbr)) +
+ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = fwi, y = dnbr)) +
   geom_jitter() +
   geom_smooth(method = "lm")
 ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ndvi, y = dnbr)) +
@@ -95,9 +116,8 @@ ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ndvi, y = dnb
 
 hist(data_all$dnbr)
 
-test <- lm(dnbr ~ scale(cwd) + scale(ews)  +  
-             scale(fine_fuel) + scale(pet) +
-             scale(vpd) + scale(eddi) + scale(pdsi), data = data_all)
+test <- lm(dnbr ~ scale(ews)  +  scale(fine_fuel) +
+             scale(ladder_fuel) + scale(pet) + scale(fwi), data = data_all)
 summary(test)
 
 
@@ -115,9 +135,9 @@ plot(residuals(test_lmer) ~ fitted(test_lmer))
 
 # plot(Effect(test_lmer, focal.predictors = c("ndvi", "ews")))
 
-test_lmer <- lmer(I(1/dnbr) ~  ews + ladder_fuel + 
-                    fwi + pet + clay +
-                    (1|fire_name), data = data_all)
+test_lmer <- lmer(I(1/dnbr) ~  fwi + ews + ladder_fuel +
+                    (1|fire_name), data = sample_frac(data_all))
+summary(test_lmer)
 test_lmer <- lmer(I(1/dnbr) ~  ews + 
                     (1|fire_name), data = data_all)
 
@@ -131,7 +151,7 @@ plot(data_all$ladder_fuel ~ data_all$ndvi)
 
 
 # 
-test_gamma <- spaMM::fitme(dnbr ~ clay + cwd + pet + ladder_fuel + ews + fwi, 
+test_gamma <- spaMM::fitme(dnbr ~ clay + ladder_fuel + ews + fwi, 
                            data = data_all,
                            family = Gamma(link = "inverse"))
 summary(test_gamma)
@@ -141,7 +161,7 @@ test_gamma <- spaMM::fitme(dnbr ~ scale(cwd) + scale(ladder_fuel) + scale(ews),
                            family = Gamma(link = "log"))
 summary(test_gamma)
 
-test_gamma2 <- spaMM::fitme(dnbr ~clay + cwd + pet + ladder_fuel + ews + fwi + (1|fire_name), 
+test_gamma2 <- spaMM::fitme(dnbr ~ ladder_fuel + ews + fwi + (1|fire_name), 
                             data = data_all,
                             family = Gamma(link = "inverse"))
 summary(test_gamma2)

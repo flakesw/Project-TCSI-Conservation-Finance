@@ -5,8 +5,8 @@
 library("geoknife")
 library("sf")
 library("terra")
-# library("raster")
 library("tidyverse")
+# library("raster")
 library("FedData") #for downloading SSURGO data
 library("stars")# using stars is so much faster, since the whole files aren't loaded into RAM, just the subsets
 # it's really an amazing upgrade from raster
@@ -67,6 +67,35 @@ landfire_2020_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladde
 landfire_2021_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2021.tif")
 landfire_2021_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2021.tif")
 
+#-------------------------------------------------------------------------------
+# Treemap fuels
+
+treemap <- terra::rast("D:/Data/treemap/RDS-2019-0026_Data/Data/national_c2014_tree_list.tif")
+
+sierra_temp <- sf::st_transform(sierra_shape, crs(treemap))
+
+treemap <-  terra::crop(treemap, vect(sierra_temp)) %>%
+  terra::project("EPSG:5070", method = "near")
+
+cats(treemap)
+levels(treemap)
+
+treemap[] <- as.numeric(as.character(treemap[])) #convert factor to numeric
+
+tl_plots <- read.csv("D:/Data/treemap/RDS-2019-0026_Data/Data/TL_CN_Lookup.txt") %>%
+  filter(tl_id %in% values(treemap))
+
+tl_trees <- read.csv("D:/Data/treemap/RDS-2019-0026_Data/Data/Tree_table_CONUS.txt") %>%
+  filter(tl_id %in% values(treemap))
+
+
+  
+initial_communities <- read.csv("./Models/Inputs/climate_IC/TCSI_IC6.csv")
+
+ladder_spp <- c("AbieConc", "CaloDecu", "PinuCont", "PinuJeff", "PinuLamb", 
+                "PinuPond", "PinuMono", "PinuSabi", "PinuWash", "PseuMenz", 
+                "FX_R_SEED", "NOFX_R_SEED", "NOFX_NOR_SEED")
+ladder_age <- 28
 
 
 #-------------------------------------------------------------------------------
@@ -92,6 +121,9 @@ mtbs_folder <- "D:/Data/mtbs_all_fires"
 #these rasters are squares which extend past the fire boundary
 # only using rdnbr rasters -- excludes some fires based on nbr
 mtbs_dnbr <- list.files(path = mtbs_folder, pattern = "*_dnbr.tif", 
+                        full.names = TRUE, recursive = TRUE)
+
+mtbs_rdnbr <- list.files(path = mtbs_folder, pattern = "*_rdnbr.tif", 
                         full.names = TRUE, recursive = TRUE)
 
 mtbs_sev <- list.files(path = mtbs_folder, pattern = "*_dnbr6.tif", 
@@ -164,7 +196,8 @@ daily_perims_all <- daily_perims_all %>%
   slice_max(gisacres) %>%
   distinct(gisacres, .keep_all= TRUE) %>%
   filter(fireyear %in% c(2000:2021))
-# 
+
+## example fire growth
 # king <- daily_perims_all[grep("King2014", daily_perims_all$incidentna), ] %>%
 #   # sf::st_transform(crs = st_crs(boundary)) %>%
 #   # dplyr::mutate(intersects = as.logical(sf::st_intersects(geometry, boundary, sparse = FALSE))) %>%
@@ -850,11 +883,14 @@ data_length <- 1000000
 
 create_data_catcher <- function(data_length){
   return(data.frame(fire_name = character(data_length),
+                    year = character(data_length),
                     dnbr = numeric(data_length),
+                    rdnbr = numeric(data_length),
                     clay = numeric(data_length),
                     pet = numeric(data_length),
                     cwd = numeric(data_length),
                     ews = numeric(data_length),
+                    windspeed = numeric(data_length),
                     vpd = numeric(data_length),
                     eddi = numeric(data_length),
                     pdsi = numeric(data_length),
@@ -872,7 +908,7 @@ row_tracker <- 1
 start_time <- Sys.time()
 
 #fires with fuels and daily progressions (year 2001) start at 314
-for(i in 741:length(mtbs_shape)){
+for(i in 314:length(mtbs_shape)){
   
   error_flag <- FALSE
   try_again <- FALSE
@@ -947,6 +983,28 @@ for(i in 741:length(mtbs_shape)){
                                 terra::values(dnbr_raster))
   
   plot(dnbr_raster)
+  
+  rdnbr_raster <-  tryCatch(
+    {
+      test2 <- terra::rast(mtbs_rdnbr[i]) %>%
+        terra::project(y = "EPSG:5070") %>%
+        terra::crop(boundary) %>%
+        terra::mask(boundary) 
+      
+    },
+    error=function(cond) {
+      
+      message(paste("Error loading raster", mtbs_rdnbr[i]))
+      message("Here's the original error message:")
+      message(cond)
+      error_flag <<- TRUE
+      
+    }
+  )
+  
+  terra::values(rdnbr_raster) <- ifelse(terra::values(rdnbr_raster) < -2000 | terra::values(rdnbr_raster) > 2000, 
+                                       NA, 
+                                       terra::values(rdnbr_raster))
   
   # subtract the dNBR offset -- based on what vegetation outside the burn perimeter
   # did in the mean time, as a control for phenology/weather/etc.
@@ -1178,11 +1236,14 @@ for(i in 741:length(mtbs_shape)){
   ncells <- sum(cells_burned)
   
   data <- data.frame(fire_name = rep(label, sum(cells_burned)),
+                     year = rep(boundary$fireyear[1], sum(cells_burned)),
                      dnbr = terra::values(dnbr_raster)[cells_burned],
+                     rdnbr = terra::values(rdnbr_raster)[cells_burned],
                      clay = terra::values(clay_map)[cells_burned],
                      pet = terra::values(clim_mosaic[[4]])[cells_burned],
                      cwd = rep(clim[3], ncells)[cells_burned],
                      ews = terra::values(clim_mosaic[[1]])[cells_burned],
+                     windspeed = terra::values(clim_mosaic[[2]])[cells_burned],
                      vpd = terra::values(clim_mosaic[[3]])[cells_burned],
                      eddi = terra::values(clim_mosaic[[5]])[cells_burned],
                      pdsi = terra::values(clim_mosaic[[6]])[cells_burned],
