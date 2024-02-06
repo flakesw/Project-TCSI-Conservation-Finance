@@ -8,9 +8,9 @@
 library("tidyverse")
 
 #what folder do all the runs to be analyzed live in?
-scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
+# scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
 # scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model templates"
-# scenario_folder <- "./Models/Model runs"
+scenario_folder <- "./Models/Model runs"
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
 # scenarios <- scenarios[c(88:91)]
@@ -75,7 +75,7 @@ necn_summaries2 <- necn_summaries %>%
 
 #Biomass over time
 
-ggplot(data = necn_summaries2[necn_summaries2$climate == "CNRM", ], 
+ggplot(data = necn_summaries2, 
        mapping = aes(x = Time+2020, y = TotalAGB)) + 
   geom_point(color="steelblue") + 
   labs(title = "Aboveground biomass",

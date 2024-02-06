@@ -29,7 +29,7 @@ crs(tcsi_mask_9311)
 ##rx fire frequency and mortality biomass
 
 #what folder do all the runs to be analyze live in?
-scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
+# scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .)) %>%
   `[`(!grepl("Scenario7|Scenario8|Scenario9|Scenario 10|Scenario 11", .))
@@ -106,11 +106,12 @@ sev_paths <- paste0(rep(paste0(scenarios, "/social-climate-fire/"), each = lengt
 
 high_sev_n_burned <- rast()
 med_sev_n_burned <- rast()
+n_burned <- rast()
 
 for(scen in scenarios){
   sev_path <- sev_paths[grepl(scen, sev_paths)]
   sev_stack <- terra::rast(sev_path)
-  sev_class_high <- terra::classify(sev_stack, rcl = matrix(c(4, 100, 1), ncol = 3), other = 0, right = FALSE)
+  sev_class_high <- terra::classify(sev_stack, rcl = matrix(c(2, 100, 1), ncol = 3), other = 0, right = FALSE)
   sev_class_med <- terra::classify(sev_stack, rcl = matrix(c(3, 100, 1), ncol = 3), other = 0, right = FALSE)
   
   sev_sum_high <- sum(sev_class_high)

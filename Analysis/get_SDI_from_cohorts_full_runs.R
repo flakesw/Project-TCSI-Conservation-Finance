@@ -76,14 +76,14 @@ bps_max_sdi[bps_max_sdi == 0] <- NA
 
 
 #what folder do all the runs to be analyze live in?
-scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
-# scenario_folder <- "./Models/Model runs"
+# scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
+scenario_folder <- "./Models/Model runs"
 
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
-# scenarios <- scenarios[-c(1)]
+scenarios <- scenarios[c(-1)]
 scenarios <- c(scenarios, "C:/Users/swflake/Documents/TCSI-conservation-finance/Models/Model runs/Scenario6 - miroc - test necnv7")
-scenarios <- scenarios[c(85, 73)]
+scenarios <- scenarios[c(1,2,9)]
 
 
 #some helper functions
@@ -146,13 +146,13 @@ for(i in 1:nrow(comm_inputs)){
 
   }
 
-plot(percent_max_sdi_rasters[[18]],
+plot(percent_max_sdi_rasters[[4]],
      mar = c(2.1, 2.1, 2.1, 8.1),
      plg = list(title = "%MaxSDI",
                 at = c(0, 35, 60, 100),
                 c(1.5,1.5)))
 
-hist(percent_max_sdi_rasters[[18]])
-mean(percent_max_sdi_rasters[[18]][], na.rm = TRUE)
+hist(percent_max_sdi_rasters[[1]])
+mean(percent_max_sdi_rasters[[1]][], na.rm = TRUE)
 
 
