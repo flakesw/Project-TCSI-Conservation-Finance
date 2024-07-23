@@ -1,6 +1,8 @@
 #download data needed to predict site-level severity from climate and fuels
 
-#TODO add: FWI, NDVI normals, CWD normals,
+#TODO add: NDVI normals
+
+#TODO add: time since fire; fire departure
 
 library("geoknife")
 library("sf")
@@ -67,36 +69,38 @@ landfire_2020_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladde
 landfire_2021_fine <- read_stars("D:/Data/Landfire fuels/sierra/landfire_fine_2021.tif")
 landfire_2021_ladder <- read_stars("D:/Data/Landfire fuels/sierra/landfire_ladder_2021.tif")
 
+dep <- stars::read_stars("D:/Data/landfire vegetation/veg_departure_sierra/US_105_VDEP/us_105vdep.tif")
 #-------------------------------------------------------------------------------
 # Treemap fuels
 
-treemap <- terra::rast("D:/Data/treemap/RDS-2019-0026_Data/Data/national_c2014_tree_list.tif")
+# treemap <- terra::rast("D:/Data/treemap/RDS-2019-0026_Data/Data/national_c2014_tree_list.tif")
+# 
+# sierra_temp <- sf::st_transform(sierra_shape, crs(treemap))
+# 
+# treemap <-  terra::crop(treemap, vect(sierra_temp)) %>%
+#   terra::project("EPSG:5070", method = "near")
+# 
+# cats(treemap)
+# levels(treemap)
+# 
+# treemap[] <- as.numeric(as.character(treemap[])) #convert factor to numeric
+# 
+# tl_plots <- read.csv("D:/Data/treemap/RDS-2019-0026_Data/Data/TL_CN_Lookup.txt") %>%
+#   filter(tl_id %in% values(treemap))
+# 
+# tl_trees <- read.csv("D:/Data/treemap/RDS-2019-0026_Data/Data/Tree_table_CONUS.txt") %>%
+#   filter(tl_id %in% values(treemap))
+# 
+# ladder_fuels <- tl_trees %>%
+#   filter(DIA < 5) %>%
+#   group_by(tl_id) %>%
+#   summarize(ladder_fuels = sum(pi*(DIA/2)^2)/10000)
+# 
+# tm_ladder_fuel <- terra::classify(treemap, rcl = ladder_fuels)
+# writeRaster(tm_ladder_fuel, "./Parameterization/calibration data/treemap_fuels.tif")
 
-sierra_temp <- sf::st_transform(sierra_shape, crs(treemap))
-
-treemap <-  terra::crop(treemap, vect(sierra_temp)) %>%
-  terra::project("EPSG:5070", method = "near")
-
-cats(treemap)
-levels(treemap)
-
-treemap[] <- as.numeric(as.character(treemap[])) #convert factor to numeric
-
-tl_plots <- read.csv("D:/Data/treemap/RDS-2019-0026_Data/Data/TL_CN_Lookup.txt") %>%
-  filter(tl_id %in% values(treemap))
-
-tl_trees <- read.csv("D:/Data/treemap/RDS-2019-0026_Data/Data/Tree_table_CONUS.txt") %>%
-  filter(tl_id %in% values(treemap))
-
-
-  
-initial_communities <- read.csv("./Models/Inputs/climate_IC/TCSI_IC6.csv")
-
-ladder_spp <- c("AbieConc", "CaloDecu", "PinuCont", "PinuJeff", "PinuLamb", 
-                "PinuPond", "PinuMono", "PinuSabi", "PinuWash", "PseuMenz", 
-                "FX_R_SEED", "NOFX_R_SEED", "NOFX_NOR_SEED")
-ladder_age <- 28
-
+tm_ladder_fuel <- rast("./Parameterization/calibration data/treemap_fuels.tif")
+ 
 
 #-------------------------------------------------------------------------------
 # import slope and aspect map
@@ -379,70 +383,72 @@ download_clay <- function(dnbr_raster, label){
   return(clay_map)
 }  
 
-#-------------------------------------------------------------------------------
-# Download ET and CWD data
-# Monthly data from TerraClimate
-# Abatzoglou, J.T., S.Z. Dobrowski, S.A. Parks, K.C. Hegewisch, 2018, Terraclimate, 
-# a high-resolution global dataset of monthly climate and climatic water balance from 1958-2015, Scientific Data
-
-download_pet_cwd <- function(boundary){  
-  #shapefile for fire
-  fire_boundary <- boundary %>%
-    sf::st_transform(crs = "+proj=longlat +datum=WGS84") #reproject to CRS that geoknife needs
-  
-  #"stencil" is what geoknife uses for the extent of the data
-  stencil <- simplegeom(as(fire_boundary, Class = "Spatial"))
-  
-  #download PET and AET to calculate CWD
-  vars_url <- c("pet", "aet")
-  year <- fire_boundary$fireyear
-  
-  urls <- paste0("http://thredds.northwestknowledge.net:8080/thredds/dodsC/TERRACLIMATE_ALL/data/TerraClimate_", 
-                 vars_url, "_", year, ".nc")
-  
-  fabric <- webdata(url = urls[1])
-  
-  geoknife::query(fabric, 'variables')
-  
-  knife <- webprocess(wait = TRUE)
-  
-  # area grid statistics are the default, but we can change it if we  (we don't)
-  algorithm(knife) <- list('Area Grid Statistics (weighted)' = 
-                             "gov.usgs.cida.gdp.wps.algorithm.FeatureWeightedGridStatisticsAlgorithm")
-  
-  knife@processInputs$STATISTICS <- c("MEAN") #what statistics do we want?
-  
-  job_results <- list()
-  
-  for(i in 1:length(vars_url)){
-    #set the fabric for a new variable, but keep everything else the same (i.e. the stencil and knife)
-    fabric <- webdata(url = urls[i])
-    variables(fabric) <- vars_url[i]
-    print(vars_url[i])
-    job <- geoknife(stencil, fabric, knife)
-    
-    
-    if(error(job)){
-      break
-      check(job)
-    }
-    
-    job_results[[i]] <- result(job)
-  }
-  
-  # results <- result(job)
-  
-  month <- as.Date(fire_date, format = "%Y-%m-%d") %>%
-    format("%m")
-  
-  pet <- job_results[[1]][as.numeric(month), 2]
-  aet <- job_results[[2]][as.numeric(month), 2]
-  cwd <- pet - aet
-  
-  if(anyNA(c(pet,aet,cwd))){
-    return(NA)
-  } else return(c(pet, aet, cwd))
-}
+# #-------------------------------------------------------------------------------
+# # Download ET and CWD data
+# # Monthly data from TerraClimate
+# # Abatzoglou, J.T., S.Z. Dobrowski, S.A. Parks, K.C. Hegewisch, 2018, Terraclimate, 
+# # a high-resolution global dataset of monthly climate and climatic water balance from 1958-2015, Scientific Data
+# 
+# This no longer works due to the death of geoknife, RIP
+#
+# download_pet_cwd <- function(boundary){  
+#   #shapefile for fire
+#   fire_boundary <- boundary %>%
+#     sf::st_transform(crs = "+proj=longlat +datum=WGS84") #reproject to CRS that geoknife needs
+#   
+#   #"stencil" is what geoknife uses for the extent of the data
+#   stencil <- simplegeom(as(fire_boundary, Class = "Spatial"))
+#   
+#   #download PET and AET to calculate CWD
+#   vars_url <- c("pet", "aet")
+#   year <- fire_boundary$fireyear
+#   
+#   urls <- paste0("http://thredds.northwestknowledge.net:8080/thredds/dodsC/TERRACLIMATE_ALL/data/TerraClimate_", 
+#                  vars_url, "_", year, ".nc")
+#   
+#   fabric <- webdata(url = urls[1])
+#   
+#   geoknife::query(fabric, 'variables')
+#   
+#   knife <- webprocess(wait = TRUE)
+#   
+#   # area grid statistics are the default, but we can change it if we  (we don't)
+#   algorithm(knife) <- list('Area Grid Statistics (weighted)' = 
+#                              "gov.usgs.cida.gdp.wps.algorithm.FeatureWeightedGridStatisticsAlgorithm")
+#   
+#   knife@processInputs$STATISTICS <- c("MEAN") #what statistics do we want?
+#   
+#   job_results <- list()
+#   
+#   for(i in 1:length(vars_url)){
+#     #set the fabric for a new variable, but keep everything else the same (i.e. the stencil and knife)
+#     fabric <- webdata(url = urls[i])
+#     variables(fabric) <- vars_url[i]
+#     print(vars_url[i])
+#     job <- geoknife(stencil, fabric, knife)
+#     
+#     
+#     if(error(job)){
+#       break
+#       check(job)
+#     }
+#     
+#     job_results[[i]] <- result(job)
+#   }
+#   
+#   # results <- result(job)
+#   
+#   month <- as.Date(fire_date, format = "%Y-%m-%d") %>%
+#     format("%m")
+#   
+#   pet <- job_results[[1]][as.numeric(month), 2]
+#   aet <- job_results[[2]][as.numeric(month), 2]
+#   cwd <- pet - aet
+#   
+#   if(anyNA(c(pet,aet,cwd))){
+#     return(NA)
+#   } else return(c(pet, aet, cwd))
+# }
 
 
 #-------------------------------------------------------------------------------
@@ -803,7 +809,7 @@ download_daily_fwi <- function(boundary, dates_of_fire){
       terra::crop(vect(st_buffer(boundary_wgs, 100000))) %>%
       terra::project(crs(vect(boundary)))
     names(fwi_raster) <- yearday #I should use the "time" band but I couldn't figure it out
-    plot(fwi_raster)
+    #plot(fwi_raster)
     
     if(i == 1){ fwi_stack <- fwi_raster} else fwi_stack <- c(fwi_stack, fwi_raster)
     
@@ -884,11 +890,15 @@ data_length <- 1000000
 create_data_catcher <- function(data_length){
   return(data.frame(fire_name = character(data_length),
                     year = character(data_length),
+                    x = numeric(data_length),
+                    y = numeric(data_length),
                     dnbr = numeric(data_length),
                     rdnbr = numeric(data_length),
+                    mtbs_severity = numeric(data_length),
                     clay = numeric(data_length),
                     pet = numeric(data_length),
                     cwd = numeric(data_length),
+                    normal_cwd = numeric(data_length),
                     ews = numeric(data_length),
                     windspeed = numeric(data_length),
                     vpd = numeric(data_length),
@@ -1057,7 +1067,6 @@ for(i in 314:length(mtbs_shape)){
     row_tracker <- 1
   }
   
- 
   
   cells_burned <- !is.na(terra::values(dnbr_raster)) & 
     terra::values(sev_raster) > 1 & 
@@ -1095,8 +1104,6 @@ for(i in 314:length(mtbs_shape)){
     as.Date(., format = "%Y%m%d") %>%
     `[`(!is.na(.))
   
-  
-
   #get data
   clay_map <- tryCatch(
       {
@@ -1134,10 +1141,24 @@ for(i in 314:length(mtbs_shape)){
 
   fwi <- download_daily_fwi(boundary, dates_of_fire)
   
-  clim <- NA
-  clim <- tryCatch(
+  clim_annual <- NA
+  clim_annual <- tryCatch(
     {
-      download_pet_cwd(boundary) #monthly
+      # download_pet_cwd(boundary) #this doesn't work anymore
+      
+      aet_rast <- terra::rast(paste0("D:/Data/terraclimate/aet_", year, ".nc"))
+      aet_annual <- sum(aet_rast)
+      pet_rast <- terra::rast(paste0("D:/Data/terraclimate/pet_", year, ".nc"))
+      pet_annual <- sum(pet_rast)
+      cwd_rast <- pet_annual - aet_annual
+      
+      temp_boundary <- boundary %>% 
+        st_buffer(10000) %>%
+        sf::st_transform(crs(aet_rast))
+      clim_annual <- terra::crop(cwd_rast, vect(temp_boundary)) %>%
+        terra::project(dnbr_raster) %>%
+        crop(dnbr_raster) %>% mask(dnbr_raster)
+      
     },
     error=function(cond) {
       message(paste("Error downloading wind data for:", label))
@@ -1147,7 +1168,37 @@ for(i in 314:length(mtbs_shape)){
       return(NA)
     }
   )
-    
+  
+  clim_normal<- NA
+  clim_normal <- tryCatch(
+    {
+      # download_pet_cwd(boundary) #this doesn't work anymore
+      
+      # aet_rast <- terra::rast(paste0("D:/Data/terraclimate/aet_", year, ".nc"))
+      # aet_annual <- sum(aet_rast)
+      # pet_rast <- terra::rast(paste0("D:/Data/terraclimate/pet_", year, ".nc"))
+      # pet_annual <- sum(pet_rast)
+      # cwd_rast <- pet_annual - aet_annual
+      
+      cwd_rast <- sum(terra::rast("D:/Data/terraclimate/TerraClimate19912020_def.nc"))
+      
+      temp_boundary <- boundary %>% 
+        st_buffer(10000) %>%
+        sf::st_transform(crs(aet_rast))
+      clim_normal<- terra::crop(cwd_rast, vect(temp_boundary)) %>%
+        terra::project(dnbr_raster) %>%
+        crop(dnbr_raster) %>% mask(dnbr_raster)
+      
+    },
+    error=function(cond) {
+      message(paste("Error downloading wind data for:", label))
+      message("Here's the original error message:")
+      message(cond)
+      
+      return(NA)
+    }
+  )
+  
   dailyclim <- NA
   dailyclim <- tryCatch(
     {
@@ -1237,11 +1288,15 @@ for(i in 314:length(mtbs_shape)){
   
   data <- data.frame(fire_name = rep(label, sum(cells_burned)),
                      year = rep(boundary$fireyear[1], sum(cells_burned)),
+                     x = xFromCell(dnbr_raster, which(cells_burned)),
+                     y = yFromCell(dnbr_raster, which(cells_burned)),
                      dnbr = terra::values(dnbr_raster)[cells_burned],
                      rdnbr = terra::values(rdnbr_raster)[cells_burned],
+                     mtbs_sev = terra::values(sev_raster)[cells_burned],
                      clay = terra::values(clay_map)[cells_burned],
                      pet = terra::values(clim_mosaic[[4]])[cells_burned],
-                     cwd = rep(clim[3], ncells)[cells_burned],
+                     cwd = terra::values(clim_annual)[cells_burned],
+                     normal_cwd = terra::values(clim_normal)[cells_burned],
                      ews = terra::values(clim_mosaic[[1]])[cells_burned],
                      windspeed = terra::values(clim_mosaic[[2]])[cells_burned],
                      vpd = terra::values(clim_mosaic[[3]])[cells_burned],
@@ -1264,7 +1319,7 @@ for(i in 314:length(mtbs_shape)){
 }
 
 #write what's leftover after the loop
-write.csv(data_catcher, paste0("./Parameterization/calibration data/fire severity/data_catcher", 
+write.csv(data_catcher, paste0("./Parameterization/calibration data/fire severity/data_catcher ", 
                                format(Sys.time(), format = "%y-%m-%d %H-%M-%S"), ".csv"))
 
 end_time <- Sys.time()
@@ -1275,3 +1330,4 @@ end_time - start_time
 #TODO add some variables related to day-of PPT
 #TODO: compare NDVI or EVI to LANDIS fuel layer
 #TODO: take a look at 
+

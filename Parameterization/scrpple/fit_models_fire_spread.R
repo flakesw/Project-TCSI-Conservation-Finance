@@ -80,6 +80,7 @@ daily_perims_all <- daily_perims_all %>%
 # fit model to fire spread
 
 #original data from may 2022, used for SCRPPLE parameterization
+#TODO update this to parallel the fire severity script!
 spread_data <- read.csv("./Parameterization/calibration data/processed_fire_spread_data_new_days_between_2023-8-8.csv")
 
 library("lme4")

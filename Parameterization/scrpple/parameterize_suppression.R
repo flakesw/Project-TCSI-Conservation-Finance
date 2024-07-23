@@ -22,7 +22,7 @@ library("raster")
 
 #using data from Gannon et al 2020
 
-fireline <- read.csv("./calibration data/suppression/fire_perimeters.csv")
+fireline <- read.csv("./Parameterization/calibration data/suppression/fire_perimeters.csv")
 
 #rename some fires to match GeoMAC
 fireline$Fire[7] <- "Miles"
@@ -33,23 +33,23 @@ fireline$Fire[31] <- "MILLI 0843 CS"
 fireline$Fire <- toupper(fireline$Fire)
 
 #fire perimeters
-perims <- sf::st_read("./calibration data/geomac fire boundaries/Historic_GeoMAC_Perimeters_Combined_2000-2018-shp/US_HIST_FIRE_PERIMTRS_2000_2018_DD83.shp")
+perims <- sf::st_read("./Parameterization/calibration data/geomac_all_years/perims_2000_2022.shp")
 perims$incidentna <- toupper(perims$incidentna)
 perims <- perims[perims$incidentna %in% fireline$Fire, ]
 perims <- rmapshaper::ms_simplify(perims) %>%
-  right_join(fireline, by = c("incidentna" = "Fire", "state" = "State"))
+  right_join(fireline, by = c("incidentna" = "Fire"))
 perims <- perims %>%
-  arrange(pooownerun) %>%
+  # arrange(pooownerun) %>%
   filter(duplicated(incidentna) == FALSE)
   
 #Short dataset
-short <- sf::st_read("./calibration data/short/Data/FPA_FOD_20210617.gdb", layer = "Fires")
+short <- sf::st_read("./Parameterization/calibration data/short_ignitions/Data/FPA_FOD_20210617.gdb", layer = "Fires")
 st_geometry_type(short)
 st_crs(short)
 # short <- st_transform(short, 2163)
 names(short)
 short2 <- subset(short, FIRE_NAME %in% perims$incidentna) %>%
-  right_join(as.data.frame(perims), by = c("FIRE_CODE" = "firecode", "STATE" = "state", "FIRE_NAME" = "incidentna"))%>%
+  right_join(as.data.frame(perims), by = c("FIRE_CODE" = "firecode", "FIRE_NAME" = "incidentna"))%>%
   arrange(desc(FIRE_YEAR)) %>%
   filter(duplicated(FIRE_NAME) == FALSE) 
 rm(short)

@@ -2112,11 +2112,11 @@ TsugMert	All
     HarvestImplementations		
 >>  Mgmt Area   Prescription    Harvest Area    Begin Time  End Time		
 >>  ---------   ------------    ------------    ----------  --------		
-2001	Below2400Age100	6%	0	80
-2011	Below4500Age100	6%	0	80
-2021	Below9100Age100	6%	0	80
-2121	Below9100Age100	6%	0	80
-2201	Below2400Age100	6%	0	80
+2001	Below2400Age100		6%	0	80
+2011	Below4500Age100		6%	0	80
+2021	Below9100Age100		6%	0	80
+2121	Below9100Age100		6%	0	80
+2201	Below2400Age100		6%	0	80
 2211	Below4500Age100	6%	0	80
 2221	Below9100Age100	6%	0	80
 3001	Below2400Age100	6%	0	80
