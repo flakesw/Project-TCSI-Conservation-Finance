@@ -4,10 +4,10 @@ library("tidyverse")
 
 #what folder do all the runs to be analyze live in?
 # scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
-scenario_folder <- "C:/Users/swflake/Documents/LANDIS inputs/Model runs"
+scenario_folder <- "./Models/Model runs"
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
-# scenarios <- scenarios[38:52]
+scenarios <- scenarios[c(2,4,6,8,10,12,14)]
 
 years <- 1:81
 
@@ -15,7 +15,7 @@ biomass_paths <- paste0(rep(paste0(scenarios, "/social-climate-fire/"), each = l
 fire_type_paths <- paste0(rep(paste0(scenarios, "/social-climate-fire/"), each = length(years)), "/ignition-type-", years, ".img")
 
 for(scen in scenarios){
-  bio_paths <- smolder_paths[grepl(scen, biomass_paths)]
+  bio_paths <- biomass_paths[grepl(scen, biomass_paths)]
   type_paths <- fire_type_paths[grepl(scen, fire_type_paths)]
   
   bio_stack <- terra::rast(bio_paths)

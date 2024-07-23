@@ -20,10 +20,11 @@ scenario_folder <- "./Models/Model runs"
 
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
+scenarios <- scenarios[c(2,4,6,8,10,12,14)]
 # scenarios <- scenarios[-c(1)]
 # scenarios <- c(scenarios, "C:/Users/swflake/Documents/TCSI-conservation-finance/Models/Model runs/Scenario6 - miroc - test necnv7")
 # scenarios <- scenarios[c(85, 73)]
-
+# scenarios <- scenarios[c(1,2,3,4,7)]
 # scenarios <- scenarios[c(6:10, 16, 94:96)]
 
 #some helper functions
@@ -113,6 +114,7 @@ get_burn_intensity <- function(raster, intensity){
 
 years <- 1:81
 #need to summarize fire data to 5-year chunks to compare with NECN data
+#first need to run script to separate wildfire and rx fire
 year_bins <- cut(years, breaks = seq(0,81, by = 5))
 
 intensity_paths <- paste0(rep(paste0(scenarios, "/social-climate-fire/"), each = length(years)), "wildfire_intensity-", years, ".tif")
@@ -121,27 +123,27 @@ high_intensity_cells <- NA
 for(i in 1:length(intensity_paths)){
   #TODO remake this a purrr::map workflow
   high_intensity_cells[i] <- terra::rast(intensity_paths[i]) %>%
-    get_burn_intensity(., 4)
+    get_burn_intensity(., 5)
 
   }
 
 fire_summaries$TotalSitesHighIntensity <- high_intensity_cells
 
-# fuel_paths <- paste0(rep(paste0(scenarios, "/social-climate-fire/"), each = length(years)), "fine-fuels-", years, ".img")
-# 
-# fine_fuel_landscape_average <- NA
-# for(i in 1:length(intensity_paths)){
-#   #TODO remake this a purrr::map workflow
-#   fuel_rast <- terra::rast(fuel_paths[i])
-#   fuel_cells <- terra::values(fuel_rast)[terra::values(fuel_rast)>0]
-#   fine_fuel_landscape_average[i] <- mean(fuel_cells)
-# }
-# 
-# fire_summaries$LandscapeFineFuels <- fine_fuel_landscape_average
+fuel_paths <- paste0(rep(paste0(scenarios, "/social-climate-fire/"), each = length(years)), "fine-fuels-", years, ".img")
+
+fine_fuel_landscape_average <- NA
+for(i in 1:length(intensity_paths)){
+  #TODO remake this a purrr::map workflow
+  fuel_rast <- terra::rast(fuel_paths[i])
+  fuel_cells <- terra::values(fuel_rast)[terra::values(fuel_rast)>0]
+  fine_fuel_landscape_average[i] <- mean(fuel_cells)
+}
+
+fire_summaries$LandscapeFineFuels <- fine_fuel_landscape_average
 
 #TODO extract more information from rasters?
 
-## aggregate to five-year chunks
+# aggregate to five-year chunks
 # scr_summaries_5_year <- scr_summaries %>%
 #   dplyr::mutate(year_round = plyr::round_any(SimulationYear, 5, f = ceiling)) %>%
 #   dplyr::group_by(id, year_round) %>%
@@ -149,7 +151,7 @@ fire_summaries$TotalSitesHighIntensity <- high_intensity_cells
 
 
 test <- fire_summaries %>% 
-  filter(climate == "Historical") %>%
+  # filter(climate == "Historical") %>%
   group_by(run_name) %>%
   summarise(HighIntensity = sum(TotalSitesHighIntensity),
             FineFuels = mean(LandscapeFineFuels),
@@ -159,12 +161,13 @@ test <- fire_summaries %>%
             mgmt = mgmt[1])
 
 boxplot(TotalSites ~ mgmt, data = test)
+boxplot(HighIntensity ~ mgmt, data = test)
 boxplot(I(HighIntensity/TotalSites) ~ mgmt, data = test)
 boxplot(FineFuels ~ mgmt, data = test)
 boxplot(FineFuelVar ~ mgmt, data = test)
 
 test2 <- fire_events %>%
-  filter(climate == "Historical") %>%
+  # filter(climate == "Historical") %>%
   group_by(run_name) %>%
   summarise(MeanFineFuels = mean(MeanFineFuels),
             MeanLadderFuels = mean(MeanLadderFuels),
@@ -247,16 +250,18 @@ ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalSitesHighIntensit
        subtitle = "by management scenario and climate scenario",
        y = "Area burned (hectares)", x = "Year") + 
   geom_smooth( color = "black", se = FALSE) + 
-  facet_wrap(~ mgmt + climate) + 
+  # facet_wrap(~ mgmt + climate) + 
+  facet_wrap(~ run_name) + 
   scale_y_log10()
 
 ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalSitesHighIntensity/(TotalBurnedSitesAccidental + TotalBurnedSitesLightning))) + 
   geom_point(color="steelblue") + 
   labs(title = "Proportion of sites burned at high intensity",
        subtitle = "by management scenario and climate scenario",
-       y = "Area burned (acres)", x = "Year") + 
+       y = "Proportion of area burned at high intensity", x = "Year") + 
   geom_smooth( color = "black") + 
   facet_wrap(~ mgmt + climate)
+  # facet_wrap(~ run_name)
 
 
 events_sum <- fire_events_accidental %>%
@@ -272,6 +277,7 @@ ggplot(data = events_sum, mapping = aes(x = SimulationYear, y = mean_dnbr)) +
        y = "DNBR", x = "Year") + 
   geom_smooth( color = "black") + 
   facet_wrap(~ mgmt + climate)
+  # facet_wrap(~ run_name)
 
 
 #-------------------------------------------------------------------------------
@@ -289,7 +295,8 @@ ggplot(data = fire_summaries, mapping = aes(x = Year, y = TotalBiomassMortalityR
        subtitle = "by management scenario and climate scenario",
        y = "Biomass burned (units)", x = "Year") + 
   geom_smooth( color = "black") +
-  facet_wrap(~ mgmt + climate)
+  facet_wrap(~run_name)
+  # facet_wrap(~ mgmt + climate)
   # facet_wrap(~ mgmt + climate, nrow = 3, ncol = 3)
 
 ggplot(data = fire_summaries, mapping = aes(x = Year, y = I(TotalBiomassMortalityLightning+TotalBiomassMortalityAccidental))) + 
@@ -298,7 +305,8 @@ ggplot(data = fire_summaries, mapping = aes(x = Year, y = I(TotalBiomassMortalit
        subtitle = "by management scenario and climate scenario",
        y = "Biomass killed (g)", x = "Year") + 
   geom_smooth( color = "black") + 
-  facet_wrap(~ mgmt)
+  # facet_wrap(~ mgmt + climate)
+  facet_wrap(~run_name)
 
 ggplot(data = fire_summaries, mapping = aes(x = Year, y = I((TotalBiomassMortalityLightning+TotalBiomassMortalityAccidental)*(180*180)/10000/1000))) + 
   geom_point(color="steelblue") + 
@@ -307,7 +315,8 @@ ggplot(data = fire_summaries, mapping = aes(x = Year, y = I((TotalBiomassMortali
        y = "Biomass killed (Mg)", x = "Year") + 
   geom_smooth( color = "black") + 
   scale_y_log10() + 
-  facet_wrap(~ mgmt + climate)
+  # facet_wrap(~ mgmt + climate)
+  facet_wrap(~run_name)
 
 ggplot(data = fire_summaries, 
        mapping = aes(x = Year, y = CumBiomassMort*(180*180)/10000/1000)) + 
@@ -317,6 +326,7 @@ ggplot(data = fire_summaries,
        y = "Biomass (Mg)", x = "Year") + 
   # geom_smooth(aes(color = filename)) + 
   facet_wrap(~ mgmt + climate)
+  # facet_wrap(~run_name)
   # facet_wrap(~ mgmt + climate, nrow = 2, ncol = 3, dir = "v")
 
 ### compare fire and beetles

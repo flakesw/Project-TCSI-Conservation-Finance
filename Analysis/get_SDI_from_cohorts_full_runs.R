@@ -25,7 +25,7 @@ get_percent_sdi_landscape <- function(path, year){
     plot_comm <- comm_input %>%
       group_by(MapCode) %>%
       summarise(SDI_pred = sum(SDI_cohort, na.rm = TRUE))
-    plot_comm$SDI_plot = exp(predict(sdi_plot_correction, newdata = plot_comm)) * 0.52 #correction to match treemap
+    plot_comm$SDI_plot = exp(predict(sdi_plot_correction, newdata = plot_comm)) #* 0.6 #correction to match treemap
     
     
     
@@ -60,8 +60,8 @@ get_percent_sdi_landscape <- function(path, year){
 # import data
 
 sdi_cohort_model <- readRDS("./Parameterization/management scenario data/sdi_cohort_model.RDS")
-# sdi_cohort_model <- readRDS("sdi_cohort_model.RDS")
-sdi_plot_correction <- readRDS("./Parameterization/management scenario data/sdi_plot_correction_model.RDS")
+# sdi_cohort_model2 <- readRDS("misc/sdi_cohort_model.RDS") #"sdi working model is the same
+# sdi_plot_correction <- readRDS("./Parameterization/management scenario data/sdi_plot_correction_model.RDS")
 
 sp_ref <- read.csv("./Parameterization/management scenario data/REF_SPECIES.csv") %>%
   mutate(SpeciesLandis = paste0(substr(GENUS, 1, 4), stringr::str_to_title(substr(SPECIES, 1, 4)))) %>%
@@ -78,12 +78,13 @@ bps_max_sdi[bps_max_sdi == 0] <- NA
 #what folder do all the runs to be analyze live in?
 # scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
 scenario_folder <- "./Models/Model runs"
+# scenario_folder <- "./Models/Model runs/New_fire_runs"
 
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
-scenarios <- scenarios[c(-1)]
-scenarios <- c(scenarios, "C:/Users/swflake/Documents/TCSI-conservation-finance/Models/Model runs/Scenario6 - miroc - test necnv7")
-scenarios <- scenarios[c(1,2,9)]
+scenarios <- scenarios[c(2,4,6,8,10,12,14)]
+# scenarios <- scenarios[c(1,2,9)]
+# scenarios <- scenarios[c(116, 124, 132, 5, 13)]
 
 
 #some helper functions
@@ -128,7 +129,8 @@ scenario_type <- scenario_type %>%
 #--------------------------------
 
 
-years <- seq(0, 80, by = 10)
+# years <- seq(0, 80, by = 20)
+years <- 80
 
 comm_inputs <- expand.grid(scenarios, years)
 
@@ -146,13 +148,53 @@ for(i in 1:nrow(comm_inputs)){
 
   }
 
-plot(percent_max_sdi_rasters[[4]],
+
+
+comm_inputs
+i <- 7
+plot(percent_max_sdi_rasters[[i]],
      mar = c(2.1, 2.1, 2.1, 8.1),
      plg = list(title = "%MaxSDI",
                 at = c(0, 35, 60, 100),
                 c(1.5,1.5)))
 
-hist(percent_max_sdi_rasters[[1]])
-mean(percent_max_sdi_rasters[[1]][], na.rm = TRUE)
+hist(percent_max_sdi_rasters[[i]])
+mean(percent_max_sdi_rasters[[i]][], na.rm = TRUE)
+median(percent_max_sdi_rasters[[i]][], na.rm = TRUE)
+sum(percent_max_sdi_rasters[[i]][] < 35, na.rm = TRUE) / sum(percent_max_sdi_rasters[[i]][] > 0, na.rm = TRUE)
+sum(percent_max_sdi_rasters[[i]][] < 60, na.rm = TRUE) / sum(percent_max_sdi_rasters[[i]][] > 0, na.rm = TRUE)
 
 
+layout(mat = matrix(data = 1:8, nrow = 4, ncol = 2))
+for(i in 1:7){
+  plot(percent_max_sdi_rasters[[i]],
+       # mar = c(2.1, 2.1, 2.1, 8.1),
+       mar = c(0.1,0.1,2.1,0),
+       plg = list(title = "%MaxSDI",
+                  at = c(0, 35, 60, 100),
+                  c(1.5,1.5)))
+  title(main = scenario_type$mgmt[i])
+}
+
+
+layout(mat = matrix(data = 1:8, nrow = 4, ncol = 2))
+par(mar = c(1.1,1.1,2.1,1),
+    oma = c(0,0,0,0))
+
+for(i in 1:7){
+  print(i)
+  hist(percent_max_sdi_rasters[[i]],
+       xlab = "%maxSDI",
+       main = scenario_type$mgmt[i])
+  
+  ymax = max(hist(percent_max_sdi_rasters[[i]],
+              xlab = "%maxSDI",
+              main = scenario_type$mgmt[i], plot = FALSE)$counts)
+  
+  abline(v = c(35, 60), lwd = 2)
+  text(x = 30, y = ymax,
+       round(sum(percent_max_sdi_rasters[[i]][] < 35, na.rm = TRUE) / sum(percent_max_sdi_rasters[[i]][] > 0, na.rm = TRUE), 2))
+  text(x = 65, y = ymax,
+       round(sum(percent_max_sdi_rasters[[i]][] < 60, na.rm = TRUE) / sum(percent_max_sdi_rasters[[i]][] > 0, na.rm = TRUE), 2))
+  
+}

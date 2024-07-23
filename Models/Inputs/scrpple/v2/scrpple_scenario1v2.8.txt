@@ -29,6 +29,8 @@ IgnitionDistribution Poisson << Poisson or ZeroInflatedPoisson
 MaximumFineFuels 1000 <<Set to 1000 to match typical maximum fine fuels from LANDIS model, sf 2021-11-11; Originally 5400, Derived from Fuel Loadings with Jonathan Long
 MaximumLadderFuels 1250 
 
+>> Minimum intensity at which a crown fire occurs. Set to >=11 to turn off crown fire.
+MinumumCanFireIntensity 5
 
 >>>>>>> Prescribed Fire Parameters <<<<<<<<<<<<<<<<<<
 MaximumRxWindSpeed 11
@@ -58,14 +60,14 @@ SpreadProbabilityB3 0.0907120 << effective wind speed.
 >> Intensity (SiteMortality) parameters <<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	>>Calibrated to match median DNBR and proportion of high severity, updated 2024-2-5
 SiteMortalityLink identity
-SiteMortalityB0 -300 <<-240 <<-35 << Intercept
+SiteMortalityB0 -320 <<-240 <<-35 << Intercept   -310 is good
 SiteMortalityB1	0	<< Clay
 SiteMortalityB2	0	<< Previous PET
-SiteMortalityB3	16 <<10.48 <<Effective wind speed
+SiteMortalityB3	18.4 <<10.48 <<Effective wind speed    18.2 is good
 SiteMortalityB4	0	<<Climatic water deficit
 SiteMortalityB5	0	<<Fine fuel (proportion)
-SiteMortalityB6	0.2 <<0.153 <<Ladder fuel (g m-2)
-SiteMortalityB7	4.5 <<3.53 <<FWI
+SiteMortalityB6	0.2 <<0.153 <<Ladder fuel (g m-2)    0.2 is good
+SiteMortalityB7	4.45 <<3.53 <<FWI                     4.35 is good    
 
 >>>>>> Cohort mortality parameters <<<<<<<<<<<<<<<<<<<<<
 CohortMortalityB0 -0.73 << Intercept

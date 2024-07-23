@@ -1,4 +1,8 @@
 #get maximum biomass maps from LANDIS runs
+#Also, create treatment zones for SDI-based management
+
+
+
 library("stars")
 library("sf")
 library("tidyverse")
