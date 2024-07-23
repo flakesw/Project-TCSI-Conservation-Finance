@@ -17,7 +17,8 @@ tcsi_poly <- sierra_poly <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_a
 
 #fire size
 nifc_perims <- sf::st_read("D:/Data/wfigs_incidents_final_fire_perims/Interagency_Fire_Perimeter_History_-_All_Years/InteragencyFirePerimeterHistory.shp") %>%
-  sf::st_intersection(tcsi_poly)
+  # sf::st_intersection(tcsi_poly)
+  sf::st_intersection(sierra_poly)
 plot(sf::st_geometry(nifc_perims))
 
 min(nifc_perims$FIRE_YEAR)
@@ -66,10 +67,15 @@ for(year in 2000:2020){
 
 severity_data$prop_high <- severity_data$high_severity_cells/severity_data$all_cells
 
+ggplot(severity_data, aes(x = year, y = high_severity_cells*30*30/10000)) +
+  geom_point() + 
+  geom_smooth(method = "lm")
+
 ggplot(severity_data, aes(x = year, y = prop_high)) +
   geom_point() + 
   geom_smooth(method = "lm")
 
+mean(severity_data$prop_high, na.rm = TRUE)
 
 yearly_area_burned <- left_join(yearly_area_burned, severity_data, 
                             by = c("FIRE_YEAR" = "year"))

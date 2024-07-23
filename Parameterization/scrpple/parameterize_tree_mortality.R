@@ -103,11 +103,13 @@ joined <- stringdist_join(ftm_fire_loc, mtbs_points,
                             offset <- boundary$dNBR_offst
                               
                             raster %>%
-                            `-`(offset) %>%
+                            # `-`(offset) %>%
                             terra::mask(terra::vect(boundary)) %>%
                             values() %>%
                             mean(na.rm = TRUE) %>% 
                             return()}))
+
+
 
 
 #------------------------------------------------------------------------------
@@ -187,10 +189,87 @@ for(i in 1:nrow(bark_growth_params)){
       
     prob_mort <- boot::inv.logit(p)
     plot(prob_mort ~ ages,
+       ylim = c(0, 1), 
        xlab = "Age",
        ylab = "P(mort)",
        main = paste(bark_growth_params$SpeciesLandis[i], ", DNBR = ", dnbr))
     graphics::text(x = 0, y = min(prob_mort), pos = 4, labels = paste0("Prob of mortality at age 100 = ", round(prob_mort[101], 2)))
 }
+
+
+
+
+ages <- seq(0,220)
+dnbr <- 400
+maxBark <- 7
+barkAlpha <- 100
+
+
+d <- maxBark * ages/(ages + barkAlpha)
+
+plot(d ~ ages)
+
+p <- -0.73 + -1.5 * d + 0.008 * dnbr
+
+prob_mort <- boot::inv.logit(p)
+plot(prob_mort ~ ages,
+     xlab = "Age",
+     ylab = "P(mort)",
+     main = paste(", DNBR = ", dnbr))
+graphics::text(x = 0, y = min(prob_mort), pos = 4, labels = paste0("Prob of mortality at age 100 = ", round(prob_mort[101], 2)))
+
+
+
+
+
+
+#-----------------------------------------
+
+ages <- c(5, 25, 50, 100, 200, 400)
+dnbr <- seq(0, 1000, by = 10)
+
+#species params
+maxBark <- 4.4 *2.5
+barkAlpha <- 800
+
+
+#mortality model params
+intercept <- -1.2
+betaBark <-  -1.5
+betaDNBR <-  0.017
+
+
+barkThickness <- maxBark * ages/(ages + barkAlpha)
+
+p <- array(NA, dim = c(length(ages), length(dnbr)))
+
+for(i in 1:length(ages)){
+  p[i, ] <- intercept + betaBark * barkThickness[i] + betaDNBR * dnbr
+}
+
+prob_mort <- boot::inv.logit(p)
+plot(NA,
+     ylim = c(0,1),
+     xlim = c(min(dnbr), max(dnbr)),
+     xlab = "DNBR",
+     ylab = "P(mort)")
+graphics::text(x = 700, y = 0.2, pos = 4, 
+               labels = paste0("intercept = ", intercept, "\n",
+                               "beta Bark = ", betaBark, "\n",
+                               "beta DNBR = ", betaDNBR))
+for(i in 1:length(ages)){
+  lines(prob_mort[i, ] ~ dnbr)
+  graphics::text(y = median(prob_mort[i, ]), x = 500, labels = ages[i])
+}
+abline(h = 0.9)
+
+# graphics::text(x = 0, y = min(prob_mort), pos = 4, labels = paste0("Prob of mortality at age 100 = ", round(prob_mort[101], 2)))
+
+
+
+
+
+#-----------------------------
+#FTM
 
 
