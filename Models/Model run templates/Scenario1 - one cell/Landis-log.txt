@@ -1,14 +1,14 @@
-2022-12-05 10:54:58,227 - LANDIS-II 7.0 (7)
-2022-12-05 10:54:58,238 - 
-2022-12-05 10:54:58,321 - Loading scenario from file "Scenario1.txt" ...
-2022-12-05 10:54:58,412 - Initialized random number generator with seed = 1,159,860,955
-2022-12-05 10:54:58,412 - Loading species data from file "species.txt" ...
-2022-12-05 10:54:58,441 - Loading ecoregions from file "../necn/ecoregions.txt" ...
-2022-12-05 10:54:58,442 - Internal error occurred within the program:
-2022-12-05 10:54:58,442 -   Could not find a part of the path 'C:\Users\Sam\Documents\Research\TCSI conservation finance\Models\Model run templates\necn\ecoregions.txt'.
-2022-12-05 10:54:58,444 - 
-2022-12-05 10:54:58,444 - Stack trace:
-2022-12-05 10:54:58,477 -    at System.IO.FileStream.ValidateFileHandle(SafeFileHandle fileHandle)
+2024-07-26 08:55:04,236 - LANDIS-II 7.0 (7)
+2024-07-26 08:55:04,249 - 
+2024-07-26 08:55:04,334 - Loading scenario from file "Scenario1.txt" ...
+2024-07-26 08:55:04,416 - Initialized random number generator with seed = 3,594,429,694
+2024-07-26 08:55:04,418 - Loading species data from file "species.txt" ...
+2024-07-26 08:55:04,446 - Loading ecoregions from file "../necn/ecoregions.txt" ...
+2024-07-26 08:55:04,448 - Internal error occurred within the program:
+2024-07-26 08:55:04,448 -   Could not find a part of the path 'C:\Users\Sam\Documents\Research\TCSI conservation finance\Models\necn\ecoregions.txt'.
+2024-07-26 08:55:04,448 - 
+2024-07-26 08:55:04,448 - Stack trace:
+2024-07-26 08:55:04,485 -    at System.IO.FileStream.ValidateFileHandle(SafeFileHandle fileHandle)
    at System.IO.FileStream.CreateFileOpenHandle(FileMode mode, FileShare share, FileOptions options)
    at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options)
    at System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize)

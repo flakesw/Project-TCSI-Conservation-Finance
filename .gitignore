@@ -198,3 +198,26 @@ Parameterization/management scenario data/test_comm_data/scen7/community-input-f
 Parameterization/management scenario data/test_comm_data/scen7/output-community-80.img
 Analysis/get_SDI_from_cohorts.R
 .RDataTmp
+misc/dixie_selected.gpkg
+misc/dixie_subset.gpkg
+misc/dixie_test.gpkg
+Parameterization/calibration data/treemap_fuels.tif
+Parameterization/calibration data/geomac_all_years/geomac_combined_2000-2023.gpkg
+misc/dixie_selected.gpkg
+misc/dixie_subset.gpkg
+misc/dixie_test.gpkg
+Parameterization/calibration data/treemap_fuels.tif
+Parameterization/calibration data/geomac_all_years/geomac_combined_2000-2023.gpkg
+misc/dixie_selected.gpkg
+misc/dixie_subset.gpkg
+misc/dixie_test.gpkg
+Parameterization/calibration data/treemap_fuels.tif
+Parameterization/calibration data/geomac_all_years/geomac_combined_2000-2023.gpkg
+linear_models_age_from_diam.RDS
+misc/dixie_selected.gpkg
+misc/dixie_subset.gpkg
+misc/dixie_test.gpkg
+Parameterization/calibration data/treemap_fuels.tif
+Parameterization/calibration data/geomac_all_years/geomac_combined_2000-2023.gpkg
+linear_models_age_from_diam.RDS
+misc/dixie_selected.gpkg

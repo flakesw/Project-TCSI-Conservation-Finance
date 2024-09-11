@@ -13,27 +13,41 @@ library("sp")
 #import data
 fire_severity_data <- list.files("./Parameterization/calibration data/fire severity/",
                                  pattern = "catcher",
-                                 full.names = TRUE)[10:17]
+                                 full.names = TRUE)[1:40]
 
 col_types <- list(
+  fire_code = col_character(),
   fire_name = col_character(),
+  mtbs_filename = col_character(),
+  year = col_integer(),
   x = col_double(),
   y = col_double(),
   dnbr = col_double(),
   rdnbr = col_double(),
+  mtbs_severity = col_integer(),
+  departure = col_double(),
   clay = col_double(),
   pet = col_double(),
   cwd = col_double(),
-  cwd_normal = col_double(),
+  normal_cwd = col_double(),
   ews = col_double(),
+  windspeed = col_double(),
   vpd = col_double(),
-  eddi = col_double(),
-  pdsi = col_double(),
+  # eddi = col_double(),
+  # pdsi = col_double(),
   fwi = col_double(),
   fine_fuel = col_double(),
   ladder_fuel = col_double(),
-  ndvi = col_double(),
-  ndvi_anomaly = col_double()
+  tm_ladder_fuel = col_double(),
+  FFMC = col_double(),
+  DMC = col_double(),
+  DC = col_double(),
+  ISI = col_double(),
+  BUI = col_double(),
+  FWI = col_double(),
+  DSR = col_double()
+  # ndvi = col_double(),
+  # ndvi_anomaly = col_double()
 )
 
 short <- readRDS("./Parameterization/calibration data/short_ignitions/short_sierra.RDS")%>%
@@ -47,11 +61,13 @@ plot(short_annual$number ~ short_annual$FIRE_YEAR)
 
 #readr is incredible
 data_all2 <- fire_severity_data %>%
-  purrr::map_df(~read_csv(., col_types = col_types)) %>%
+  purrr::map_df(~read_csv(., col_types = col_types) %>%
+                  group_by(fire_name) %>%
+                  slice_sample(n = 5000)) %>%
   dplyr::filter(dnbr > 0) %>%
   dplyr::mutate(fine_fuel = ifelse(fine_fuel > 1000, 1, fine_fuel/1000)) %>%
-  dplyr::mutate(fwi = fwi * 0.658, #calibration to move from MERRA2 to LANDIS internal calculation
-                ews = ews * 1.9409) %>% #calibration to match LANDIS internal calculations
+  # dplyr::mutate(fwi = fwi * 0.658, #calibration to move from MERRA2 to LANDIS internal calculation
+                # ews = ews * 1.9409) %>% #calibration to match LANDIS internal calculations
   # dplyr::mutate(dnbr = ifelse(dnbr < 100, 100, dnbr)) %>%
   # dplyr::mutate(dnbr = ifelse(dnbr > 1000, 1000, dnbr)) %>%
   dplyr::filter(!is.na(dnbr)) #%>%
@@ -59,45 +75,58 @@ data_all2 <- fire_severity_data %>%
   # group_by(fire_name) %>%
   # slice_sample(n = 5000)
 
+data_all2$departure <- ifelse(data_all2$departure >100, NA, data_all2$departure)
+
 mean(data_all2$dnbr)
 hist(data_all2$dnbr)
+abline(v = quantile(data_all2$dnbr, 0.45))
+abline(v = quantile(data_all2$dnbr, 0.75))
 
 data_all <- data_all2 %>%
-  group_by(fire_name) %>%
-  slice_sample(n = 1000)
+  # group_by(fire_name) %>%
+  # slice_sample(n = 100)
+  sample_frac(0.1)
 
-test <- data_all %>%
-  group_by(fire_name) %>%
-  summarize(mean_dnbr = mean(dnbr, na.rm = TRUE),
-            mean_ews = mean(ews, na.rm = TRUE),
-            mean_fwi = mean(fwi, na.rm = TRUE),
-            mean_ladder = mean(ladder_fuel, na.rm = TRUE))
 
-summary(lm(mean_dnbr ~ mean_ews + mean_fwi + mean_ladder, data = test))
+#assign to Sierra regions
+sierra_shape <- sf::st_read("./Models/Inputs/masks_boundaries/WIP_Capacity_V1Draft/WIP_Capacity_V1Draft.shp") %>%
+  sf::st_transform("EPSG:5070")
 
-mean(test$mean_dnbr)
-mean(data_all2$dnbr)
-hist(data_all2$dnbr)
-median(data_all$dnbr)
-sum(data_all$dnbr > 300)/nrow(data_all)
-sum(data_all2$dnbr > 500)/nrow(data_all2)
-hist(test$mean_dnbr)
-hist(data_all$dnbr)
-plot(test$mean_dnbr ~ test$mean_ladder)
-summary(lm(test$mean_dnbr ~ test$mean_ladder))
-plot(rdnbr ~ ladder_fuel, data = sample_frac(data_all, 0.01))
-summary(lm(data_all$rdnbr~data_all$ladder_fuel))
-abline(coef(lm(data_all$rdnbr~data_all$ladder_fuel)))
+data_all_with_loc <- data_all %>% 
+  sf::st_as_sf(coords = c("x", "y"), crs = "EPSG:5070") %>%
+  sf::st_join(sierra_shape, join = st_within)
 
-plot(test$mean_dnbr ~ test$mean_ews)
-summary(lm(test$mean_dnbr ~ test$mean_ews))
-plot(dnbr ~ ews, data = sample_frac(data_all, 0.01))
-summary(lm(data_all$dnbr~data_all$ews))
+data_tcsi <- data_all_with_loc[data_all_with_loc$WIPGeoNam == "TCSI Plus", ]
 
-plot(test$mean_dnbr ~ test$mean_fwi)
-summary(lm(test$mean_dnbr ~ test$mean_fwi))
-plot(rdnbr ~ fwi, data = sample_frac(data_all, 0.01))
-summary(lm(data_all$rdnbr~data_all$fwi))
+data_all <- data_tcsi
+
+
+plot(dnbr ~ ladder_fuel, data = data_all)
+summary(lm(dnbr~ladder_fuel, data = data_all))
+abline(coef(lm(dnbr~ladder_fuel, data = data_all)))
+plot(dnbr ~ tm_ladder_fuel, data = data_all)
+summary(lm(dnbr~tm_ladder_fuel, data = data_all))
+abline(coef(lm(dnbr~tm_ladder_fuel, data = data_all)))
+plot(dnbr ~ fine_fuel, data = data_all)
+summary(lm(dnbr~fine_fuel, data = data_all))
+abline(coef(lm(dnbr~fine_fuel, data = data_all)))
+
+plot(rdnbr ~ ladder_fuel, data = data_all)
+summary(lm(rdnbr~ladder_fuel, data = data_all))
+abline(coef(lm(rdnbr~ladder_fuel, data = data_all)))
+plot(rdnbr ~ tm_ladder_fuel, data = data_all)
+summary(lm(rdnbr~tm_ladder_fuel, data = data_all))
+abline(coef(lm(rdnbr~tm_ladder_fuel, data = data_all)))
+plot(rdnbr ~ fine_fuel, data = data_all)
+summary(lm(rdnbr~fine_fuel, data = data_all))
+abline(coef(lm(rdnbr~fine_fuel, data = data_all)))
+
+
+plot(dnbr ~ fwi, data = data_all)
+test <- lmer(dnbr ~ windspeed+fwi+fine_fuel + (1|fire_name),
+             data = data_all)
+plot(effects::allEffects(test))
+
 abline(coef(lm(data_all$rdnbr~data_all$fwi)))
 
 hist(data_all$fwi)
@@ -109,159 +138,117 @@ hist(test$mean_fwi)
 mean(test$mean_fwi)
 mean(data_all$ews, na.rm = TRUE)
 
+hist(data_all$departure)
+summary(lm(rdnbr ~ departure*fwi + fine_fuel + ews, data = data_all))
+plot(allEffects(lm(rdnbr ~ departure*fwi + fine_fuel + ews, data = data_all)))
 
-
-#add in landfire 
-#TODO put this in data-extraction script
-# library("stars")
-# mtbs_rast <- stars::read_stars("D:/Data/mtbs_all_fires/2020/nv3957611991320200627_20190715_20200701_dnbr.tif")
-# dep <- stars::read_stars("D:/Data/landfire vegetation/veg_departure_sierra/US_105_VDEP/us_105vdep.tif")
-# sierra_shape <- sf::st_read("./Models/Inputs/masks_boundaries/WIP_Capacity_V1Draft/WIP_Capacity_V1Draft.shp") %>%
-#   sf::st_transform(st_crs(dep)) %>%
-#   sf::st_union()
-# test <- st_crop(dep, sierra_shape) %>%
-#   st_warp(mtbs_rast)
-# plot(test)
-
-
-
-# test <- terra::crop(dep, vect(sierra_shape)) %>% terra::mask(vect(sierra_shape))
-# dep <- terra::project(dep, crs(mtbs_rast))
-hist(values(dep))
-dep[dep[]>100] <- NA
-plot(dep)
-
-
-# tcsi_poly <- sf::st_read("./Models/Inputs/masks_boundaries/tcsi_area_shapefile/TCSI_v2.shp") %>%
-#   sf::st_zm() %>%
-#   sf::st_transform(crs = "EPSG:5070") %>%
-#   sf::st_make_valid() 
-# 
-# data_all_with_loc <- data_all %>%
-#   mutate(fire_name = toupper(fire_name)) %>%
-#   left_join(dplyr::select(short, "MTBS_ID", "MTBS_FIRE_NAME", "LATITUDE", "LONGITUDE") %>%
-#               filter(!duplicated(MTBS_ID)),
-#             by = c("fire_name" = "MTBS_ID")  ) %>%
-#   filter(!is.na(LATITUDE)) %>%
-#   sf::st_as_sf(coords = c("LONGITUDE", "LATITUDE")) %>%
-#   sf::st_set_crs("EPSG:5070") %>%
-#   ungroup() 
-# 
-# tcsi_data <- data_all_with_loc %>%
-#   st_filter(st_union(tcsi_poly), .predicate = st_within)
-
-
-
-
-# head(data_all_with_loc)
-
-# plot(sf::st_geometry(data_all_with_loc[which(!duplicated(data_all_with_loc$fire_name)), ]))
-
-# data_all$ndvi_normal <- data_all$ndvi + data_all$ndvi_anomaly
-# 
-# data_with_fuel <- data_all %>%
-#   dplyr::filter(!is.na(fine_fuel))
-
-# plot(dnbr ~ fine_fuel, data = data_with_fuel[sample(x = nrow(data_with_fuel), size = 1000), ])
-
-ggplot(data = sample_frac(data_all, 0.01), mapping = aes(x = fine_fuel, y = rdnbr)) +
+ggplot(data = data_all, mapping = aes(x = fine_fuel, y = dnbr)) +
   geom_jitter(width = 0.02) +
   geom_smooth(method = "lm", formula = y ~ exp(x))
-ggplot(data = sample_frac(data_all[!is.na(data_all$ladder_fuel), ], 0.01), mapping = aes(x = ladder_fuel, y = rdnbr)) +
+ggplot(data = data_all, mapping = aes(x = ladder_fuel, y = dnbr)) +
   geom_jitter() +
   geom_smooth(method = "lm", formula = y ~ x)
-ggplot(data = sample_frac(data_all, 0.01), mapping = aes(x = ndvi, y = rdnbr)) +
+ggplot(data = data_all, mapping = aes(x = tm_ladder_fuel, y = dnbr)) +
   geom_jitter() +
   geom_smooth(method = "lm", formula = y ~ x)
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ews, y = dnbr)) +
+ggplot(data = data_all, mapping = aes(x = ndvi, y = dnbr)) +
+  geom_jitter() +
+  geom_smooth(method = "lm", formula = y ~ x)
+ggplot(data = data_all, mapping = aes(x = ews, y = dnbr)) +
   geom_jitter() +
   geom_smooth(method = "lm", formula = y ~ x) +
   xlab("Effective windspeed")
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ladder_fuel, y = log(dnbr))) +
+ggplot(data = data_all, mapping = aes(x = fine_fuel, y = log(dnbr))) +
   geom_jitter() +
   geom_smooth(method = "lm", formula = y ~ x)
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = cwd, y = dnbr)) +
+ggplot(data = data_all, mapping = aes(x = cwd, y = dnbr)) +
   geom_jitter() +
   geom_smooth(method = "lm")
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = pet, y = dnbr)) +
+ggplot(data = data_all, mapping = aes(x = pet, y = dnbr)) +
   geom_jitter() +
   geom_smooth(method = "lm")
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = fwi, y = dnbr)) +
+ggplot(data = data_all, mapping = aes(x = fwi, y = dnbr)) +
   geom_jitter() +
   geom_smooth(method = "lm")
-ggplot(data = sample_frac(data_with_fuel, 0.01), mapping = aes(x = ndvi, y = dnbr)) +
+ggplot(data = data_all, mapping = aes(x = ndvi, y = dnbr)) +
   geom_jitter() +
   geom_smooth(method = "lm")
 
 hist(data_all$dnbr)
 
-test <- lm(dnbr ~ scale(ews) + scale(ladder_fuel) + scale(fwi), 
-           data = sample_frac(data_all, 0.01))
+test <- lm(dnbr ~ ews + ladder_fuel + BUI, 
+           data = data_all)
+summary(test)
+MuMIn::r.squaredGLMM(test)
 plot(predict(test) ~ test$model$dnbr)
 abline(0,1)
+plot(allEffects(test))
 hist(predict(test), xlim = c(0,1200))
 hist(test$model$dnbr, xlim = c(0,1200))
 
-summary(test)
 plot(test)
 hist(resid(test))
 
-test <- glm(dnbr ~ scale(ews) + scale(ladder_fuel) + scale(fwi), 
+test <- glm(dnbr ~ scale(ews) + scale(ladder_fuel) + scale(BUI) + scale(pet) + scale(clay), 
             family = gaussian(link = "log"),
-            data = sample_frac(data_all, 0.01))
+            data = data_all)
 summary(test)
 plot(test)
 hist(resid(test))
 
-test <- glm(dnbr ~ scale(ews) + scale(ladder_fuel) + scale(fwi), 
+test <- glm(dnbr ~ scale(ews) + scale(ladder_fuel) + scale(FWI), 
             family = Gamma(link = "inverse"),
-            data = sample_frac(data_all, 0.01))
+            data = data_all)
 summary(test)
 plot(test)
 hist(resid(test))
 
 test <- glm(dnbr ~ scale(ews) + scale(ladder_fuel) + scale(fwi), 
             family = gaussian(link = "sqrt"),
-            data = sample_frac(data_all, 0.01))
+            data = data_all)
 summary(test)
 plot(test)
 hist(resid(test))
 
-test_lmer <- lmer(rdnbr ~  scale(ews) + 
-                    scale(fwi) *
+test_lmer <- lmer(dnbr ~  scale(ews) + 
+                    scale(ladder_fuel) +
+                    scale(fine_fuel) +
+                    # scale(FFMC) +
+                    # scale(DMC) +
+                    # scale(DC) +
+                    # scale(ISI) +
+                    # scale(BUI) +
+                    scale(FWI)  +
+                    # scale(DSR) +
+                    (1|fire_name), data = data_all)
+summary(test_lmer)
+plot(allEffects(test_lmer))
+MuMIn::r.squaredGLMM(test_lmer)
+
+test_lmer <- lmer(dnbr ~  #scale(windspeed) +
+                    # scale(ews) + 
+                    # scale(fwi) +
                     # scale(cwd) +
-                    scale(normal_cwd) +
-                    # scale(pet) +
+                    # scale(normal_cwd) +
+                    scale(pet) +
                     # scale(vpd) +
                     # scale(eddi)  +
                     scale(ladder_fuel) +
-                    scale(pdsi) +
-                   (1|fire_name), data = sample_frac(data_all, 0.01))
+                    scale(FWI) +
+                   (1|fire_name), data = sample_frac(data_all2, 0.01))
 
 summary(test_lmer)
 plot(allEffects(test_lmer))
+MuMIn::r.squaredGLMM(test_lmer)
 plot(Effect(focal.predictors = c("pdsi", "normal_cwd"), mod = test_lmer))
 
 test_lmer <- glmer(dnbr ~  scale(ews) + 
-                    scale(fwi) +
-                    # scale(pet) +
-                    # scale(vpd) +
-                    # scale(eddi)  +
-                    scale(ndvi) +
-                     # scale(ladder_fuel) +
-                    # scale(pdsi) +
-                    + (1|fire_name), 
-                   data = sample_frac(data_all, 0.01),
+                     scale(ladder_fuel) + 
+                     scale(BUI) + 
+                     scale(clay) +
+                    (1|fire_name), 
+                   data = data_all,
                    family = Gamma(link = "log"))
-
-test_lmer <- lmer(dnbr ~  ews + 
-                    fwi +
-                    # scale(pet) +
-                    # scale(vpd) +
-                    # scale(eddi)  +
-                    ndvi +
-                    # scale(pdsi) +
-                    + (1|fire_name), data = sample_frac(data_all, 0.01))
 
 summary(test_lmer)
 plot(test_lmer)
@@ -362,25 +349,16 @@ bak <- data_all
 
 data_all <- data_all[, c(7:20)]
 # data_all <- as.data.frame(data_all[complete.cases(data_all), ]) #dismo needs data frames
-data_all <-as.data.frame(data_all[!is.na(data_all$rdnbr), ])
-data_all$rdnbr <- data_all$rdnbr/1000 #dismo needs small values for response variable
+data_all <-as.data.frame(data_all[!is.na(data_all$dnbr), ])
+data_all$dnbr <- data_all$dnbr/1000 #dismo needs small values for response variable
 gbm_mod <- gbm.step(data = data_all,
-                    gbm.x = c(4,5,6,9,10,11,13, 14),
-                    gbm.y = 1,
+                    gbm.x = c(10,11,12,13,14,15,16,17,18,19),
+                    gbm.y = 6,
                     family = "gaussian",
                     learning.rate = 0.15,
                     max.trees = 5000)
 
-plot(gbm_mod, 1)
-plot(gbm_mod, 2)
-plot(gbm_mod, 3)
-plot(gbm_mod, 4)
-plot(gbm_mod, 5)
-plot(gbm_mod, 6)
-plot(gbm_mod, 7)
-plot(gbm_mod, 8)
-plot(gbm_mod, 9)
-
+gbm.plot(gbm_mod, n.plots = 9, plot.layout = c(3,3))
 gbm_simp <- gbm.simplify(gbm_mod)
 gbm.plot(gbm_simp)
 

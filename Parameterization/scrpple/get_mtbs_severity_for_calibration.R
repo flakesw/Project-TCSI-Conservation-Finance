@@ -65,9 +65,6 @@ table(raster_firenumbers %in% shape_firenumbers)
 mtbs_shape <- subset(mtbs_shape, shape_firenumbers %in% raster_firenumbers)
 
 
-
-
-
 #How many rows to collect before writing data to disk
 data_length <- 1000000
 

@@ -1,4 +1,8 @@
 #merge GeoMAC boundaries into one file
+
+# DEPRECATED -- use "process_geomac_files.R"
+
+
 library("sf")
 
 tcsi_poly <- sf::st_read("./masks_boundaries/tcsi_area_shapefile/TCSI_v2.shp") %>%
