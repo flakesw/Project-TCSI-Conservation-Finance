@@ -6,6 +6,10 @@
 
 #TODO add: Sierra Nevada region (extract when clipping raster to region)
 
+#TODO add: monthly climate (CWD, PET, VPD)
+
+#TODO add: year-of annual CWD and PET
+
 library("geoknife")
 library("sf")
 library("terra")
@@ -529,85 +533,6 @@ get_daily_climate_rasters <- function(boundary, dates_of_fire){
   
   return(clim_rast)
 }
-  
-  
-  
-  
-  
-## this is broken because of loss of geoknife
-
-#   
-#   #shapefile for fire
-#   fire_boundary <- boundary %>%
-#     sf::st_transform(crs = "+proj=longlat +datum=WGS84") #reproject to CRS that geoknife needs
-#   
-#   fire_date <- fire_boundary$Ig_Date
-#   
-#   #"stencil" is what geoknife uses for the extent of the data
-#   stencil <- simplegeom(as(fire_boundary, Class = "Spatial"))
-#   
-#   # stencil <- simplegeom(data.frame('point1' = c(-76,49), 'point2' = c(-93,40)))
-#   
-#   year <- substr(fire_date, 1, 4)
-#   first_day <- min(dates_of_fire)
-#   last_day <- max(dates_of_fire)
-#   
-#   # windspeed and wind direction
-#   vars_url <- c("vs", "th", "vpd", "pet", "eddi30d", "pdsi") #other variables like burning index, fuel moisture, are available
-#   urls <- paste0("http://thredds.northwestknowledge.net:8080/thredds/dodsC/agg_met_", vars_url, "_1979_CurrentYear_CONUS.nc")
-#   fabric <- webdata(url = urls[6], times = c(as.POSIXct.Date(first_day), as.POSIXct.Date(last_day)))
-#   geoknife::query(fabric, 'variables')
-#   vars_long <- c("daily_mean_wind_speed", 
-#                  "daily_mean_wind_direction",
-#                  "daily_mean_vapor_pressure_deficit",
-#                  "daily_mean_reference_evapotranspiration_grass",
-#                  "eddi",
-#                  "daily_mean_palmer_drought_severity_index"
-#                  )
-#   
-# 
-#   
-#   knife <- webprocess(algorithm = list('OPeNDAP Subset' = "gov.usgs.cida.gdp.wps.algorithm.FeatureCoverageOPeNDAPIntersectionAlgorithm"),
-#                       wait = TRUE)
-#   # variables(fabric) <- c("spei", "category")
-#   # job <- geoknife(stencil, fabric, knife, wait = TRUE, OUTPUT_TYPE = "geotiff")
-# 
-#   job_results <- list()
-#   
-#   for(j in 1:length(vars_long)){
-#     #set the fabric for a new variable, but keep everything else the same (i.e. the stencil and knife)
-#     fabric <- webdata(url = urls[j], times = c(as.POSIXct.Date(first_day-1), as.POSIXct.Date(last_day+1)))
-#     variables(fabric) <- vars_long[j]
-#     print(vars_long[j])
-#     job <- geoknife(stencil, fabric, knife, wait = TRUE, OUTPUT_TYPE = "geotiff")
-#     if(error(job)){
-#       break
-#       check(job)
-#     }
-#   
-#     dest <- file.path(tempdir(), paste0(vars_long[j], '_data.zip'))
-#     file <- download(job, destination = dest, overwrite = TRUE)
-#     tiff.dir <- file.path(tempdir(), vars_long[j])
-#     # unzip(zipfile = file, exdir = file.path(tempdir(),'et'))
-#     
-#     #delete contents from previous fire
-#     unlink(tiff.dir, recursive = TRUE)
-#     
-#     archive::archive_extract(archive = file, dir = tiff.dir)
-# 
-#     stack <- rast(list.files(file.path(tempdir(), vars_long[j]), full.names = TRUE))
-#     
-#     # unlink(file.path(tempdir(), "extract"), recursive = TRUE)
-#     
-#     job_results[j] <- stack
-#   }
-# 
-#   for(i in 1:length(job_results)) terra::saveRDS(job_results[[i]], paste0("./Parameterization/calibration data/daily_climate/", boundary$Event_ID, vars_url[i], ".rds"))
-#   
-#   return(job_results)
-# }
-
-
 
 #-------------------------------------------------------------------------------
 # get relative windspeed and other daily climate data, extracted to the right
@@ -665,9 +590,9 @@ get_daily_climate_mosaic <- function(dnbr_raster, date_raster, severity_raster, 
   DSR_rast <-  cffdrs[7][[1]]%>%
     terra::project(dnbr_raster, method = "bilinear")
   
-  
-  fwi2 <- fwi %>%
-    terra::project(dnbr_raster)
+  # 
+  # fwi2 <- fwi %>%
+  #   terra::project(dnbr_raster)
   
   wind_speed_raster <- dnbr_raster %>% terra::setValues(NA)
   wind_dir_raster <- dnbr_raster %>% terra::setValues(NA)
@@ -719,10 +644,10 @@ get_daily_climate_mosaic <- function(dnbr_raster, date_raster, severity_raster, 
     # pdsi_mask <- terra::mask(pdsi_temp, date_rast_temp)
     # pdsi_raster <- sum(pdsi_raster, pdsi_mask, na.rm = TRUE)
     
-    fwi_temp <- fwi2[[which.min(abs(as.numeric((as.Date(sub("X", "", names(fwi2)), format = "%Y%j") -
-                                                  as.Date(as.character(date), format = "%Y%m%d")))))]]
-    fwi_mask <- terra::mask(fwi_temp, date_rast_temp)
-    fwi_raster <- sum(fwi_raster, fwi_mask, na.rm = TRUE)
+    # fwi_temp <- fwi2[[which.min(abs(as.numeric((as.Date(sub("X", "", names(fwi2)), format = "%Y%j") -
+    #                                               as.Date(as.character(date), format = "%Y%m%d")))))]]
+    # fwi_mask <- terra::mask(fwi_temp, date_rast_temp)
+    # fwi_raster <- sum(fwi_raster, fwi_mask, na.rm = TRUE)
     
     FFMC_temp <- FFMC_rast[[which.min(abs(as.numeric((as.Date(names(FFMC_rast), format = "%Y-%m-%d") - 
                                                    as.Date(as.character(date), format = "%Y%m%d")))))]]
@@ -962,7 +887,7 @@ calculate_cffdrs <- function(boundary, dates_of_fire){
     as.integer() %>%
     as.Date(origin = "1900-01-01")
   fwi_dates <- fwi_dates_all %>%
-    `[`(which(. %in% fire_dates_expanded))
+    `[`(which(. <= last_date))
   
   #make a template to use to write the cffdrs variables
   template <- ppt_rast
@@ -1108,7 +1033,7 @@ create_data_catcher <- function(data_length){
                     vpd = numeric(data_length),
                     # eddi = numeric(data_length),
                     # pdsi = numeric(data_length),
-                    fwi = numeric(data_length),
+                    # fwi = numeric(data_length),
                     fine_fuel = numeric(data_length),
                     ladder_fuel = numeric(data_length),
                     tm_ladder_fuel = numeric(data_length),
@@ -1130,7 +1055,7 @@ row_tracker <- 1
 start_time <- Sys.time()
 
 #fires with fuels and daily progressions (year 2001) start at 303
-for(i in 769:length(mtbs_shape)){
+for(i in 669:length(mtbs_shape)){
   
   error_flag <- FALSE
   try_again <- FALSE
@@ -1310,16 +1235,17 @@ for(i in 769:length(mtbs_shape)){
                             `[`(!is.na(.))
     
     
-    fwi <- tryCatch(
-      {
-        download_daily_fwi(boundary, dates_of_fire) #FWI from MERRA-2 satellite
-      },
-      error = function(cond){
-        message(paste("Error getting MERRA-2 FWI data:", label))
-        message(cond)
-      return(NA)
-      }
-    )
+    # fwi <- tryCatch(
+    #   {
+    #     download_daily_fwi(boundary, dates_of_fire) #FWI from MERRA-2 satellite
+    #   },
+    #   error = function(cond){
+    #     message(paste("Error getting MERRA-2 FWI data:", label))
+    #     message(cond)
+    #   return(NA)
+    #   }
+    # )
+    fwi <- NA
     
     cffdrs <- calculate_cffdrs(boundary, dates_of_fire) #FFMC, DMC, DC, ISI, BUI, FWI, DSR
     
@@ -1543,7 +1469,7 @@ for(i in 769:length(mtbs_shape)){
                      vpd = terra::values(clim_mosaic[[3]])[cells_burned],
                      # eddi = terra::values(clim_mosaic[[5]])[cells_burned],
                      # pdsi = terra::values(clim_mosaic[[6]])[cells_burned],
-                     fwi = terra::values(clim_mosaic[[5]])[cells_burned],
+                     # fwi = terra::values(clim_mosaic[[5]])[cells_burned],
                      fine_fuel = fuel[[1]][cells_burned],
                      ladder_fuel = fuel[[2]][cells_burned],
                      tm_ladder_fuel = tm_fuel[cells_burned],

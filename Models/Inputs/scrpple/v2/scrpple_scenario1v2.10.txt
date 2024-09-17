@@ -7,7 +7,7 @@ Species_CSV_File	"../../Inputs/scrpple/SCRPPLE_spp_sierra.csv"
 
 AccidentalIgnitionsMap     	"../../Inputs/input_rasters_reproject/accidental_tcsi_v2.tif" <<updated sf 2023-10-4
 LightningIgnitionsMap  		"../../Inputs/input_rasters_reproject/lightning_tcsi_v2.tif" <<updated sf 2023-10-4
-RxIgnitionsMap  		"../../Inputs/input_rasters_reproject/scen6rx.tif"
+RxIgnitionsMap  		"../../Inputs/input_rasters_reproject/rx_equal1.tif" 
 
 AccidentalSuppressionMap	"../../Inputs/input_rasters_reproject/suppression_accidental.tif"
 LightningSuppressionMap		"../../Inputs/input_rasters_reproject/suppression_lightning.tif" 
@@ -30,20 +30,20 @@ MaximumFineFuels 1000 <<Set to 1000 to match typical maximum fine fuels from LAN
 MaximumLadderFuels 1250 
 
 >> Minimum intensity at which a crown fire occurs. Set to >=11 to turn off crown fire.
-MinumumCanFireIntensity 11
+>>MinumumCanFireIntensity 11
 
->> Prescribed Fire Parameters
+>>>>>>> Prescribed Fire Parameters <<<<<<<<<<<<<<<<<<
 MaximumRxWindSpeed 11
 MaximumRxFireWeatherIndex 42.0
 MinimumRxFireWeatherIndex 6.0
 MaximumRxTemperature 32.0	<< Optional
 MinimumRxRelativeHumidity 22.0	<< Optional
 MaximumRxFireIntensity 1
-NumberRxAnnualFires 320
-NumberRxDailyFires 4
+NumberRxAnnualFires 0
+NumberRxDailyFires 1
 FirstDayRxFires 10
 LastDayRxFires 350
-TargetRxSize 45
+TargetRxSize 40
 
 >>>>>>> Maximum spread area parameters <<<<<<<<<<<<<<<<<<<<<<<
 MaximumSpreadAreaB0	-71 
@@ -59,16 +59,17 @@ SpreadProbabilityB3 0.0907120 << effective wind speed.
 
 
 >> Intensity (SiteMortality) parameters <<<<<<<<<<<<<<<<<<<<<<<<<<<<
-	>>Calibrated to match median DNBR and proportion of high severity, updated 2024-2-5
+>>Calibrated to match median DNBR and proportion of high severity, updated 2024-2-5
 SiteMortalityLink identity
-SiteMortalityB0 -320 <<-240 <<-35 << Intercept   -310 is good
+SiteMortalityB0 140.011  << Intercept 
 SiteMortalityB1	0	<< Clay
 SiteMortalityB2	0	<< Previous PET
-SiteMortalityB3	18.4 <<10.48 <<Effective wind speed    18.2 is good
+SiteMortalityB3	22.7308 <<Effective wind speed   
 SiteMortalityB4	0	<<Climatic water deficit
 SiteMortalityB5	0	<<Fine fuel (proportion)
-SiteMortalityB6	0.2 <<0.153 <<Ladder fuel (g m-2)    0.2 is good
-SiteMortalityB7	4.45 <<3.53 <<FWI                     4.35 is good             
+SiteMortalityB6	-0.0317 <<Ladder fuel (g m-2) 
+SiteMortalityB7	3.017194  <<FWI         
+SiteMortalityB8 0.008241 << Interaction for FWI:Ladder Fuel       
 
 >>>>>> Cohort mortality parameters <<<<<<<<<<<<<<<<<<<<<
 CohortMortalityB0 -0.73 << Intercept

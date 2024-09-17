@@ -66,8 +66,9 @@ data_all2 <- fire_severity_data %>%
                   slice_sample(n = 5000)) %>%
   dplyr::filter(dnbr > 0) %>%
   dplyr::mutate(fine_fuel = ifelse(fine_fuel > 1000, 1, fine_fuel/1000)) %>%
-  # dplyr::mutate(fwi = fwi * 0.658, #calibration to move from MERRA2 to LANDIS internal calculation
-                # ews = ews * 1.9409) %>% #calibration to match LANDIS internal calculations
+  dplyr::mutate(fwi = fwi * 0.658, #calibration to move from MERRA2 to LANDIS internal calculation
+                ews = ews * 1.9409,
+                FWI = FWI * 3.751713) %>% #calibration to match LANDIS internal calculations
   # dplyr::mutate(dnbr = ifelse(dnbr < 100, 100, dnbr)) %>%
   # dplyr::mutate(dnbr = ifelse(dnbr > 1000, 1000, dnbr)) %>%
   dplyr::filter(!is.na(dnbr)) #%>%
@@ -101,15 +102,15 @@ data_tcsi <- data_all_with_loc[data_all_with_loc$WIPGeoNam == "TCSI Plus", ]
 data_all <- data_tcsi
 
 
-plot(dnbr ~ ladder_fuel, data = data_all)
-summary(lm(dnbr~ladder_fuel, data = data_all))
-abline(coef(lm(dnbr~ladder_fuel, data = data_all)))
-plot(dnbr ~ tm_ladder_fuel, data = data_all)
-summary(lm(dnbr~tm_ladder_fuel, data = data_all))
-abline(coef(lm(dnbr~tm_ladder_fuel, data = data_all)))
-plot(dnbr ~ fine_fuel, data = data_all)
-summary(lm(dnbr~fine_fuel, data = data_all))
-abline(coef(lm(dnbr~fine_fuel, data = data_all)))
+plot(dnbr ~ ladder_fuel, data = data_all2[data_all2$FWI <20, ])
+summary(lm(dnbr~ladder_fuel, data = data_all2[data_all2$FWI <20, ]))
+abline(coef(lm(dnbr~ladder_fuel, data = data_all2[data_all2$FWI <20, ])))
+plot(dnbr ~ tm_ladder_fuel, data = data_all2[data_all2$FWI <20, ])
+summary(lm(dnbr~tm_ladder_fuel, data = data_all2[data_all2$FWI <20, ]))
+abline(coef(lm(dnbr~tm_ladder_fuel, data = data_all2[data_all2$FWI <20, ])))
+plot(dnbr ~ fine_fuel, data = data_all2[data_all2$FWI <20, ])
+summary(lm(dnbr~fine_fuel, data = data_all2[data_all2$FWI <20, ]))
+abline(coef(lm(dnbr~fine_fuel, data = data_all2[data_all2$FWI <20, ])))
 
 plot(rdnbr ~ ladder_fuel, data = data_all)
 summary(lm(rdnbr~ladder_fuel, data = data_all))
@@ -196,56 +197,59 @@ summary(test)
 plot(test)
 hist(resid(test))
 
-test <- glm(dnbr ~ scale(ews) + scale(ladder_fuel) + scale(FWI), 
+test <- glm(dnbr ~ scale(ews) + scale(ladder_fuel) + scale(BUI), 
             family = Gamma(link = "inverse"),
             data = data_all)
 summary(test)
 plot(test)
 hist(resid(test))
+plot(allEffects(test))
 
-test <- glm(dnbr ~ scale(ews) + scale(ladder_fuel) + scale(fwi), 
+test <- glm(dnbr ~ scale(ews) + scale(ladder_fuel) + scale(BUI), 
             family = gaussian(link = "sqrt"),
             data = data_all)
 summary(test)
 plot(test)
 hist(resid(test))
+plot(allEffects(test))
 
-test_lmer <- lmer(dnbr ~  scale(ews) + 
+test_lmer <- glmer(dnbr ~  scale(ews) + 
                     scale(ladder_fuel) +
                     scale(fine_fuel) +
                     # scale(FFMC) +
                     # scale(DMC) +
                     # scale(DC) +
                     # scale(ISI) +
-                    # scale(BUI) +
-                    scale(FWI)  +
+                    scale(FWI) *
+                     scale(ladder_fuel) +
+                    # scale(FWI)  +
                     # scale(DSR) +
-                    (1|fire_name), data = data_all)
+                    (1|fire_name), data = data_all, 
+                   family = gaussian(link = "log"))
 summary(test_lmer)
 plot(allEffects(test_lmer))
 MuMIn::r.squaredGLMM(test_lmer)
 
 test_lmer <- lmer(dnbr ~  #scale(windspeed) +
-                    # scale(ews) + 
-                    # scale(fwi) +
+                    (ews) +
                     # scale(cwd) +
                     # scale(normal_cwd) +
-                    scale(pet) +
+                    # scale(pet) +
                     # scale(vpd) +
                     # scale(eddi)  +
-                    scale(ladder_fuel) +
-                    scale(FWI) +
-                   (1|fire_name), data = sample_frac(data_all2, 0.01))
+                    scale(fine_fuel) * scale(FFMC) +
+                    (tm_ladder_fuel) *
+                    (BUI) + 
+                    (1|fire_name), data = data_all)
 
 summary(test_lmer)
 plot(allEffects(test_lmer))
 MuMIn::r.squaredGLMM(test_lmer)
-plot(Effect(focal.predictors = c("pdsi", "normal_cwd"), mod = test_lmer))
+# plot(Effect(focal.predictors = c("pdsi", "normal_cwd"), mod = test_lmer))
 
-test_lmer <- glmer(dnbr ~  scale(ews) + 
-                     scale(ladder_fuel) + 
-                     scale(BUI) + 
-                     scale(clay) +
+test_lmer <- glmer(dnbr ~  ews + 
+                     ladder_fuel + 
+                     FWI + 
                     (1|fire_name), 
                    data = data_all,
                    family = Gamma(link = "log"))
@@ -257,7 +261,7 @@ plot(residuals(test_lmer) ~ log(fitted(test_lmer)))
 qqplot(scale(residuals(test_lmer)), scale(fitted(test_lmer)))
 abline(0,1)
 
-plot(predict(test_lmer) ~ test_lmer@frame$dnbr)
+plot(exp(predict(test_lmer)) ~ test_lmer@frame$dnbr)
 abline(0,1)
 
 # plot(Effect(test_lmer, focal.predictors = c("ndvi", "ews")))
@@ -336,7 +340,6 @@ plot(preds1 ~ newdata$ews, type = "l",
      xlab = "Effective Windspeed",
      ylab = "DNBR")
 
-
 length(unique(data_all$fire_name))
 nrow(data_all)
 
@@ -352,7 +355,7 @@ data_all <- data_all[, c(7:20)]
 data_all <-as.data.frame(data_all[!is.na(data_all$dnbr), ])
 data_all$dnbr <- data_all$dnbr/1000 #dismo needs small values for response variable
 gbm_mod <- gbm.step(data = data_all,
-                    gbm.x = c(10,11,12,13,14,15,16,17,18,19),
+                    gbm.x = c(10,11,12,13,14,15,16,17,18,20),
                     gbm.y = 6,
                     family = "gaussian",
                     learning.rate = 0.15,
