@@ -1,2 +1,0 @@
-#Compare climate input files
-

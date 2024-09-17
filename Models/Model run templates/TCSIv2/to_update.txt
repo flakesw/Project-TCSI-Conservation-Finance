@@ -1,3 +1,0 @@
-NECN: no changes
-Harvest: make sure to update location of input files
-SCRPPLE: Need to change ignition surface, ignition params, spread params, mortality params, add ladder fuel max
