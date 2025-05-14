@@ -54,7 +54,7 @@ SpreadProbabilityB1 0.0137766 <<FWI
 SpreadProbabilityB2  0.5442314 << relativized fine fuels. 
 SpreadProbabilityB3 0.0907120 << effective wind speed.
 
->>Calibrated to match median DNBR and proportion of high severity, updated 2025-1-16
+>>Calibrated to match median DNBR and proportion of high severity, updated 2024-1-16
 SiteMortalityB0 0.0062 	<< Intercept
 SiteMortalityB1	0	<< Clay
 SiteMortalityB2	0	<< Previous PET

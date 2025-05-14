@@ -1,12 +1,14 @@
 #download data needed to predict site-level severity from climate and fuels
 
+#TODO see if we can parallelize this thing!!!
+
 #TODO add: NDVI normals
 
 #TODO add: time since fire; fire departure
 
 #TODO add: Sierra Nevada region (extract when clipping raster to region)
 
-#TODO add: monthly climate (CWD, PET, VPD)
+#TODO add: monthly climate (CWD, PET, VPD) for all fires
 
 #TODO add: year-of annual CWD and PET
 
@@ -36,8 +38,6 @@ options(warn = 0) #this gets reset sometimes for some reason, super annoying
 # This script has a ton of downloading and processing going on. 
 # response variable: dNBR
 # predictors: %clay, ET, effective windspeed, CWD, fuels
-# TODO we need to make sure that CWD and ET from TerraClimate are near enough to LANDIS values
-# TODO calculate previous-year AET
 
 #CRS -- EPSG 5070 or ESRI 102039
 
@@ -57,7 +57,6 @@ sierra_shape <- sf::st_read("./Models/Inputs/masks_boundaries/WIP_Capacity_V1Dra
 sierra_poly_wgs <- sierra_shape %>%
   sf::st_transform(crs = "+proj=longlat +datum=WGS84 +no_defs")
 
-short_all <- read.csv("./Parameterization/calibration data/short_ignitions/short_drop_geometry.csv")
 short <- readRDS("./Parameterization/calibration data/short_ignitions/short_sierra.RDS") %>%
   sf::st_transform("EPSG:5070")
 
@@ -89,7 +88,7 @@ dep <- stars::read_stars("D:/Data/landfire vegetation/veg_departure_sierra/US_10
 # 
 # treemap <-  terra::crop(treemap, vect(sierra_temp)) %>%
 #   terra::project("EPSG:5070", method = "near")
-# # 
+# #
 # # cats(treemap)
 # # levels(treemap)
 # 
@@ -1055,7 +1054,7 @@ row_tracker <- 1
 start_time <- Sys.time()
 
 #fires with fuels and daily progressions (year 2001) start at 303
-for(i in 669:length(mtbs_shape)){
+for(i in 1:length(mtbs_shape)){
   
   error_flag <- FALSE
   try_again <- FALSE

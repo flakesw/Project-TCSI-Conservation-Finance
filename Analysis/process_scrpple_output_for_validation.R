@@ -97,8 +97,10 @@ maxyear <- 40
 # scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
 # scenario_folder <- "C:/Users/swflake/Documents/TCSI-conservation-finance/Models/Model runs"
 scenario_folder <- "C:/Users/swflake/Documents/TCSI-conservation-finance/Models/Model runs/scrpplev2 testing"
-#   `[`(grep("Scenario", .)) %>%
-#   `[`(grep("historical", .))
+  # `[`(grep("Scenario", .)) %>%
+  # `[`(grep("historical", .))
+
+scenarios <- list.dirs(scenario_folder, recursive = FALSE)
 # scenarios <- scenarios[-1]
 # scenarios <- scenarios[4:8]
 # scenarios <- scenarios[c(6:10, 16, 94:96)]

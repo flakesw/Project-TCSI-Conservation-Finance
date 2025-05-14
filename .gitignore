@@ -221,3 +221,8 @@ Parameterization/calibration data/treemap_fuels.tif
 Parameterization/calibration data/geomac_all_years/geomac_combined_2000-2023.gpkg
 linear_models_age_from_diam.RDS
 misc/dixie_selected.gpkg
+Parameterization/calibration data/geomac_all_years/2020_perimeters_clean.gpkg
+Parameterization/calibration data/geomac_all_years/2021_perimeters_clean.gpkg
+Parameterization/calibration data/geomac_all_years/2022_perimeters_clean.gpkg
+Parameterization/calibration data/geomac_all_years/2023_perimeters_clean.gpkg
+Parameterization/calibration data/geomac_all_years/combined_boundaries_2000-2019.gpkg
