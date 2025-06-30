@@ -101,6 +101,7 @@ scenario_folder <- "C:/Users/swflake/Documents/TCSI-conservation-finance/Models/
 scenarios <- list.dirs(scenario_folder, recursive = FALSE)
 #   `[`(grep("Scenario", .)) %>%
 #   `[`(grep("historical", .))
+
 # scenarios <- scenarios[-1]
 scenarios <- scenarios[c(14:23)]
 # scenarios <- scenarios[c(6:10, 16, 94:96)]
