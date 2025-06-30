@@ -1,0 +1,105 @@
+LandisData  "SCRAPPLE"
+<< JES 10/2024: Sitemortality and Cohort mortality parameters iteratively adjusted to achieve 1) A TSCI-wide site biomass mort distribution matching observations (MTBS severity); 2) Basic Low-Mod-High severity impacts on both young and old cohorts.  
+<< updated by Sam Flake to better represent TCSI fire regime and influence of fuels. 
+
+<< Use with srplle version from Jeff
+
+Timestep                            1
+
+Species_CSV_File	"../../Inputs/scrpple/SCRPPLE_spp_sierra_psmemod_1.02.csv"
+
+AccidentalIgnitionsMap     	"../../Inputs/input_rasters_reproject/accidental_tcsi_v2.tif" <<updated sf 2023-10-4
+LightningIgnitionsMap  		"../../Inputs/input_rasters_reproject/lightning_tcsi_v2.tif" <<updated sf 2023-10-4
+RxIgnitionsMap  		"../../Inputs/input_rasters_reproject/rx_equal1.tif" 
+
+AccidentalSuppressionMap	"../../Inputs/input_rasters_reproject/suppression_accidental.tif"
+LightningSuppressionMap		"../../Inputs/input_rasters_reproject/suppression_lightning.tif" 
+RxSuppressionMap		"../../Inputs/input_rasters_reproject/full_suppression.tif" <<NEED
+
+GroundSlopeMap "../../Inputs/input_rasters_reproject/Slope2.tif"		
+UphillSlopeAzimuthMap  "../../Inputs/input_rasters_reproject/upslope.tif"	
+ClayMap "../../Inputs/input_rasters_reproject/PercClay.tif"
+
+
+>>>>>>>> Ignition count model <<<<<<<< 
+<< sf updated 2024-1-4 with new params to match ignitions from Karen Short database for TCSI region
+LightningIgnitionsB0 -7.394988
+LightningIgnitionsB1  0.0826
+AccidentalIgnitionsB0  -5.736498
+AccidentalIgnitionsB1   0.0644
+IgnitionDistribution Poisson << Poisson or ZeroInflatedPoisson
+
+>> Maximum fuels <<<<<<<<<<<<<<<<<<<<
+MaximumFineFuels 1000 <<Set to 1000 to match typical maximum fine fuels from LANDIS model, sf 2021-11-11; Originally 5400, Derived from Fuel Loadings with Jonathan Long
+MaximumLadderFuels 1250 
+
+>> Minimum intensity at which a crown fire occurs. Set to >=11 to turn off crown fire.
+MinumumCanFireIntensity 11
+
+>>>>>>> Prescribed Fire Parameters <<<<<<<<<<<<<<<<<<
+MaximumRxWindSpeed 11
+MaximumRxFireWeatherIndex 42.0
+MinimumRxFireWeatherIndex 6.0
+MaximumRxTemperature 32.0	<< Optional
+MinimumRxRelativeHumidity 22.0	<< Optional
+MaximumRxFireIntensity 1
+NumberRxAnnualFires 0
+NumberRxDailyFires 1
+FirstDayRxFires 10
+LastDayRxFires 350
+TargetRxSize 40
+
+>>>>>>> Maximum spread area parameters <<<<<<<<<<<<<<<<<<<<<<<
+MaximumSpreadAreaB0	-71 
+MaximumSpreadAreaB1	17.5 <<-3 <<FWI
+MaximumSpreadAreaB2	10.6 <<-2.5  <<effective wind speed
+
+>> Spread parameters <<<<<<<<<<<<<<<<<<<<<<<<<<<
+>>updated 2022-4-22 from mixed-effects regression, calibrated to match observed area burned per year
+SpreadProbabilityB0 -2
+SpreadProbabilityB1 0.0137766 <<FWI
+SpreadProbabilityB2  0.5442314 << relativized fine fuels. 
+SpreadProbabilityB3 0.0907120 << effective wind speed.
+
+>> Intensity (SiteMortality) parameters <<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	>>Calibrated to match median DNBR and proportion of high severity, updated 2024-2-5
+SiteMortalityLink identity
+SiteMortalityB0 -400 <<-600 <<-240 <<-35 << Intercept
+SiteMortalityB1	0	<< Clay
+SiteMortalityB2	0	<< Previous PET
+SiteMortalityB3	16 <<10.48 <<Effective wind speed
+SiteMortalityB4	0	<<Climatic water deficit
+SiteMortalityB5	150	<<Fine fuel (proportion)
+SiteMortalityB6	0.4 <<0.153 <<Ladder fuel (g m-2)
+SiteMortalityB7	4.5 <<3.53 <<FWI
+
+  
+>>>>>> Cohort mortality parameters <<<<<<<<<<<<<<<<<<<<<
+CohortMortalityB0 -1.0 << -0.73 << Intercept
+CohortMortalityB1 -1.2 << -0.9 << The parameter fit for the relationship between bark thickness and cohort mortality.
+CohortMortalityB2  0.018 << 0.008 << The parameter fit for the relationship between site mortality and cohort mortality. 
+
+>>>>>>> Ladder fuel parameters <<<<<<<<<<<<<<<<<<<<<<<<<<
+LadderFuelMaxAge 28
+
+LadderFuelSpeciesList 
+AbieConc CaloDecu PinuCont PinuJeff PinuLamb PinuPond PinuMono PinuSabi PinuWash PseuMenz FX_R_SEED NOFX_R_SEED NOFX_NOR_SEED
+
+>>>>>>>> Suppression parameters <<<<<<<<<<<<<<<<<<<<
+SuppressionMaxWindSpeed 12
+Suppression_CSV_File "../../Inputs/scrpple/Suppression_Input_Gannon.csv" <<updated sf 2022-3-7
+
+>>>>>>>> Dead wood table <<<<<<<<<<<<<<<<<<
+DeadWoodTable
+PinuJeff	22
+CaloDecu	33
+PinuCont	38
+PinuLamb	27
+AbieMagn	28
+AbieConc	29
+PinuAlbi	34
+PinuMont	34
+TsugMert	30
+PinuPond	24
+PinuWash	24
+PseuMenz	27

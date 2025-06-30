@@ -13,7 +13,8 @@ MinimumBiomass 4506
 MinimumTimeSinceLastHarvest 5	
 SiteSelection   CompleteStandSpread 6  12	
 MinTimeSinceDamage	5		
-CohortsRemoved  ClearCut			
+CohortsRemoved  ClearCut
+Plant PinuPond			
 
 Prescription    PIF_CC_30			
 StandRanking Random			
@@ -22,6 +23,7 @@ MinimumTimeSinceLastHarvest 10
 SiteSelection   CompleteStandSpread 6  12	
 MinTimeSinceDamage	10	
 CohortsRemoved  ClearCut
+Plant PinuPond
 		
 Prescription    PIF_CC_32			
 StandRanking Random			
@@ -30,6 +32,7 @@ MinimumTimeSinceLastHarvest 20
 SiteSelection   CompleteStandSpread 6  12	
 MinTimeSinceDamage	20
 CohortsRemoved  ClearCut
+Plant PinuPond
 
 Prescription    PIF_CC_34			
 StandRanking Random			
@@ -38,6 +41,7 @@ MinimumTimeSinceLastHarvest 30
 SiteSelection   CompleteStandSpread 6  12	
 MinTimeSinceDamage	30	
 CohortsRemoved  ClearCut	
+Plant PinuPond
 	
 Prescription    PIF_CC_36			
 StandRanking Random			
@@ -46,6 +50,7 @@ MinimumTimeSinceLastHarvest 40
 SiteSelection   CompleteStandSpread 6  12	
 MinTimeSinceDamage	40
 CohortsRemoved  ClearCut	
+Plant PinuPond
 
 Prescription    PIF_PCT_29
 StandRanking Random			
@@ -1486,7 +1491,8 @@ MinimumBiomass 4506
 >>MinimumTimeSinceLastHarvest 5		
 SiteSelection   CompleteStandSpread 6  12		
 >>MinTimeSinceDamage	5	
-CohortsRemoved  ClearCut		
+CohortsRemoved  ClearCut
+Plant PinuPond		
 		
 Prescription    PIF_CC_30_2		
 StandRanking Random		
@@ -1494,7 +1500,8 @@ MinimumBiomass 4905
 >>MinimumTimeSinceLastHarvest 10		
 SiteSelection   CompleteStandSpread 6  12		
 >>MinTimeSinceDamage	10
-CohortsRemoved  ClearCut		
+CohortsRemoved  ClearCut	
+Plant PinuPond	
 		
 Prescription    PIF_CC_32_2		
 StandRanking Random		
@@ -1502,7 +1509,8 @@ MinimumBiomass 4201
 >>MinimumTimeSinceLastHarvest 20		
 SiteSelection   CompleteStandSpread 6  12		
 >>MinTimeSinceDamage	30
-CohortsRemoved  ClearCut		
+CohortsRemoved  ClearCut	
+Plant PinuPond	
 		
 Prescription    PIF_CC_34_2		
 StandRanking Random		
@@ -1510,7 +1518,8 @@ MinimumBiomass 4617
 >>MinimumTimeSinceLastHarvest 30		
 SiteSelection   CompleteStandSpread 6  12		
 >>MinTimeSinceDamage	30
-CohortsRemoved  ClearCut		
+CohortsRemoved  ClearCut	
+Plant PinuPond	
 		
 Prescription    PIF_CC_36_2		
 StandRanking Random		
@@ -1518,7 +1527,8 @@ MinimumBiomass 5015
 >>MinimumTimeSinceLastHarvest 40		
 SiteSelection   CompleteStandSpread 6  12		
 >>MinTimeSinceDamage	40
-CohortsRemoved  ClearCut		
+CohortsRemoved  ClearCut	
+Plant PinuPond	
 		
 Prescription    PIF_PCT_29_2		
 StandRanking Random		

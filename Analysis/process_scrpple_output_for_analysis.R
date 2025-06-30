@@ -16,12 +16,12 @@ library("terra")
 
 #what folder do all the runs to be analyze live in?
 # scenario_folder <- "E:/TCSI LANDIS/LANDIS runs"
-scenario_folder <- "./Models/Model runs"
+scenario_folder <- "./Models/Model runs/"
 
 scenarios <- list.dirs(scenario_folder, recursive = FALSE) %>%
   `[`(grep("Scenario", .))
-scenarios <- scenarios[c(2,4,6,8,10,12,14)]
-# scenarios <- scenarios[-c(1)]
+# scenarios <- scenarios[c(1:9)]
+scenarios <- scenarios[13:17]
 # scenarios <- c(scenarios, "C:/Users/swflake/Documents/TCSI-conservation-finance/Models/Model runs/Scenario6 - miroc - test necnv7")
 # scenarios <- scenarios[c(85, 73)]
 # scenarios <- scenarios[c(1,2,3,4,7)]
@@ -112,7 +112,7 @@ get_burn_intensity <- function(raster, intensity){
   return(sum(terra::values(raster) >= intensity))
 }
 
-years <- 1:81
+years <- 1:20
 #need to summarize fire data to 5-year chunks to compare with NECN data
 #first need to run script to separate wildfire and rx fire
 year_bins <- cut(years, breaks = seq(0,81, by = 5))
@@ -325,8 +325,8 @@ ggplot(data = fire_summaries,
        subtitle = "by management scenario and climate scenario",
        y = "Biomass (Mg)", x = "Year") + 
   # geom_smooth(aes(color = filename)) + 
-  facet_wrap(~ mgmt + climate)
-  # facet_wrap(~run_name)
+  # facet_wrap(~ mgmt + climate)
+  facet_wrap(~run_name)
   # facet_wrap(~ mgmt + climate, nrow = 2, ncol = 3, dir = "v")
 
 ### compare fire and beetles

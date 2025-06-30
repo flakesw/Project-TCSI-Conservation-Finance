@@ -1,0 +1,103 @@
+LandisData  "SCRAPPLE"
+<< fires turned down extremely low
+
+Timestep                            1
+
+Species_CSV_File	"../../Inputs/scrpple/SCRPPLE_spp_sierra.csv"
+
+AccidentalIgnitionsMap     	"../../Inputs/input_rasters_reproject/accidental_tcsi.tif"
+LightningIgnitionsMap  		"../../Inputs/input_rasters_reproject/lightning_tcsi.tif"
+RxIgnitionsMap  		"../../Inputs/input_rasters_reproject/rx_equal1.tif"
+
+AccidentalSuppressionMap	"../../Inputs/input_rasters_reproject/suppression_accidental.tif"
+LightningSuppressionMap		"../../Inputs/input_rasters_reproject/suppression_lightning.tif"
+RxSuppressionMap		"../../Inputs/input_rasters_reproject/full_suppression.tif" <<NEED
+
+GroundSlopeMap "../../Inputs/input_rasters_reproject/Slope2.tif"		
+UphillSlopeAzimuthMap  "../../Inputs/input_rasters_reproject/upslope.tif"	
+ClayMap "../../Inputs/input_rasters_reproject/PercClay.tif"
+
+>>>>>>>> Count model<<<<<<<< << sf updated 2021-08-26 with new params 
+LightningIgnitionsB0 -2.729175
+LightningIgnitionsB1  0.087775
+
+AccidentalIgnitionsB0   -0.63738
+AccidentalIgnitionsB1   0.01361
+IgnitionDistribution ZeroInflatedPoisson << Poisson or ZeroInflatedPoisson
+
+>>> Zero inflated model <<<<<<<
+LightningIgnitionsBinomialB0 -100
+LightningIgnitionsBinomialB1 0.13809
+AccidentalIgnitionsBinomialB0 -100
+AccidentalIgnitionsBinomialB1 -0.13918
+
+>> Maximum fuels <<<<<<<<<<<<<<<<<<<<
+MaximumFineFuels 1000 <<Set to 1000 to match typical maximum fine fuels from LANDIS model, sf 2021-11-11; Originally 5400, Derived from Fuel Loadings with Jonathan Long
+MaximumLadderFuels 1250 
+
+>> Minimum intensity at which a crown fire occurs. Set to >=11 to turn off crown fire.
+MinumumCanFireIntensity 11
+
+>> Prescribed Fire Parameters
+MaximumRxWindSpeed 11
+MaximumRxFireWeatherIndex 42.0
+MinimumRxFireWeatherIndex 6.0
+MaximumRxTemperature 32.0	<< Optional
+MinimumRxRelativeHumidity 22.0	<< Optional
+MaximumRxFireIntensity 1
+NumberRxAnnualFires 0
+NumberRxDailyFires 1
+FirstDayRxFires 10
+LastDayRxFires 350
+TargetRxSize 40
+
+MaximumSpreadAreaB0	-71 
+MaximumSpreadAreaB1	0 <<-3 <<FWI
+MaximumSpreadAreaB2	0 <<-2.5  <<effective wind speed
+
+SpreadProbabilityB0 -100 <<more negative means lower spread
+SpreadProbabilityB1 0.0388  <<FWI
+SpreadProbabilityB2  0.0313 << relativized fine fuels. Was .915
+SpreadProbabilityB3 0.0138 << effective wind speed. 
+
+>> Intensity (SiteMortality) parameters <<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	>>Calibrated to match median DNBR and proportion of high severity, updated 2024-2-5
+SiteMortalityLink identity
+SiteMortalityB0 -320  << Intercept 
+SiteMortalityB1	0	<< Clay
+SiteMortalityB2	0	<< Previous PET
+SiteMortalityB3	18.4 <<Effective wind speed   
+SiteMortalityB4	0	<<Climatic water deficit
+SiteMortalityB5	0	<<Fine fuel (proportion)
+SiteMortalityB6	0.2 <<Ladder fuel (g m-2) 
+SiteMortalityB7	4.45  <<FWI                     
+
+>>>>>> Cohort mortality parameters <<<<<<<<<<<<<<<<<<<<<
+CohortMortalityB0 -0.73 << Intercept
+CohortMortalityB1 -0.9 << The parameter fit for the relationship between bark thickness and cohort mortality.
+CohortMortalityB2  0.008 << The parameter fit for the relationship between site mortality and cohort mortality. 
+
+>>>>>>> Ladder fuel parameters <<<<<<<<<<<<<<<<<<<<<<<<<<
+LadderFuelMaxAge 28
+
+LadderFuelSpeciesList 
+AbieConc CaloDecu PinuCont PinuJeff PinuLamb PinuPond PinuMono PinuSabi PinuWash PseuMenz FX_R_SEED NOFX_R_SEED NOFX_NOR_SEED
+
+>>>>>>>> Suppression parameters <<<<<<<<<<<<<<<<<<<<
+SuppressionMaxWindSpeed 12
+Suppression_CSV_File "../../Inputs/scrpple/Suppression_Input_Gannon.csv" <<updated sf 2022-3-7
+
+>>>>>>>> Dead wood table <<<<<<<<<<<<<<<<<<
+DeadWoodTable
+PinuJeff	22
+CaloDecu	33
+PinuCont	38
+PinuLamb	27
+AbieMagn	28
+AbieConc	29
+PinuAlbi	34
+PinuMont	34
+TsugMert	30
+PinuPond	24
+PinuWash	24
+PseuMenz	27

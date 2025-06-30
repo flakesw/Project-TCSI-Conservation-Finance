@@ -59,7 +59,8 @@ SpreadProbabilityB3 0.0907120 << effective wind speed.
 
 
 >> Intensity (SiteMortality) parameters <<<<<<<<<<<<<<<<<<<<<<<<<<<<
->>Calibrated to match median DNBR and proportion of high severity, updated 2024-2-5
+>> Calibrated to match median DNBR and proportion of high severity
+>> and added interaction with FWI and ladder fuel
 SiteMortalityLink identity
 SiteMortalityB0 140.011  << Intercept 
 SiteMortalityB1	0	<< Clay
